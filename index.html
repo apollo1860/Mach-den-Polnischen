@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Der Polnische – Trinkspiel</title>
+<style>
+  :root{
+    --night1:#161c36; --night2:#232c52; --night3:#2e3a66;
+    --ink:#3d3428; --paper:#fdf7ea; --paper2:#f3ead6;
+    --coral:#ff5a3c; --coral-hi:#ff8a5c; --coral-dk:#c22f14;
+    --mint:#3ddc97; --mint-dk:#1d9e66;
+    --neon:#e84ce0; --gold:#ffcf4d;
+    --z1:#e88a6d; --z2:#7da3d0; --z3:#8fbe5f; --z4:#b57fd0; --z5:#e0a94f; --z6:#5fbfa4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    font-family:-apple-system,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;
+    background:var(--night1); color:var(--ink);
+    user-select:none; touch-action:manipulation;
+  }
+
+  /* ===================== NACHT-WELT ===================== */
+  #viewport{
+    position:fixed;inset:0;
+    perspective:1150px; perspective-origin:50% 28%;
+    overflow:hidden;
+    background:
+      radial-gradient(140vmax 90vmax at 78% -18%, #4a5896 0%, transparent 52%),
+      radial-gradient(90vmax 70vmax at 12% 108%, #1b2a4d 0%, transparent 60%),
+      linear-gradient(168deg,var(--night1) 0%, var(--night2) 55%, var(--night3) 100%);
+  }
+  /* Sterne + Mondglühen */
+  #viewport::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(2px 2px at 12% 18%, #fff8, transparent 60%),
+      radial-gradient(1.5px 1.5px at 28% 8%,  #fff6, transparent 60%),
+      radial-gradient(2px 2px at 44% 22%, #fff5, transparent 60%),
+      radial-gradient(1.5px 1.5px at 61% 6%,  #fff7, transparent 60%),
+      radial-gradient(2px 2px at 74% 16%, #fff6, transparent 60%),
+      radial-gradient(1.5px 1.5px at 88% 26%, #fff5, transparent 60%),
+      radial-gradient(2px 2px at 55% 34%, #fff4, transparent 60%),
+      radial-gradient(1.5px 1.5px at 8% 42%,  #fff4, transparent 60%),
+      radial-gradient(2.5px 2.5px at 93% 44%, #fff5, transparent 60%),
+      radial-gradient(36vmin 36vmin at 82% 8%, #fef3c766 0%, transparent 70%);
+    animation:twinkle 6s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle{from{opacity:.75;}to{opacity:1;}}
+
+  #world{
+    position:absolute;left:50%;top:50%;
+    width:0;height:0;
+    transform-style:preserve-3d;
+    transition:transform .95s cubic-bezier(.3,.75,.25,1);
+  }
+  #board{
+    position:absolute;
+    transform:rotateX(54deg);
+    transform-style:preserve-3d;
+  }
+
+  /* ---------- Zonen-Bezirke ---------- */
+  .zone-panel{
+    position:absolute;border-radius:34px;pointer-events:none;
+    background:rgba(12,17,36,.42);
+    box-shadow:inset 0 0 0 2px var(--zc, #fff3), inset 0 0 42px #0006, 0 14px 34px #0007;
+  }
+  .zone-label{
+    position:absolute;pointer-events:none;white-space:nowrap;
+    font-size:17px;font-weight:800;letter-spacing:4px;text-transform:uppercase;
+    color:var(--zc,#fff);opacity:.85;
+    text-shadow:0 0 14px var(--zc,#fff), 0 2px 4px #0009;
+    transform-origin:center;
+  }
+  .deco{
+    position:absolute;pointer-events:none;font-size:30px;
+    opacity:.38;filter:saturate(.75) drop-shadow(0 3px 3px #0008);
+  }
+
+  /* ---------- Kacheln ---------- */
+  .tile{
+    position:absolute;width:96px;height:96px;
+    border-radius:14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    text-align:center;
+    background:linear-gradient(165deg, var(--tf1,#fdf6e8) 0%, var(--tf2,#efe4cc) 100%);
+    box-shadow:
+      0 7px 0 var(--td,#c9b98f),
+      0 12px 22px #00000066,
+      inset 0 2px 0 #ffffffaa,
+      inset 0 0 0 2px #ffffff30;
+  }
+  .tile .t-emoji{
+    font-size:26px;line-height:1;
+    width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 35% 28%, #ffffffee 0%, #ffffff55 55%, #ffffff22 100%);
+    box-shadow:inset 0 0 0 1.5px #ffffff88, 0 2px 5px #0003;
+  }
+  .tile .t-name{
+    font-size:9px;font-weight:800;letter-spacing:.4px;
+    text-transform:uppercase;line-height:1.15;padding:0 5px;
+    color:#4a3d2c;
+  }
+  .zone-1{--tf1:#f9ddd0;--tf2:#efc2ad;--td:#b06a4e;}
+  .zone-2{--tf1:#dfe9f6;--tf2:#c2d4ea;--td:#5a7ca8;}
+  .zone-3{--tf1:#e3f1cc;--tf2:#c8e0a4;--td:#6f9a44;}
+  .zone-4{--tf1:#efdff6;--tf2:#dcc2ea;--td:#8f60a8;}
+  .zone-5{--tf1:#fbe9c6;--tf2:#f1d097;--td:#b17f34;}
+  .zone-6{--tf1:#d8f0e7;--tf2:#b4ddcd;--td:#48927b;}
+  .tile.type-start{
+    --tf1:#fff3cf;--tf2:#ffdf8e;--td:#c29a2e;
+    box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 26px #ffd76e55;
+  }
+  .tile.type-goal{
+    --tf1:#ffd9fb;--tf2:#f7aef0;--td:#aí;
+    --td:#a83f9e;
+    animation:partyPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes partyPulse{
+    0%,100%{box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 22px #e84ce066;}
+    50%    {box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 44px #e84ce0cc;}
+  }
+  .tile.active-tile{
+    box-shadow:0 7px 0 var(--td,#c9b98f),0 12px 22px #0007, inset 0 2px 0 #fff,
+      0 0 0 4px var(--gold), 0 0 30px #ffcf4dbb;
+  }
+
+  /* ---------- Zaun ---------- */
+  #fence{
+    position:absolute;display:flex;align-items:flex-end;justify-content:space-around;
+    transform-style:preserve-3d;
+  }
+  #fence .post{
+    width:11px;height:48px;border-radius:4px 4px 0 0;
+    background:linear-gradient(90deg,#6d5238 0%, #4a3521 100%);
+    transform:rotateX(-54deg);transform-origin:bottom center;
+    box-shadow:3px 3px 4px #0008;position:relative;
+  }
+  #fence .post::before,#fence .post::after{
+    content:"";position:absolute;left:-30px;right:-30px;height:8px;border-radius:3px;
+    background:linear-gradient(180deg,#7a5d3f,#553d26);
+  }
+  #fence .post::before{top:9px;}
+  #fence .post::after{top:27px;}
+
+  /* ---------- Spielfiguren ---------- */
+  .token{
+    position:absolute;width:42px;height:42px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:19px;
+    background:radial-gradient(circle at 32% 26%, #ffffff 0%, #f0ede4 45%, #cfc8b6 100%);
+    box-shadow:0 8px 14px #000a, inset 0 -3px 5px #0002, inset 0 2px 3px #fff;
+    border:2.5px solid #fff;
+    transition:left .42s cubic-bezier(.4,.1,.4,1), top .42s cubic-bezier(.4,.1,.4,1);
+    z-index:5;
+  }
+  .token.hop{animation:hop .4s ease-out;}
+  @keyframes hop{
+    0%{transform:translateY(0) scale(1);}
+    45%{transform:translateY(-20px) scale(1.08,0.95);}
+    80%{transform:translateY(2px) scale(0.96,1.05);}
+    100%{transform:translateY(0) scale(1);}
+  }
+
+  /* ===================== UI-EBENE ===================== */
+  #hud{
+    position:fixed;top:0;left:0;right:0;padding:12px;
+    display:flex;justify-content:center;pointer-events:none;z-index:20;
+  }
+  #hud .bar{
+    display:flex;align-items:center;gap:12px;
+    background:rgba(22,28,54,.62);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1.5px solid #ffffff2a;border-radius:999px;
+    box-shadow:0 10px 26px #0008, inset 0 1px 0 #ffffff30;
+    padding:8px 20px 8px 10px;max-width:94vw;
+  }
+  #hud .p-dot{
+    width:40px;height:40px;border-radius:50%;font-size:19px;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 32% 26%, #fff, #d9d2c2);
+    box-shadow:0 3px 8px #0007, 0 0 0 2.5px var(--gold);
+  }
+  #hud .p-name{font-weight:800;font-size:16px;color:#fdf7ea;letter-spacing:.2px;}
+  #hud .p-sub{font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#ffcf4d;}
+
+  #bottom{
+    position:fixed;left:0;right:0;bottom:0;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    padding:0 0 16px;z-index:20;pointer-events:none;
+  }
+  #log{
+    background:rgba(22,28,54,.66);color:#fdf7ea;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border:1.5px solid #ffffff22;
+    font-size:13px;font-weight:700;letter-spacing:.2px;
+    padding:8px 18px;border-radius:999px;
+    max-width:88vw;text-align:center;min-height:32px;
+    box-shadow:0 8px 20px #0007;
+  }
+  #rollBtn{
+    pointer-events:auto;position:relative;overflow:hidden;
+    width:118px;height:118px;border:none;border-radius:30px;
+    transform:rotate(45deg);cursor:pointer;
+    background:linear-gradient(155deg,var(--coral-hi) 0%,var(--coral) 48%,var(--coral-dk) 100%);
+    box-shadow:0 11px 0 #8f1f09, 0 20px 36px #000a, inset 0 2px 2px #ffffff80;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .1s, box-shadow .1s;
+    animation:goPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes goPulse{
+    0%,100%{filter:brightness(1);}
+    50%{filter:brightness(1.12);}
+  }
+  #rollBtn::after{ /* Glanz-Sweep */
+    content:"";position:absolute;top:-60%;left:-80%;width:55%;height:220%;
+    background:linear-gradient(100deg,transparent,#ffffff55,transparent);
+    transform:rotate(10deg);
+    animation:shine 3.2s ease-in-out infinite;
+  }
+  @keyframes shine{0%,60%{left:-80%;}100%{left:160%;}}
+  #rollBtn:active{transform:rotate(45deg) translate(5px,5px);box-shadow:0 4px 0 #8f1f09, 0 8px 16px #0009;}
+  #rollBtn span{
+    transform:rotate(-45deg);
+    color:#fff;font-size:35px;font-weight:900;letter-spacing:1px;
+    text-shadow:0 3px 0 #00000045;
+    font-family:"Arial Black","Arial",sans-serif;
+  }
+  #rollBtn:disabled{filter:grayscale(.75) brightness(.65);cursor:default;animation:none;}
+  #scooterTag{
+    background:linear-gradient(160deg,#4fdd8f,var(--mint-dk));color:#fff;
+    font-weight:900;font-size:12px;letter-spacing:1px;
+    padding:6px 16px;border-radius:999px;
+    box-shadow:0 5px 14px #0007, inset 0 1px 0 #ffffff70;display:none;
+  }
+
+  /* ---------- 3D-Würfel ---------- */
+  #diceLayer{
+    position:fixed;inset:0;z-index:40;display:none;
+    align-items:center;justify-content:center;gap:56px;
+    background:rgba(10,14,30,.45);
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    pointer-events:none;perspective:900px;
+  }
+  .cube-wrap{width:92px;height:92px;animation:diceDrop .5s cubic-bezier(.2,1.3,.4,1);}
+  @keyframes diceDrop{
+    0%{transform:translateY(-46vh) scale(.5);opacity:0;}
+    100%{transform:translateY(0) scale(1);opacity:1;}
+  }
+  .cube{
+    width:100%;height:100%;position:relative;transform-style:preserve-3d;
+    transition:transform 1.15s cubic-bezier(.18,.75,.22,1.06);
+  }
+  .face{
+    position:absolute;inset:0;border-radius:18px;
+    background:linear-gradient(150deg,#ffffff 0%,#eee7d7 100%);
+    box-shadow:inset 0 0 0 2px #00000012, inset 0 -5px 0 #00000010;
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    padding:14px;
+  }
+  .face .pip{display:flex;align-items:center;justify-content:center;}
+  .face .pip i{width:15px;height:15px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #4c4436, #221d14);
+    box-shadow:inset 0 -2px 2px #0006;}
+  .f1{transform:translateZ(46px);}
+  .f6{transform:rotateY(180deg) translateZ(46px);}
+  .f3{transform:rotateY(90deg) translateZ(46px);}
+  .f4{transform:rotateY(-90deg) translateZ(46px);}
+  .f5{transform:rotateX(90deg) translateZ(46px);}
+  .f2{transform:rotateX(-90deg) translateZ(46px);}
+
+  /* ---------- Modal ---------- */
+  #modalWrap{
+    position:fixed;inset:0;z-index:50;
+    background:rgba(10,14,30,.62);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;padding:18px;
+  }
+  #modal{
+    position:relative;
+    background:linear-gradient(178deg,#fffdf6 0%, var(--paper2) 100%);
+    border-radius:26px;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #fff, inset 0 0 0 1.5px #ffffff90;
+    width:min(400px,92vw);padding:26px 22px 22px;text-align:center;
+    animation:popIn .42s cubic-bezier(.2,1.45,.4,1);
+  }
+  @keyframes popIn{0%{transform:scale(.55) translateY(30px);opacity:0;}100%{transform:scale(1) translateY(0);opacity:1;}}
+  #modal .m-emoji{
+    font-size:56px;line-height:1;filter:drop-shadow(0 4px 4px #0004);
+    animation:emojiBob 2.2s ease-in-out infinite;
+  }
+  @keyframes emojiBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  #modal .m-tag{
+    display:inline-block;margin-top:12px;
+    font-size:10.5px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;
+    color:#fff;padding:5px 15px;border-radius:999px;
+    box-shadow:0 3px 8px #0004, inset 0 1px 0 #ffffff60;
+  }
+  #modal h2{font-size:23px;font-weight:900;margin-top:10px;letter-spacing:-.3px;color:#332a1d;}
+  #modal p{font-size:15px;font-weight:600;margin-top:9px;line-height:1.5;color:#4f4433;}
+  #modal .m-btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  .btn{
+    border:none;cursor:pointer;position:relative;overflow:hidden;
+    font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.2px;
+    color:#fff;padding:14px 28px;border-radius:18px;
+    background:linear-gradient(160deg,var(--coral-hi),var(--coral) 55%,var(--coral-dk));
+    box-shadow:0 6px 0 #8f1f09, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:active{transform:translateY(5px);box-shadow:0 1px 0 #8f1f09, 0 3px 8px #0006;}
+  .btn.green{background:linear-gradient(160deg,#5ceea0,var(--mint) 55%,var(--mint-dk));box-shadow:0 6px 0 #10704a, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;}
+  .btn.green:active{box-shadow:0 1px 0 #10704a;}
+  .btn.gray{background:linear-gradient(160deg,#a8a294,#7c766a 55%,#57524a);box-shadow:0 6px 0 #3c3830, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff50;}
+  .btn.gray:active{box-shadow:0 1px 0 #3c3830;}
+
+  /* ---------- Konfetti ---------- */
+  #confetti{position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden;display:none;}
+  #confetti i{
+    position:absolute;top:-4vh;width:10px;height:16px;border-radius:3px;
+    animation:confFall linear forwards;
+  }
+  @keyframes confFall{
+    to{transform:translateY(110vh) rotate(720deg);}
+  }
+
+  /* ---------- Setup ---------- */
+  #setup{
+    position:fixed;inset:0;z-index:60;
+    display:flex;align-items:center;justify-content:center;padding:18px;
+    background:
+      radial-gradient(120vmax 80vmax at 80% -10%, #4a5896 0%, transparent 50%),
+      linear-gradient(168deg,var(--night1),var(--night3));
+  }
+  #setup::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(2px 2px at 15% 20%, #fff7, transparent 60%),
+      radial-gradient(2px 2px at 70% 12%, #fff6, transparent 60%),
+      radial-gradient(1.5px 1.5px at 45% 30%, #fff5, transparent 60%),
+      radial-gradient(2px 2px at 88% 38%, #fff5, transparent 60%);
+  }
+  #setup .card{
+    position:relative;
+    background:linear-gradient(178deg,#fffdf6, var(--paper2));
+    border-radius:28px;
+    box-shadow:0 28px 70px #000c, inset 0 2px 0 #fff;
+    width:min(430px,94vw);padding:30px 24px 26px;text-align:center;
+    max-height:92vh;overflow-y:auto;
+  }
+  #setup .kicker{
+    font-size:11px;font-weight:900;letter-spacing:4px;text-transform:uppercase;
+    color:var(--coral);
+  }
+  #setup h1{
+    font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1.05;
+    margin-top:6px;color:#2e2618;
+  }
+  #setup h1 span{
+    background:linear-gradient(120deg,var(--coral),var(--neon));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  #setup .sub{font-size:13.5px;font-weight:600;color:#6b5f4c;margin-top:10px;line-height:1.5;}
+  #playerList{margin:20px 0 6px;display:flex;flex-direction:column;gap:9px;}
+  .p-row{
+    display:flex;align-items:center;gap:10px;
+    background:#fff;border-radius:16px;padding:8px 12px;
+    box-shadow:0 3px 10px #00000014, inset 0 0 0 1.5px #e7ddc6;
+  }
+  .p-row .ico{font-size:21px;width:30px;}
+  .p-row input{
+    flex:1;border:none;outline:none;font-family:inherit;
+    font-size:15px;font-weight:700;background:transparent;color:var(--ink);min-width:0;
+  }
+  .p-row .rm{
+    border:none;background:#f0e8d3;color:#8a7a5c;
+    width:28px;height:28px;border-radius:50%;font-weight:900;cursor:pointer;
+  }
+  #addPlayer{
+    margin-top:10px;background:none;border:2px dashed #cbbd9a;
+    border-radius:16px;padding:11px;width:100%;cursor:pointer;
+    font-family:inherit;font-weight:800;color:#8a7a5c;font-size:14px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <div class="card">
+    <div class="kicker">Das Münchner Trinkspiel</div>
+    <h1>Der <span>Polnische</span></h1>
+    <div class="sub">Schleich dich unbemerkt von der öden Party. Einmal quer durch München – wer zuerst auf der geilen Party ankommt, gewinnt. 🥱→🎉</div>
+    <div id="playerList"></div>
+    <button id="addPlayer">+ Spieler hinzufügen</button>
+    <div style="margin-top:20px">
+      <button class="btn green" id="startBtn" style="font-size:19px;padding:16px 44px;">Los geht's!</button>
+    </div>
+  </div>
+</div>
+
+<div id="viewport">
+  <div id="world"><div id="board"></div></div>
+</div>
+
+<div id="hud">
+  <div class="bar">
+    <span class="p-dot" id="hudDot">🔴</span>
+    <div>
+      <div class="p-name" id="hudName">–</div>
+      <div class="p-sub" id="hudSub">ist am Zug</div>
+    </div>
+  </div>
+</div>
+
+<div id="bottom">
+  <div id="scooterTag">🛴 E-SCOOTER AKTIV – 2 WÜRFEL</div>
+  <div id="log">Willkommen beim Polnischen!</div>
+  <button id="rollBtn"><span>GO ⇄</span></button>
+</div>
+
+<div id="diceLayer"></div>
+<div id="confetti"></div>
+<div id="modalWrap"><div id="modal"></div></div>
+
+<script>
+/* =====================================================
+   DER POLNISCHE – v0.4 „Nacht-München"
+   Logik unverändert zu v0.3 (Ring im Uhrzeigersinn,
+   Zaunzelle links, 2 Kartendecks, Teleports, E-Scooter).
+   Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
+===================================================== */
+
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal" };
+
+const FIELDS = [
+  {n:"Balkon",              e:"🚬", t:T.START,   z:1, d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
+  {n:"Küche",               e:"🍳", t:T.EVENT,   z:1},
+  {n:"Schlafzimmer",        e:"🛏️", t:T.EVENT,   z:1},
+  {n:"Wohnzimmer",          e:"🛋️", t:T.EVENT,   z:1},
+  {n:"Garderobe",           e:"🧥", t:T.EVENT,   z:1},
+  {n:"Flur",                e:"🚪", t:T.EVENT,   z:1},
+  {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:10, d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
+  {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
+  {n:"Giesinger Stehausschank",e:"🦁",t:T.EVENT, z:2},
+  {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
+  {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:26, d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Münchner Freiheit."},
+  {n:"Rathaus",             e:"🏛️", t:T.EVENT,   z:2},
+  {n:"Marienplatz",         e:"⭐", t:T.EVENT,   z:2},
+  {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:2},
+  {n:"Viktualienmarkt",     e:"🥨", t:T.EVENT,   z:2},
+  {n:"Alter Peter",         e:"⛪", t:T.EVENT,   z:2},
+  {n:"Hofbräuhaus",         e:"🍺", t:T.EVENT,   z:2},
+  {n:"ATM",                 e:"🏧", t:T.FIXED,   z:2, d:"Der Geldautomat zieht deine Karte ein – sperre schnell deine Karte und setze eine Runde aus.", skip:1},
+  {n:"Englischer Garten",   e:"🌳", t:T.EVENT,   z:3},
+  {n:"Monopterus",          e:"🏛️", t:T.EVENT,   z:3},
+  {n:"Universität",         e:"🎓", t:T.TELEPORT,z:3, tp:26, d:"Die U-Bahn an der Uni steht schon da! Sie bringt dich zur Münchner Freiheit."},
+  {n:"Mono-Wiese",          e:"🌼", t:T.EVENT,   z:3},
+  {n:"Parkbank",            e:"🪑", t:T.FIXED,   z:3, d:"Kurze Verschnaufpause auf der Parkbank – setze eine Runde aus.", skip:1},
+  {n:"P1",                  e:"🪩", t:T.FIXED,   z:3, d:"Ein Kumpel holt dich für einen Drink in den Club – trinke 3 Schlücke."},
+  {n:"Siegestor",           e:"🏆", t:T.EVENT,   z:3},
+  {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
+  {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:20, d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
+  {n:"Tanke",               e:"⛽", t:T.FIXED,   z:4, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
+  {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
+  {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
+  {n:"Spielplatz",          e:"🛝", t:T.EVENT,   z:4},
+  {n:"Hopfendolde",         e:"🌿", t:T.FIXED,   z:4, d:"Du lädst Fremde auf ein Getränk ein – verteile 3 Schlücke."},
+  {n:"Taxistand",           e:"🚕", t:T.FIXED,   z:4, d:"Kein Taxifahrer will dich mitnehmen – setze eine Runde aus.", skip:1},
+  {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
+  {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
+  {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:5},
+  {n:"Tanke",               e:"⛽", t:T.FIXED,   z:5, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
+  {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
+  {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
+  {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5},
+  {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
+  {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
+  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:6, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
+  {n:"Boazn",               e:"🍻", t:T.FIXED,   z:6, d:"Du lädst Fremde auf ein Getränk ein – verteile 3 Schlücke."},
+  {n:"Theresienwiese",      e:"🎡", t:T.EVENT,   z:6},
+  {n:"Schwanthaler Höhe",   e:"🏘️", t:T.EVENT,   z:6},
+  {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:6},
+  {n:"Stadtviertelfest",    e:"🎪", t:T.FIXED,   z:6, d:"Du wirst auf ein Getränk eingeladen – trinke 2 Schlücke."},
+  {n:"Herzog-Ernst-Platz",  e:"🌲", t:T.EVENT,   z:6},
+  {n:"Sendlinger Kirche",   e:"⛪", t:T.EVENT,   z:6},
+  {n:"Geile Party",         e:"🎉", t:T.GOAL,    z:6, d:"Angekommen – und keiner hat es gemerkt!"}
+];
+
+const PARTY_CARDS = [
+  {e:"🗣️", txt:"Eine Person, die du nicht kennst, verwickelt dich in Smalltalk – trinke 2 Schlücke."},
+  {e:"🚪", txt:"Jemand blockiert die Tür – setze 1 Runde aus.", skip:1},
+  {e:"🖼️", txt:"Der Gastgeber zeigt dir Urlaubsbilder – trinke 2 Schlücke und grinse dabei."},
+  {e:"🍺", txt:"Du klaust ein Bier für den Weg – trinke 3 Schlücke."},
+  {e:"👟", txt:"Der Gastgeber erwischt dich beim Schuheanziehen – zurück zum Start + 1 Schluck aus Scham.", goto:0},
+  {e:"🧥", txt:"Der Gastgeber erwischt dich beim Anziehen der Jacke – zurück zum Start + 1 Schluck aus Scham.", goto:0},
+  {e:"🥂", txt:"Jemand fordert alle zum Anstoßen auf – alle trinken 1 Schluck."},
+  {e:"🎸", txt:"Jemand packt die Gitarre aus und spielt Wonderwall – trinke 2 Schlücke und spiel den Song ab (wenn möglich)."},
+  {e:"👶", txt:"Ein Pärchen zeigt dir Babyfotos – trinke 2 Schlücke und grinse dabei."},
+  {e:"🍾", txt:"Das Bier geht aus – trink dein Norgerl und hol dir schnell ein Neues: trinke 2 Schlücke."},
+  {e:"🐶", txt:"Der Gastgeber hat ein süßes Haustier, das gestreichelt werden muss – setze 1 Runde aus.", skip:1},
+  {e:"🍰", txt:"Es werden Nachspeisen gebracht, die gegessen werden müssen – setze 1 Runde aus.", skip:1},
+  {e:"😶", txt:"Es herrscht peinliche Stille – trinke 1 Schluck."},
+  {e:"🍹", txt:"Du bringst einem Gast etwas zu trinken mit – verteile 3 Schlücke."},
+  {e:"🥃", txt:"Ein Gast will dein Bier probieren – verteile 1 Schluck."},
+];
+
+const FORGOT_CARDS = [
+  {e:"📱", txt:"Du hast dein Handy vergessen – zurück zur Party!", goto:5},
+  {e:"🍺", txt:"Du hast dein Wegbier vergessen – zurück zur Party!", goto:5},
+  {e:"👛", txt:"Du hast deinen Geldbeutel vergessen – zurück zur Party!", goto:5},
+];
+
+const STREET_CARDS = [
+  {e:"🎶", txt:"Ohrwurm – wünsche dir einen Song."},
+  {e:"🏈", txt:"Du wirst zu einer Partie Flunkyball herausgefordert und verlierst – trinke 3 Schlücke."},
+  {e:"🏆", txt:"Du wirst zu einer Partie Flunkyball herausgefordert und gewinnst – verteile 3 Schlücke."},
+  {e:"🏓", txt:"Du wirst zu einer Partie Bierpong herausgefordert und gewinnst – verteile 3 Schlücke."},
+  {e:"🥤", txt:"Du wirst zu einer Partie Bierpong herausgefordert und verlierst – trinke 3 Schlücke."},
+  {e:"🧔", txt:"Ein Obdachloser bietet dir etwas aus seinem Getränk an – trinke 1 Höflichkeitsschluck."},
+  {e:"🍾", txt:"Du findest eine nicht ganz ausgetrunkene Bierflasche – trinke 2 Schlücke."},
+  {e:"📉", txt:"Dein Promillegehalt sinkt bedenklich – trinke 4 Schlücke."},
+  {e:"📊", txt:"Dein Promillegehalt sinkt leicht – trinke 1 Schluck."},
+  {e:"🤝", txt:"Du gibst dein Norgerl einem Fremden – verteile 2 Schlücke."},
+  {e:"😤", txt:"Jemand wirft dir vor, dass du „nicht saufen kannst“ – zeig's ihm und trinke 4 Schlücke."},
+  {e:"🍻", txt:"Du holst dir Nachschub in einer Boazn – trinke 3 Schlücke."},
+  {e:"🥃", txt:"Du findest einen Shot in deiner Hosentasche (einen Kurzen hast du da ja bereits) – trinke 1 Shot oder 5 Schlücke."},
+  {e:"💧", txt:"Du bekommst Durst – trinke 2 Schlücke."},
+  {e:"🛣️", txt:"Du bist in die falsche Straße abgebogen – gehe 2 Felder zurück.", mv:-2},
+  {e:"🗺️", txt:"Google Maps fällt kurzzeitig aus – gehe 2 Felder zurück.", mv:-2},
+  {e:"🧭", txt:"Ein Passant fragt dich nach dem Weg – setze eine Runde aus.", skip:1},
+  {e:"👊", txt:"Du wirst Augenzeuge einer Schlägerei – setze eine Runde aus.", skip:1},
+  {e:"🚧", txt:"Du musst wegen einer Straßensperrung einen Umweg nehmen – gehe 2 Felder zurück.", mv:-2},
+  {e:"🚗", txt:"Du musst wegen eines Verkehrsunfalls einen Umweg nehmen – gehe 2 Felder zurück.", mv:-2},
+  {e:"🚦", txt:"Du musst ewig an einer roten Ampel warten – setze eine Runde aus.", skip:1},
+  {e:"🟢", txt:"Du erwischst bei den Ampeln eine „grüne Welle“ – gehe 2 Felder vor.", mv:2},
+  {e:"🚌", txt:"Du erwischst pünktlich deinen Bus – gehe 3 Felder vor.", mv:3},
+  {e:"🏃", txt:"Du verpasst knapp deinen Bus und musst weiter zu Fuß gehen – gehe 2 Felder zurück.", mv:-2},
+  {e:"🚋", txt:"Du erwischst pünktlich deine Tram – gehe 2 Felder vor.", mv:2},
+  {e:"💨", txt:"Du ziehst einen kurzen Sprint an – gehe 1 Feld vor.", mv:1},
+  {e:"🏘️", txt:"Du nimmst eine Abkürzung über ein Wohngebiet – gehe 1 Feld vor.", mv:1},
+  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade und gibt dir eine Verwarnung – setze eine Runde aus.", skip:1},
+  {e:"💬", txt:"Ein Fremder verwickelt dich in ein Gespräch – setze eine Runde aus.", skip:1},
+  {e:"🍟", txt:"Kurze Chicken-McNuggets-Pause bei McDonald's – setze eine Runde aus.", skip:1},
+];
+
+const TYPE_META = {
+  start:   {tag:"START",         col:"linear-gradient(140deg,#e6b93a,#b98a12)"},
+  event:   {tag:"EREIGNISKARTE", col:"linear-gradient(140deg,#b06ad4,#7d3d9e)"},
+  fixed:   {tag:"EREIGNIS",      col:"linear-gradient(140deg,#f09044,#c9641a)"},
+  teleport:{tag:"MVG",           col:"linear-gradient(140deg,#4aa8e8,#2472ad)"},
+  scooter: {tag:"E-SCOOTER",     col:"linear-gradient(140deg,#4fdd8f,#1d9e66)"},
+  goal:    {tag:"ZIEL",          col:"linear-gradient(140deg,#f06ae0,#ab2f9e)"},
+};
+const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
+const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
+const TOKEN_ICONS = ["🔴","🔵","🟢","🟡","🟣","🟠","⚫","⚪"];
+
+/* ---------- Ring-Geometrie im Uhrzeigersinn ---------- */
+const TILE = 100, COLS = 12, ROWS = 16;
+function buildCoords(){
+  const c=[];
+  for(let x=0;x<=COLS-1;x++) c.push([x,0]);
+  for(let y=1;y<=ROWS-1;y++) c.push([COLS-1,y]);
+  for(let x=COLS-2;x>=0;x--) c.push([x,ROWS-1]);
+  for(let y=ROWS-2;y>=2;y--) c.push([0,y]);
+  return c; // 51, Zelle (0,1) bleibt frei für den Zaun
+}
+const COORDS = buildCoords();
+
+/* ---------- State ---------- */
+let players = [], current = 0, busy = false, gameOver = false;
+let decks = {party:[], city:[], street:[]};
+
+function shuffled(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function drawCard(zone){
+  if(zone===1){
+    if(decks.party.length===0) decks.party = shuffled(PARTY_CARDS);
+    return decks.party.pop();
+  }
+  if(zone===2){
+    if(decks.city.length===0) decks.city = shuffled(STREET_CARDS.concat(FORGOT_CARDS));
+    return decks.city.pop();
+  }
+  if(decks.street.length===0) decks.street = shuffled(STREET_CARDS);
+  return decks.street.pop();
+}
+
+/* ---------- DOM ---------- */
+const $ = s => document.querySelector(s);
+const board = $("#board"), world = $("#world");
+const rollBtn = $("#rollBtn"), log = $("#log");
+const modalWrap = $("#modalWrap"), modal = $("#modal");
+const diceLayer = $("#diceLayer");
+const scooterTag = $("#scooterTag");
+const confetti = $("#confetti");
+
+/* ---------- Setup ---------- */
+const playerList = $("#playerList");
+function addPlayerRow(name=""){
+  if(playerList.children.length>=8) return;
+  const i = playerList.children.length;
+  const row = document.createElement("div");
+  row.className="p-row";
+  row.innerHTML = `<span class="ico">${TOKEN_ICONS[i]}</span>
+    <input placeholder="Spieler ${i+1}" value="${name}" maxlength="12">
+    <button class="rm">✕</button>`;
+  row.querySelector(".rm").onclick = ()=>{ if(playerList.children.length>2) row.remove(); refreshIcons(); };
+  playerList.appendChild(row);
+}
+function refreshIcons(){
+  [...playerList.children].forEach((r,i)=> r.querySelector(".ico").textContent = TOKEN_ICONS[i]);
+}
+$("#addPlayer").onclick = ()=> addPlayerRow();
+addPlayerRow(); addPlayerRow();
+
+$("#startBtn").onclick = ()=>{
+  players = [...playerList.children].map((r,i)=>({
+    name: r.querySelector("input").value.trim() || `Spieler ${i+1}`,
+    icon: TOKEN_ICONS[i],
+    pos:0, skip:0, scooter:false
+  }));
+  if(players.length<2) return;
+  decks.party = shuffled(PARTY_CARDS);
+  decks.city = shuffled(STREET_CARDS.concat(FORGOT_CARDS));
+  decks.street = shuffled(STREET_CARDS);
+  $("#setup").style.display="none";
+  buildBoard();
+  renderTokens();
+  updateHud();
+  focusOn(0);
+  setLog(`${players[0].icon} ${players[0].name} schleicht zuerst – GO drücken!`);
+};
+
+/* ---------- Board ---------- */
+function tilePos(i){
+  const [gx,gy] = COORDS[i];
+  return {x: gx*TILE, y: gy*TILE};
+}
+function buildBoard(){
+  const w = COLS*TILE, h = ROWS*TILE;
+  board.style.width = w+"px"; board.style.height = h+"px";
+  board.style.left = (-w/2)+"px"; board.style.top = (-h/2)+"px";
+
+  // Bezirks-Platten
+  const zoneTiles = {};
+  FIELDS.forEach((f,i)=>{
+    if(f.t===T.GOAL || f.t===T.START) return;
+    (zoneTiles[f.z] = zoneTiles[f.z]||[]).push(tilePos(i));
+  });
+  Object.entries(zoneTiles).forEach(([z,pts])=>{
+    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+    const pad = 24;
+    const el = document.createElement("div");
+    el.className="zone-panel";
+    el.style.setProperty("--zc", ZONE_COLORS[z]);
+    el.style.left = (Math.min(...xs)-pad)+"px";
+    el.style.top = (Math.min(...ys)-pad)+"px";
+    el.style.width = (Math.max(...xs)-Math.min(...xs)+96+2*pad)+"px";
+    el.style.height = (Math.max(...ys)-Math.min(...ys)+96+2*pad)+"px";
+    board.appendChild(el);
+  });
+
+  // Deko im Innenraum (gedimmt, wie bemalter Boden)
+  const deco = [
+    ["🍺",7.2,1.7],["🥨",5.0,1.8],["🏰",9.6,2.6],
+    ["⛪",8.7,5.4],["🏢",9.3,8.2],["🌳",8.6,11.0],["🌲",7.4,12.8],
+    ["🎠",4.2,13.0],["🛝",2.6,12.6],["🚏",2.2,9.6],["🌉",2.5,6.4],
+    ["🍻",2.6,3.6],["🎡",4.6,5.2],["🌙",6.2,8.4],
+  ];
+  deco.forEach(([em,x,y])=>{
+    const el = document.createElement("div");
+    el.className="deco"; el.textContent = em;
+    el.style.left = (x*TILE)+"px"; el.style.top = (y*TILE)+"px";
+    board.appendChild(el);
+  });
+
+  // Kacheln
+  FIELDS.forEach((f,i)=>{
+    const {x,y} = tilePos(i);
+    const el = document.createElement("div");
+    el.className = `tile type-${f.t} zone-${f.z}`;
+    el.id = "tile-"+i;
+    el.style.left = x+"px"; el.style.top = y+"px";
+    el.innerHTML = `<div class="t-emoji">${f.e}</div><div class="t-name">${f.n}</div>`;
+    board.appendChild(el);
+  });
+
+  // Zaun auf der freien Zelle unter dem Start
+  const fence = document.createElement("div");
+  fence.id="fence";
+  fence.style.left = "6px";
+  fence.style.top  = (1*TILE + 36)+"px";
+  fence.style.width = (TILE - 12)+"px";
+  for(let i=0;i<3;i++){ const p=document.createElement("div"); p.className="post"; fence.appendChild(p); }
+  board.appendChild(fence);
+
+  // Bezirks-Namen
+  const zones = [
+    {txt:"Öde Party",         z:1, x:2.4*TILE, y:1.62*TILE},
+    {txt:"Innenstadt",        z:2, x:9.35*TILE, y:3.7*TILE,  rot:-90},
+    {txt:"Englischer Garten", z:3, x:9.35*TILE, y:10.6*TILE, rot:-90},
+    {txt:"Münchner Freiheit", z:4, x:5.6*TILE, y:13.55*TILE},
+    {txt:"Neuhausen",         z:5, x:1.75*TILE, y:12.5*TILE, rot:90},
+    {txt:"Sendling",          z:6, x:1.75*TILE, y:6.2*TILE,  rot:90},
+  ];
+  zones.forEach(z=>{
+    const el = document.createElement("div");
+    el.className="zone-label";
+    el.style.setProperty("--zc", ZONE_COLORS[z.z]);
+    el.textContent = z.txt;
+    el.style.left = z.x+"px"; el.style.top = z.y+"px";
+    if(z.rot) el.style.transform = `rotate(${z.rot}deg)`;
+    board.appendChild(el);
+  });
+}
+
+/* ---------- Tokens ---------- */
+function renderTokens(hopIdx=-1){
+  players.forEach((p,pi)=>{
+    let tk = document.getElementById("tk-"+pi);
+    if(!tk){
+      tk = document.createElement("div");
+      tk.className="token"; tk.id="tk-"+pi;
+      tk.textContent = p.icon;
+      board.appendChild(tk);
+    }
+    const {x,y} = tilePos(p.pos);
+    const off = tokenOffset(pi, p.pos);
+    tk.style.left = (x + 27 + off.x)+"px";
+    tk.style.top  = (y + 18 + off.y)+"px";
+    if(pi===hopIdx){
+      tk.classList.remove("hop");
+      void tk.offsetWidth;
+      tk.classList.add("hop");
+    }
+  });
+}
+function tokenOffset(pi,pos){
+  const same = players.filter((q,qi)=> q.pos===pos && qi<pi).length;
+  return {x:(same%3)*14 - 7, y:Math.floor(same/3)*14 - 4};
+}
+
+/* ---------- Kamera ---------- */
+function focusOn(fieldIndex){
+  const {x,y} = tilePos(fieldIndex);
+  const w = COLS*TILE, h = ROWS*TILE;
+  const cx = (x + TILE/2) - w/2;
+  const cy = (y + TILE/2) - h/2;
+  const squash = Math.cos(54*Math.PI/180);
+  world.style.transform =
+    `translate3d(${-cx*1.35}px, ${(-cy*squash*1.35)+60}px, 0) scale(1.35)`;
+}
+
+/* ---------- HUD / Log ---------- */
+function updateHud(){
+  const p = players[current];
+  $("#hudDot").textContent = p.icon;
+  $("#hudName").textContent = p.name;
+  const f = FIELDS[p.pos];
+  $("#hudSub").textContent = p.scooter ? "E-Scooter 🛴" : (ZONE_NAMES[f.z] || "am Zug");
+  scooterTag.style.display = p.scooter ? "block" : "none";
+  document.querySelectorAll(".tile").forEach(t=>t.classList.remove("active-tile"));
+  const at = document.getElementById("tile-"+p.pos);
+  if(at) at.classList.add("active-tile");
+}
+function setLog(t){ log.textContent = t; }
+
+/* ---------- 3D-Würfel ---------- */
+const PIP_MAP = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function faceHTML(v,cls){
+  let cells="";
+  for(let i=0;i<9;i++) cells += `<div class="pip">${PIP_MAP[v].includes(i)?"<i></i>":""}</div>`;
+  return `<div class="face ${cls}">${cells}</div>`;
+}
+/* Endrotation, damit Wert v vorne liegt (front=1, bottom=2, right=3, left=4, top=5, back=6) */
+const DICE_ROT = {1:[0,0],2:[90,0],3:[0,-90],4:[0,90],5:[-90,0],6:[0,180]};
+function cubeHTML(){
+  return `<div class="cube-wrap"><div class="cube">
+    ${faceHTML(1,"f1")}${faceHTML(2,"f2")}${faceHTML(3,"f3")}
+    ${faceHTML(4,"f4")}${faceHTML(5,"f5")}${faceHTML(6,"f6")}
+  </div></div>`;
+}
+function showDice(vals){
+  return new Promise(res=>{
+    diceLayer.innerHTML = vals.map(cubeHTML).join("");
+    diceLayer.style.display="flex";
+    const cubes = diceLayer.querySelectorAll(".cube");
+    cubes.forEach((c,i)=>{
+      c.style.transform = `rotateX(${-120-Math.random()*160}deg) rotateY(${140+Math.random()*180}deg) rotateZ(35deg)`;
+    });
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      cubes.forEach((c,i)=>{
+        const [rx,ry] = DICE_ROT[vals[i]];
+        const spins = 360*(2+i);
+        c.style.transform = `rotateX(${rx+spins}deg) rotateY(${ry+spins}deg) rotateZ(0deg)`;
+      });
+    }));
+    setTimeout(()=>{ diceLayer.style.display="none"; res(); }, 1750);
+  });
+}
+const rand = n => Math.floor(Math.random()*n)+1;
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+
+/* ---------- Modal ---------- */
+function showModal({emoji, tag, tagCol, title, text, buttons}){
+  return new Promise(res=>{
+    modal.innerHTML = `
+      <div class="m-emoji">${emoji}</div>
+      ${tag?`<div class="m-tag" style="background:${tagCol}">${tag}</div>`:""}
+      <h2>${title}</h2>
+      ${text?`<p>${text}</p>`:""}
+      <div class="m-btns"></div>`;
+    const btnWrap = modal.querySelector(".m-btns");
+    buttons.forEach(b=>{
+      const el = document.createElement("button");
+      el.className = "btn " + (b.cls||"");
+      el.textContent = b.label;
+      el.onclick = ()=>{ modalWrap.style.display="none"; res(b.value); };
+      btnWrap.appendChild(el);
+    });
+    modalWrap.style.display="flex";
+  });
+}
+
+/* ---------- Konfetti ---------- */
+function throwConfetti(){
+  const colors = ["#ff5a3c","#ffcf4d","#3ddc97","#4aa8e8","#e84ce0","#fdf7ea"];
+  confetti.innerHTML = "";
+  for(let i=0;i<80;i++){
+    const p = document.createElement("i");
+    p.style.left = (Math.random()*100)+"vw";
+    p.style.background = colors[i%colors.length];
+    p.style.animationDuration = (2.2+Math.random()*2.4)+"s";
+    p.style.animationDelay = (Math.random()*0.8)+"s";
+    p.style.transform = `rotate(${Math.random()*360}deg)`;
+    confetti.appendChild(p);
+  }
+  confetti.style.display="block";
+}
+
+/* ---------- Bewegung ---------- */
+async function moveSteps(pi, steps){
+  const p = players[pi];
+  const dir = steps>0 ? 1 : -1;
+  let remaining = Math.abs(steps);
+  while(remaining>0){
+    if(dir>0 && p.pos===FIELDS.length-1) break;
+    if(dir<0 && p.pos===0) break;
+    p.pos += dir;
+    remaining--;
+    renderTokens(pi); focusOn(p.pos); updateHud();
+    await wait(400);
+  }
+}
+async function teleport(pi, target){
+  const p = players[pi];
+  p.pos = target;
+  renderTokens(pi); focusOn(p.pos); updateHud();
+  await wait(650);
+}
+
+/* ---------- Feld-Auflösung (nur nach Würfelzug) ---------- */
+async function resolveField(pi){
+  const p = players[pi];
+  const f = FIELDS[p.pos];
+  const meta = TYPE_META[f.t];
+
+  switch(f.t){
+    case T.GOAL: {
+      gameOver = true;
+      throwConfetti();
+      await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:meta.col,
+        title:`${p.name} ist auf der geilen Party!`,
+        text:"Polnischer geglückt – keiner hat es gemerkt! Alle anderen trinken den Abschlussschluck. 🍻",
+        buttons:[{label:"Nochmal spielen", cls:"green", value:1}]});
+      location.reload();
+      return;
+    }
+    case T.EVENT: {
+      const c = drawCard(f.z);
+      await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
+        title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
+      if(c.skip){ p.skip = c.skip; }
+      if(c.goto!==undefined){ await teleport(pi, c.goto); }
+      else if(c.mv){ await moveSteps(pi, c.mv); }
+      break;
+    }
+    case T.FIXED: {
+      await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
+        title:f.n, text:f.d, buttons:[{label:"OK", value:1}]});
+      if(f.skip) p.skip = f.skip;
+      break;
+    }
+    case T.TELEPORT: {
+      await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
+        title:f.n, text:f.d, buttons:[{label:"Einsteigen", value:1}]});
+      await teleport(pi, f.tp);
+      break;
+    }
+    case T.SCOOTER: {
+      const choice = await showModal({emoji:"🛴", tag:meta.tag, tagCol:TYPE_META.scooter.col,
+        title:"E-Scooter gefunden!",
+        text:"Nimmst du ihn? Nächster Zug mit <b>2 Würfeln</b> – aber: 10% Polizei (zurück zum Start), 25% Unfall (1 Runde aussetzen).",
+        buttons:[{label:"Aufsteigen! 🛴", cls:"green", value:true},{label:"Lieber laufen", cls:"gray", value:false}]});
+      if(choice){ p.scooter = true; setLog(`${p.icon} ${p.name} fährt nächsten Zug E-Scooter!`); }
+      break;
+    }
+  }
+  updateHud();
+}
+
+/* ---------- Zug ---------- */
+rollBtn.onclick = async ()=>{
+  if(busy || gameOver) return;
+  busy = true; rollBtn.disabled = true;
+
+  const p = players[current];
+  focusOn(p.pos);
+
+  const isScooter = p.scooter;
+  p.scooter = false;
+  const vals = isScooter ? [rand(6), rand(6)] : [rand(6)];
+  const sum = vals.reduce((a,b)=>a+b,0);
+  setLog(isScooter ? `${p.icon} ${p.name} würfelt mit 2 Würfeln…` : `${p.icon} ${p.name} würfelt…`);
+  await showDice(vals);
+
+  if(isScooter){
+    const r = Math.random();
+    if(r < 0.10){
+      await showModal({emoji:"🚔", tag:"BUSTED", tagCol:"linear-gradient(140deg,#f0564a,#a8241a)", title:"Polizei!",
+        text:`Ohne Licht durch die Stadt… ${p.name} wird kassiert und zurück zur öden Party gebracht. Trink 2 zum Trost.`,
+        buttons:[{label:"Mist!", value:1}]});
+      await teleport(current, 0);
+      endTurn(); return;
+    } else if(r < 0.35){
+      await showModal({emoji:"🤕", tag:"UNFALL", tagCol:"linear-gradient(140deg,#f09044,#c9641a)", title:"Bordsteinkante!",
+        text:`${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trink 1 zum Trost.`,
+        buttons:[{label:"Autsch", value:1}]});
+      p.skip = 1;
+      endTurn(); return;
+    } else {
+      setLog(`🛴 Freie Fahrt! ${p.name} zieht ${sum} Felder.`);
+      await wait(600);
+    }
+  }
+
+  await moveSteps(current, sum);
+  await resolveField(current);
+  if(!gameOver) endTurn();
+};
+
+/* Aussetzer werden reihum verbraucht – kein Deadlock. */
+function endTurn(){
+  let next = current;
+  while(true){
+    next = (next+1) % players.length;
+    const q = players[next];
+    if(q.skip>0){
+      q.skip--;
+      setLog(`${q.icon} ${q.name} setzt aus …`);
+      continue;
+    }
+    break;
+  }
+  current = next;
+  const p = players[current];
+  updateHud();
+  focusOn(p.pos);
+  setLog(`${p.icon} ${p.name} ist dran – GO drücken!`);
+  busy = false; rollBtn.disabled = false;
+}
+</script>
+</body>
+</html>
