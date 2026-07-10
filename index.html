@@ -115,8 +115,7 @@
     box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 26px #ffd76e55;
   }
   .tile.type-goal{
-    --tf1:#ffd9fb;--tf2:#f7aef0;--td:#aí;
-    --td:#a83f9e;
+    --tf1:#ffd9fb;--tf2:#f7aef0;--td:#a83f9e;
     animation:partyPulse 1.6s ease-in-out infinite;
   }
   @keyframes partyPulse{
@@ -749,16 +748,91 @@ function tokenOffset(pi,pos){
   return {x:(same%3)*14 - 7, y:Math.floor(same/3)*14 - 4};
 }
 
-/* ---------- Kamera ---------- */
+/* ---------- Kamera (mit Zoom & Pan) ---------- */
+let zoom = 1.35;
+const ZOOM_MIN = 0.55, ZOOM_MAX = 2.6;
+let lastFocus = 0;
+let panX = 0, panY = 0;
 function focusOn(fieldIndex){
-  const {x,y} = tilePos(fieldIndex);
+  lastFocus = fieldIndex;
+  panX = 0; panY = 0;          // Fokuswechsel zentriert wieder aufs Feld
+  applyCamera();
+}
+function applyCamera(){
+  const {x,y} = tilePos(lastFocus);
   const w = COLS*TILE, h = ROWS*TILE;
   const cx = (x + TILE/2) - w/2;
   const cy = (y + TILE/2) - h/2;
   const squash = Math.cos(54*Math.PI/180);
   world.style.transform =
-    `translate3d(${-cx*1.35}px, ${(-cy*squash*1.35)+60}px, 0) scale(1.35)`;
+    `translate3d(${-cx*zoom + panX}px, ${(-cy*squash*zoom)+60 + panY}px, 0) scale(${zoom})`;
 }
+function instantCamera(){
+  world.style.transition = "none";
+  applyCamera();
+  requestAnimationFrame(()=>{ world.style.transition = ""; });
+}
+function setZoom(z, instant=false){
+  zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
+  instant ? instantCamera() : applyCamera();
+}
+
+/* Mausrad-Zoom (Desktop) */
+const vp = document.getElementById("viewport");
+vp.addEventListener("wheel", e=>{
+  e.preventDefault();
+  setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9));
+}, {passive:false});
+
+/* Touch: 1 Finger = Sicht verschieben, 2 Finger = Pinch-Zoom */
+let pinchDist = 0, pinchStartZoom = 1;
+let dragX = 0, dragY = 0, dragPanX = 0, dragPanY = 0, dragging = false;
+vp.addEventListener("touchstart", e=>{
+  if(e.touches.length===2){
+    dragging = false;
+    pinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+    pinchStartZoom = zoom;
+  } else if(e.touches.length===1){
+    dragging = true;
+    dragX = e.touches[0].clientX; dragY = e.touches[0].clientY;
+    dragPanX = panX; dragPanY = panY;
+  }
+}, {passive:true});
+vp.addEventListener("touchmove", e=>{
+  if(e.touches.length===2 && pinchDist>0){
+    e.preventDefault();
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+    setZoom(pinchStartZoom * (d / pinchDist), true);
+  } else if(e.touches.length===1 && dragging){
+    e.preventDefault();
+    panX = dragPanX + (e.touches[0].clientX - dragX);
+    panY = dragPanY + (e.touches[0].clientY - dragY);
+    instantCamera();
+  }
+}, {passive:false});
+vp.addEventListener("touchend", e=>{
+  if(e.touches.length<2) pinchDist = 0;
+  if(e.touches.length===0) dragging = false;
+}, {passive:true});
+
+/* Maus-Drag (Desktop) */
+let mouseDown = false;
+vp.addEventListener("mousedown", e=>{
+  mouseDown = true;
+  dragX = e.clientX; dragY = e.clientY;
+  dragPanX = panX; dragPanY = panY;
+});
+window.addEventListener("mousemove", e=>{
+  if(!mouseDown) return;
+  panX = dragPanX + (e.clientX - dragX);
+  panY = dragPanY + (e.clientY - dragY);
+  instantCamera();
+});
+window.addEventListener("mouseup", ()=>{ mouseDown = false; });
 
 /* ---------- HUD / Log ---------- */
 function updateHud(){
@@ -981,3 +1055,4 @@ function endTurn(){
 </script>
 </body>
 </html>
+
