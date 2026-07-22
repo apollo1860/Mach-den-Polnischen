@@ -24,7 +24,6 @@
   /* ===================== NACHT-WELT ===================== */
   #viewport{
     position:fixed;inset:0;
-    perspective:1150px; perspective-origin:50% 28%;
     overflow:hidden;
     background:
       radial-gradient(140vmax 90vmax at 78% -18%, #4a5896 0%, transparent 52%),
@@ -52,13 +51,10 @@
   #world{
     position:absolute;left:50%;top:50%;
     width:0;height:0;
-    transform-style:preserve-3d;
-    transition:transform .95s cubic-bezier(.3,.75,.25,1);
+    transition:transform .55s cubic-bezier(.25,.7,.3,1);
   }
   #board{
     position:absolute;
-    transform:rotateX(54deg);
-    transform-style:preserve-3d;
   }
 
   /* ---------- Zonen-Bezirke ---------- */
@@ -118,11 +114,14 @@
     0%,100%{ box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 14px #ffd54a55; }
     50%    { box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 32px #ffd54acc; }
   }
-  .tile.type-minigame .t-emoji{
-    width:68px;height:68px;font-size:50px;
-    background:radial-gradient(circle at 35% 28%, #fff9 0%, #fff3 55%, transparent 100%);
+  .tile.type-darts{
+    --tf1:#f2c9cb;--tf2:#dd8f92;--td:#8f3538;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #c0272d55;
   }
-  .tile.type-minigame .t-name{display:none;}
+  .tile.type-namen{
+    --tf1:#c9e6f2;--tf2:#8fc0dd;--td:#356b8f;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #4aa8e855;
+  }
   .tile.type-start{
     --tf1:#fff3cf;--tf2:#ffdf8e;--td:#c29a2e;
     box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 26px #ffd76e55;
@@ -140,23 +139,12 @@
       0 0 0 4px var(--gold), 0 0 30px #ffcf4dbb;
   }
 
-  /* ---------- Zaun ---------- */
+  /* ---------- Zaun (Absperrband, von oben) ---------- */
   #fence{
-    position:absolute;display:flex;align-items:flex-end;justify-content:space-around;
-    transform-style:preserve-3d;
+    position:absolute;height:26px;border-radius:6px;
+    background:repeating-linear-gradient(45deg, #ffcf4d 0 12px, #2b2116 12px 24px);
+    box-shadow:0 4px 10px #0007, inset 0 0 0 2px #00000040;
   }
-  #fence .post{
-    width:11px;height:48px;border-radius:4px 4px 0 0;
-    background:linear-gradient(90deg,#6d5238 0%, #4a3521 100%);
-    transform:rotateX(-54deg);transform-origin:bottom center;
-    box-shadow:3px 3px 4px #0008;position:relative;
-  }
-  #fence .post::before,#fence .post::after{
-    content:"";position:absolute;left:-30px;right:-30px;height:8px;border-radius:3px;
-    background:linear-gradient(180deg,#7a5d3f,#553d26);
-  }
-  #fence .post::before{top:9px;}
-  #fence .post::after{top:27px;}
 
   /* ---------- Spielfiguren ---------- */
   .token{
@@ -604,6 +592,143 @@
   #puzzleOverlay.caught .puzzle-card{animation:sneakShake .4s;box-shadow:0 24px 60px #000c, 0 0 0 3px #ff5a3c99;}
   #puzzleOverlay.won .puzzle-card{box-shadow:0 24px 60px #000c, 0 0 0 3px #3ddc9799;}
 
+  /* ---------- Minispiel „Boazn-Darts" ---------- */
+  #dartsOverlay{
+    position:fixed;inset:0;z-index:49;display:none;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(10,14,30,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .darts-card{
+    position:relative;width:min(360px,94vw);max-height:94vh;overflow-y:auto;
+    background:linear-gradient(178deg,#241014 0%,#140a0c 100%);
+    border-radius:26px;padding:18px 16px 20px;text-align:center;
+    color:#fdf7ea;border:1.5px solid #ffffff18;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    animation:popIn .38s cubic-bezier(.2,1.45,.4,1);
+  }
+  .darts-title{font-size:19px;font-weight:900;letter-spacing:-.2px;}
+  .darts-scorebar{display:flex;gap:8px;margin-top:12px;}
+  .darts-score-card{
+    flex:1;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 6px;
+    box-shadow:inset 0 0 0 1.5px #ffffff18;
+  }
+  .darts-score-card .who{font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#e0b0b3;}
+  .darts-score-card.you .who{color:var(--gold);}
+  .darts-score-card .total{font-size:23px;font-weight:900;margin-top:2px;}
+  .darts-score-card .rounds{font-size:10px;color:#c79a9c;margin-top:2px;min-height:13px;}
+  .darts-sub{font-size:13px;font-weight:800;margin-top:10px;min-height:18px;}
+  .darts-timer{
+    margin-top:8px;height:8px;border-radius:999px;background:#00000055;
+    overflow:hidden;box-shadow:inset 0 2px 4px #0008;
+  }
+  .darts-timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#3ddc97,#1d9e66);transition:width .1s linear;}
+  .darts-timer-fill.critical{background:linear-gradient(90deg,#ff6a54,#c22f14);}
+  .darts-timer-label{margin-top:3px;font-size:10.5px;font-weight:800;color:#c79a9c;}
+  .darts-board-wrap{
+    position:relative;width:min(64vw,260px);height:min(64vw,260px);
+    margin:12px auto 0;
+  }
+  .darts-board-wrap canvas{width:100%;height:100%;display:block;border-radius:50%;
+    box-shadow:0 12px 30px #000a, 0 0 0 6px #241a10, 0 0 0 9px #4a3520;}
+  .darts-aimline{position:absolute;pointer-events:none;background:var(--gold);box-shadow:0 0 10px 2px #ffcf4dcc;}
+  .darts-aimline.h{width:2.5px;top:0;bottom:0;}
+  .darts-aimline.v{height:2.5px;left:0;right:0;}
+  .darts-dartmark{
+    position:absolute;width:9px;height:9px;margin:-4.5px;border-radius:50%;
+    background:#fff;box-shadow:0 0 0 2px #1a1410, 0 2px 4px #000a;pointer-events:none;
+  }
+  .darts-dartmark .pts{
+    position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+    font-size:10px;font-weight:900;color:var(--gold);white-space:nowrap;text-shadow:0 1px 3px #000;
+  }
+  .darts-left{font-size:11px;font-weight:700;color:#c79a9c;margin-top:8px;min-height:14px;}
+  .darts-throw{
+    pointer-events:auto;position:relative;overflow:hidden;
+    width:100%;border:none;border-radius:16px;cursor:pointer;touch-action:none;
+    font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.3px;
+    color:#fff;padding:14px;margin-top:10px;
+    background:linear-gradient(160deg,var(--coral-hi),var(--coral) 55%,var(--coral-dk));
+    box-shadow:0 6px 0 #8f1f09, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .darts-throw:active{transform:translateY(4px);box-shadow:0 2px 0 #8f1f09, 0 4px 10px #0006;}
+  .darts-throw:disabled{opacity:.4;cursor:default;}
+
+  /* ---------- Minispiel „Namen merken" ---------- */
+  #namenOverlay{
+    position:fixed;inset:0;z-index:49;display:none;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(10,14,30,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .namen-card{
+    position:relative;width:min(380px,94vw);max-height:94vh;overflow-y:auto;
+    background:linear-gradient(178deg,#12202c 0%,#0a141c 100%);
+    border-radius:26px;padding:18px 16px 18px;text-align:center;
+    color:#fdf7ea;border:1.5px solid #ffffff18;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    animation:popIn .38s cubic-bezier(.2,1.45,.4,1);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .namen-title{font-size:18px;font-weight:900;letter-spacing:-.2px;}
+  .namen-status{
+    font-size:12.5px;font-weight:800;text-align:center;min-height:30px;
+    display:flex;align-items:center;justify-content:center;padding:0 4px;
+  }
+  .namen-errors{font-size:10.5px;font-weight:700;color:#ff9a90;min-height:13px;}
+  .namen-grid{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:7px;
+  }
+  .namen-pcard{
+    position:relative;border-radius:14px;background:rgba(255,255,255,.07);
+    box-shadow:inset 0 0 0 1.5px #ffffff18;
+    display:flex;align-items:center;justify-content:center;
+    aspect-ratio:1;transition:box-shadow .2s, background .2s;
+  }
+  .namen-pcard .namen-emoji{font-size:clamp(18px,6vw,26px);transition:transform .25s;}
+  .namen-pcard.active{box-shadow:inset 0 0 0 2.5px var(--gold), 0 0 14px #ffcf4d88;}
+  .namen-pcard.happy{background:rgba(61,220,151,.22);}
+  .namen-pcard.happy .namen-emoji{animation:namenHappy .5s ease;}
+  .namen-pcard.angry{background:rgba(255,90,60,.22);}
+  .namen-pcard.angry .namen-emoji{animation:namenAngry .4s ease;}
+  @keyframes namenHappy{0%,100%{transform:scale(1);}40%{transform:scale(1.35) rotate(-6deg);}70%{transform:scale(1.1) rotate(4deg);}}
+  @keyframes namenAngry{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px) rotate(-8deg);}75%{transform:translateX(6px) rotate(8deg);}}
+  .namen-bubble{
+    position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+    background:#fffdf6;color:#332a1d;border-radius:12px;
+    padding:6px 9px;font-size:9.5px;font-weight:700;line-height:1.3;
+    width:max-content;max-width:104px;text-align:center;word-break:break-word;
+    box-shadow:0 8px 18px #0008;z-index:10;
+    animation:namenBubbleIn .25s cubic-bezier(.3,1.4,.4,1);
+  }
+  .namen-bubble::after{
+    content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:5px solid transparent;border-top-color:#fffdf6;
+  }
+  .namen-bubble.edge-left{left:0;transform:translateX(0);}
+  .namen-bubble.edge-left::after{left:16px;transform:translateX(-50%);}
+  .namen-bubble.edge-right{left:auto;right:0;transform:translateX(0);}
+  .namen-bubble.edge-right::after{left:auto;right:16px;transform:translateX(50%);}
+  @keyframes namenBubbleIn{0%{opacity:0;transform:translateY(6px) scale(.7);}100%{opacity:1;transform:translateY(0) scale(1);}}
+  .namen-bubble.ask{background:var(--gold);}
+  .namen-bubble.ask::after{border-top-color:var(--gold);}
+  .namen-bubble.reveal{background:#ffe3df;}
+  .namen-bubble.reveal::after{border-top-color:#ffe3df;}
+  .namen-answerbar{display:none;gap:8px;}
+  .namen-input{
+    flex:1;border:none;border-radius:14px;padding:12px 14px;min-height:44px;
+    font-family:inherit;font-size:16px;font-weight:700;
+    background:#fffdf6;color:#332a1d;
+  }
+  .namen-answerbtn{
+    border:none;border-radius:14px;padding:0 18px;min-height:44px;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:14px;color:#fff;
+    background:linear-gradient(160deg,var(--coral-hi),var(--coral) 55%,var(--coral-dk));
+    box-shadow:0 5px 0 #8f1f09;
+  }
+  .namen-answerbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f1f09;}
+
   /* ---------- Aussetzer-Anzeige ---------- */
   #skipOverlay{
     position:fixed;inset:0;z-index:55;display:none;
@@ -795,6 +920,45 @@
   </div>
 </div>
 
+<div id="dartsOverlay">
+  <div class="darts-card">
+    <div class="darts-title">🎯 Boazn-Darts</div>
+    <div class="darts-scorebar">
+      <div class="darts-score-card">
+        <div class="who">🧔 Fremder</div>
+        <div class="total" id="dartsBotTotal">0</div>
+        <div class="rounds" id="dartsBotRounds">–</div>
+      </div>
+      <div class="darts-score-card you">
+        <div class="who" id="dartsYouLabel">🥷 Du</div>
+        <div class="total" id="dartsYouTotal">0</div>
+        <div class="rounds" id="dartsYouRounds">–</div>
+      </div>
+    </div>
+    <div class="darts-sub" id="dartsStatus">Der Fremde tritt an…</div>
+    <div class="darts-timer"><div class="darts-timer-fill" id="dartsTimerFill"></div></div>
+    <div class="darts-timer-label" id="dartsTimerLabel">30s</div>
+    <div class="darts-board-wrap" id="dartsBoardWrap">
+      <canvas id="dartsCanvas" width="300" height="300"></canvas>
+    </div>
+    <div class="darts-left" id="dartsLeftLabel"></div>
+    <button id="dartsThrowBtn" class="darts-throw">WERFEN</button>
+  </div>
+</div>
+
+<div id="namenOverlay">
+  <div class="namen-card">
+    <div class="namen-title">🧑‍🤝‍🧑 Namen merken</div>
+    <div class="namen-errors" id="namenErrorCounter"></div>
+    <div class="namen-status" id="namenStatus">Du lernst gleich eine neue Gruppe kennen…</div>
+    <div class="namen-grid" id="namenGrid"></div>
+    <div class="namen-answerbar" id="namenAnswerBar">
+      <input class="namen-input" id="namenAnswerInput" type="text" placeholder="Name eingeben…" autocomplete="off">
+      <button class="namen-answerbtn" id="namenAnswerBtn">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =====================================================
    DER POLNISCHE – v0.4 „Nacht-München"
@@ -803,22 +967,20 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen" };
 
 const FIELDS = [
   {n:"Balkon",              e:"🚬", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
   {n:"Küche",               e:"🍳", t:T.EVENT,   z:1},
   {n:"Schlafzimmer",        e:"🛏️", t:T.EVENT,   z:1},
   {n:"Wohnzimmer",          e:"🛋️", t:T.EVENT,   z:1},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:1},
   {n:"Garderobe",           e:"🧥", t:T.EVENT,   z:1},
   {n:"Flur",                e:"🚪", t:T.EVENT,   z:1, key:"flur"},
   {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:"sendlinger-tor", key:"hauptbahnhof", d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
   {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
   {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:2},
-  {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"muenchner-freiheit", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Münchner Freiheit."},
+  {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"universitaet", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Universität."},
   {n:"Rathaus",             e:"🏛️", t:T.EVENT,   z:2},
   {n:"Marienplatz",         e:"⭐", t:T.EVENT,   z:2},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:2},
@@ -826,14 +988,12 @@ const FIELDS = [
   {n:"Alter Peter",         e:"⛪", t:T.EVENT,   z:2},
   {n:"Hofbräuhaus",         e:"🍺", t:T.EVENT,   z:2},
   {n:"ATM",                 e:"🏧", t:T.FIXED,   z:2, d:"Der Geldautomat zieht deine Karte ein – sperre schnell deine Karte und setze eine Runde aus.", skip:1},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:2},
   {n:"Englischer Garten",   e:"🌳", t:T.EVENT,   z:3},
   {n:"Monopterus",          e:"🏛️", t:T.EVENT,   z:3},
   {n:"Universität",         e:"🎓", t:T.TELEPORT,z:3, tp:"muenchner-freiheit", key:"universitaet", d:"Die U-Bahn an der Uni steht schon da! Sie bringt dich zur Münchner Freiheit."},
-  {n:"Mono-Wiese",          e:"🌼", t:T.EVENT,   z:3},
+  {n:"Mono-Wiese",          e:"🧑‍🤝‍🧑", t:T.NAMEN,   z:3, d:"Du lernst eine neue Gruppe kennen und musst dir die Namen merken."},
   {n:"Parkbank",            e:"🪑", t:T.FIXED,   z:3, d:"Kurze Verschnaufpause auf der Parkbank – setze eine Runde aus.", skip:1},
   {n:"P1",                  e:"🪩", t:T.FIXED,   z:3, d:"Ein Kumpel holt dich für einen Drink in den Club – trinke 3 Schlücke."},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:3},
   {n:"Siegestor",           e:"🏆", t:T.EVENT,   z:3},
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
   {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
@@ -841,27 +1001,23 @@ const FIELDS = [
   {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
   {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
   {n:"Spielplatz",          e:"🛝", t:T.EVENT,   z:4},
-  {n:"Hopfendolde",         e:"🌿", t:T.FIXED,   z:4, d:"Du lädst Fremde auf ein Getränk ein – verteile 3 Schlücke."},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:4},
+  {n:"Hopfendolde",         e:"🌿", t:T.MINIGAME, z:4, games:["zeche-prellen"], d:"Ein Fremder fordert dich zu einem Minispiel heraus."},
   {n:"Taxistand",           e:"🚕", t:T.TAXI,    z:4},
   {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
   {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:5},
   {n:"Tanke",               e:"⛽", t:T.FIXED,   z:5, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:5},
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
   {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5},
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:5},
   {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
-  {n:"Boazn",               e:"🍻", t:T.FIXED,   z:6, d:"Du lädst Fremde auf ein Getränk ein – verteile 3 Schlücke."},
-  {n:"Theresienwiese",      e:"🎡", t:T.EVENT,   z:6},
+  {n:"Boazn",               e:"🎯", t:T.DARTS,   z:6, d:"Ein Fremder fordert dich zu einer Partie Darts heraus – 3 Aufnahmen à 3 Darts, wer mehr Punkte wirft gewinnt."},
+  {n:"Theresienwiese",      e:"🎡", t:T.MINIGAME, z:6, games:["flaschenpuzzle"], d:"Ein Fremder fordert dich zu einem Minispiel heraus."},
   {n:"Schwanthaler Höhe",   e:"🏘️", t:T.EVENT,   z:6},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:6},
   {n:"Stadtviertelfest",    e:"🎪", t:T.FIXED,   z:6, d:"Du wirst auf ein Getränk eingeladen – trinke 2 Schlücke."},
-  {n:"",                     e:"⭐", t:T.MINIGAME,z:6},
   {n:"Herzog-Ernst-Platz",  e:"🌲", t:T.EVENT,   z:6},
   {n:"Sendlinger Kirche",   e:"⛪", t:T.EVENT,   z:6},
   {n:"Geile Party",         e:"🎉", t:T.GOAL,    z:6, d:"Angekommen – und keiner hat es gemerkt!"}
@@ -933,6 +1089,8 @@ const TYPE_META = {
   goal:    {tag:"ZIEL",          col:"linear-gradient(140deg,#f06ae0,#ab2f9e)"},
   taxi:    {tag:"TAXISTAND",     col:"linear-gradient(140deg,#f0c94a,#c9971a)"},
   minigame:{tag:"MINISPIEL",     col:"linear-gradient(140deg,#f472b6,#a8266b)"},
+  darts:   {tag:"BOAZN-DARTS",   col:"linear-gradient(140deg,#c0272d,#7a1418)"},
+  namen:   {tag:"NAMEN MERKEN",  col:"linear-gradient(140deg,#5ec9e8,#2472ad)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
 const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
@@ -940,7 +1098,7 @@ const TOKEN_ICONS = ["🔴","🔵","🟢","🟡","🟣","🟠","⚫","⚪"];
 const PLAYER_COLORS = ["#ff5a3c","#4aa8e8","#3ddc97","#ffcf4d","#b57fd0","#ff9a3c","#9a9a9a","#f0ede4"];
 
 /* ---------- Ring-Geometrie im Uhrzeigersinn ---------- */
-const TILE = 100, COLS = 14, ROWS = 18;
+const TILE = 100, COLS = 12, ROWS = 16;
 function buildCoords(){
   const c=[];
   for(let x=0;x<=COLS-1;x++) c.push([x,0]);
@@ -953,6 +1111,7 @@ const COORDS = buildCoords();
 
 /* ---------- State ---------- */
 let players = [], current = 0, busy = false, gameOver = false;
+let activeTileEl = null;
 let decks = {party:[], city:[], street:[]};
 
 function shuffled(arr){
@@ -1022,7 +1181,7 @@ $("#startBtn").onclick = ()=>{
   renderTokens();
   renderSipsHud();
   updateHud();
-  focusOn(0);
+  focusOn(0, true);
   setLog(`${players[0].icon} ${players[0].name} schleicht zuerst – GO drücken!`);
 };
 
@@ -1066,10 +1225,10 @@ function buildBoard(){
 
   // Deko im Innenraum (gedimmt, wie bemalter Boden)
   const deco = [
-    ["🍺",8.40,1.91],["🥨",5.83,2.03],["🏰",11.20,2.93],
-    ["⛪",10.15,6.08],["🏢",10.85,9.23],["🌳",10.03,12.38],["🌲",8.63,14.40],
-    ["🎠",4.90,14.63],["🛝",3.03,14.18],["🚏",2.57,10.80],["🌉",2.92,7.20],
-    ["🍻",3.03,4.05],["🎡",5.37,5.85],["🌙",7.23,9.45],
+    ["🍺",7.2,1.7],["🥨",5.0,1.8],["🏰",9.6,2.6],
+    ["⛪",8.7,5.4],["🏢",9.3,8.2],["🌳",8.6,11.0],["🌲",7.4,12.8],
+    ["🎠",4.2,13.0],["🛝",2.6,12.6],["🚏",2.2,9.6],["🌉",2.5,6.4],
+    ["🍻",2.6,3.6],["🎡",4.6,5.2],["🌙",6.2,8.4],
   ];
   deco.forEach(([em,x,y])=>{
     const el = document.createElement("div");
@@ -1089,23 +1248,22 @@ function buildBoard(){
     board.appendChild(el);
   });
 
-  // Zaun auf der freien Zelle unter dem Start
+  // Zaun (Absperrband) auf der freien Zelle unter dem Start
   const fence = document.createElement("div");
   fence.id="fence";
   fence.style.left = "6px";
   fence.style.top  = (1*TILE + 36)+"px";
   fence.style.width = (TILE - 12)+"px";
-  for(let i=0;i<3;i++){ const p=document.createElement("div"); p.className="post"; fence.appendChild(p); }
   board.appendChild(fence);
 
   // Bezirks-Namen
   const zones = [
-    {txt:"Öde Party",         z:1, x:2.80*TILE, y:1.82*TILE},
-    {txt:"Innenstadt",        z:2, x:10.91*TILE, y:4.16*TILE,  rot:-90},
-    {txt:"Englischer Garten", z:3, x:10.91*TILE, y:11.93*TILE, rot:-90},
-    {txt:"Münchner Freiheit", z:4, x:6.53*TILE, y:15.24*TILE},
-    {txt:"Neuhausen",         z:5, x:2.04*TILE, y:14.06*TILE, rot:90},
-    {txt:"Sendling",          z:6, x:2.04*TILE, y:6.98*TILE,  rot:90},
+    {txt:"Öde Party",         z:1, x:2.4*TILE, y:1.62*TILE},
+    {txt:"Innenstadt",        z:2, x:9.35*TILE, y:3.7*TILE,  rot:-90},
+    {txt:"Englischer Garten", z:3, x:9.35*TILE, y:10.6*TILE, rot:-90},
+    {txt:"Münchner Freiheit", z:4, x:5.6*TILE, y:13.55*TILE},
+    {txt:"Neuhausen",         z:5, x:1.75*TILE, y:12.5*TILE, rot:90},
+    {txt:"Sendling",          z:6, x:1.75*TILE, y:6.2*TILE,  rot:90},
   ];
   zones.forEach(z=>{
     const el = document.createElement("div");
@@ -1144,29 +1302,44 @@ function tokenOffset(pi,pos){
   return {x:(same%3)*14 - 7, y:Math.floor(same/3)*14 - 4};
 }
 
-/* ---------- Kamera (Vogelperspektive, zeigt dauerhaft das ganze Brett) ---------- */
+/* ---------- Kamera (Vogelperspektive, zeigt immer ein Viertel des Bretts) ---------- */
 let zoom = 1.35;
-const ZOOM_MIN = 0.25, ZOOM_MAX = 2.6;
+const ZOOM_MIN = 0.4, ZOOM_MAX = 3.2;
 let lastFocus = 0;
 let panX = 0, panY = 0;
+let lastQuadrantKey = null;
+function quadrantForTile(fieldIndex){
+  const [gx,gy] = COORDS[fieldIndex];
+  return { qx: gx < COLS/2 ? 0 : 1, qy: gy < ROWS/2 ? 0 : 1 };
+}
 function fitBoardToViewport(){
-  const squash = Math.cos(54*Math.PI/180);
-  const w = COLS*TILE, h = ROWS*TILE*squash;
+  // Zeigt nur ein Viertel (halbe Breite/Höhe) des Bretts, damit die Felder lesbar bleiben.
+  const w = (COLS/2)*TILE, h = (ROWS/2)*TILE;
   const availW = window.innerWidth * 0.94;
   const availH = window.innerHeight * 0.58; // Platz für HUD oben & Steuerung unten lassen
   zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(availW/w, availH/h)));
 }
-function focusOn(fieldIndex){
-  lastFocus = fieldIndex; // wird nur noch für aktives Tile-Highlight verwendet, nicht mehr für die Kamera
+function focusOn(fieldIndex, force=false){
+  lastFocus = fieldIndex;
+  const {qx, qy} = quadrantForTile(fieldIndex);
+  const key = qx+"-"+qy;
+  // Kamera nur bewegen, wenn sich das Viertel wirklich ändert – sonst bleibt sie
+  // während einer Zug-Animation ruhig stehen, statt bei jedem Schritt zu "ruckeln".
+  if(!force && key===lastQuadrantKey) return;
+  lastQuadrantKey = key;
   panX = 0; panY = 0;
   fitBoardToViewport();
   applyCamera();
 }
 function applyCamera(){
-  // Das Board ist bereits über sein eigenes -w/2/-h/2 auf den Ursprung von #world zentriert,
-  // daher zeigt eine Kamera ohne Feld-Offset dauerhaft das komplette Brett.
+  const boardW = COLS*TILE, boardH = ROWS*TILE;
+  const quadW = boardW/2, quadH = boardH/2;
+  const {qx, qy} = quadrantForTile(lastFocus);
+  // Mittelpunkt des aktuellen Viertels, relativ zur Brettmitte (wo #world verankert ist)
+  const offsetX = (qx*quadW + quadW/2) - boardW/2;
+  const offsetY = (qy*quadH + quadH/2) - boardH/2;
   world.style.transform =
-    `translate3d(${panX}px, ${60 + panY}px, 0) scale(${zoom})`;
+    `translate3d(${-offsetX*zoom + panX}px, ${-offsetY*zoom + 40 + panY}px, 0) scale(${zoom})`;
 }
 function instantCamera(){
   world.style.transition = "none";
@@ -1244,9 +1417,9 @@ function updateHud(){
   const f = FIELDS[p.pos];
   $("#hudSub").textContent = p.scooter ? "E-Scooter 🛴" : (ZONE_NAMES[f.z] || "am Zug");
   scooterTag.style.display = p.scooter ? "block" : "none";
-  document.querySelectorAll(".tile").forEach(t=>t.classList.remove("active-tile"));
   const at = document.getElementById("tile-"+p.pos);
-  if(at) at.classList.add("active-tile");
+  if(activeTileEl && activeTileEl!==at) activeTileEl.classList.remove("active-tile");
+  if(at){ at.classList.add("active-tile"); activeTileEl = at; }
   updateSipsUI();
 }
 function setLog(t){ log.textContent = t; }
@@ -1695,9 +1868,408 @@ function playBottlePuzzleGame(p, val){
   });
 }
 
-/* ---------- Minispiel-Register ----------
-   Zentrale Liste aller Minispiele. Die Slot-Machine lost eines zufällig aus –
-   aktuell „Zeche prellen“ und „Flaschenpuzzle“, weitere lassen sich hier einfach ergänzen. */
+/* ---------- Minispiel „Boazn-Darts" (eigenes Feld, nicht Teil der Minispiel-Auslosung) ----------
+   Gegen einen Fremden: 3 Aufnahmen à 3 Darts pro Seite, wer mehr Punkte wirft gewinnt.
+   Der Fremde: pro Aufnahme wird nur ein zufälliger Score gezogen und angezeigt.
+   Du: pro Dart 2-Phasen-Zielen (erst horizontal, dann vertikal), beide Visiere
+   wackeln und wechseln laufend ihr Sweep-Tempo, damit der Wurf nicht zu präzise wird.
+   Zeitlimit: 30 Sekunden für alle 3 Darts einer Aufnahme zusammen. */
+const DARTS_BOT_SCORES = [26,40,41,45,55,57,58,59,60,81,85,100,140,180];
+const DARTS_SECTORS = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+let dartsBoardDrawn = false;
+function drawDartsBoard(){
+  const canvas = $("#dartsCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = W/2 - 4;
+  ctx.clearRect(0,0,W,H);
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2); ctx.fillStyle="#0c0f08"; ctx.fill();
+  const bands = [
+    {r0:0.629, r1:0.953, kind:"single"},
+    {r0:0.093, r1:0.582, kind:"single"},
+    {r0:0.582, r1:0.629, kind:"triple"},
+    {r0:0.953, r1:1.0,   kind:"double"},
+  ];
+  for(let i=0;i<20;i++){
+    const a0 = (i*18-9-90) * Math.PI/180;
+    const a1 = (i*18+9-90) * Math.PI/180;
+    const even = i%2===0;
+    bands.forEach(b=>{
+      const color = b.kind==="single" ? (even?"#e9dcb8":"#171310") : (even?"#c0272d":"#0f7a41");
+      ctx.beginPath();
+      ctx.arc(CX,CY,R*b.r1,a0,a1);
+      ctx.arc(CX,CY,R*b.r0,a1,a0,true);
+      ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+    });
+    ctx.beginPath();
+    ctx.moveTo(CX+Math.cos(a0)*R*0.093, CY+Math.sin(a0)*R*0.093);
+    ctx.lineTo(CX+Math.cos(a0)*R, CY+Math.sin(a0)*R);
+    ctx.strokeStyle="#000a"; ctx.lineWidth=1.2; ctx.stroke();
+  }
+  ctx.beginPath(); ctx.arc(CX,CY,R*0.093,0,Math.PI*2); ctx.fillStyle="#0f7a41"; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,R*0.037,0,Math.PI*2); ctx.fillStyle="#c0272d"; ctx.fill();
+  ctx.beginPath(); ctx.arc(CX,CY,R,0,Math.PI*2); ctx.lineWidth=3; ctx.strokeStyle="#3a2c1a"; ctx.stroke();
+
+  ctx.font="900 12px -apple-system,sans-serif";
+  for(let i=0;i<20;i++){
+    const ang = (i*18-90) * Math.PI/180;
+    const midR = R*0.79;
+    const x = CX+Math.cos(ang)*midR, y = CY+Math.sin(ang)*midR;
+    const even = i%2===0;
+    ctx.save(); ctx.translate(x,y);
+    let rot = ang + Math.PI/2;
+    if(Math.cos(ang) < 0) rot += Math.PI;
+    ctx.rotate(rot);
+    ctx.fillStyle = even ? "#171310" : "#e9dcb8";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(DARTS_SECTORS[i], 0, 0);
+    ctx.restore();
+  }
+  ctx.font="900 13px -apple-system,sans-serif"; ctx.fillStyle="#fdf7ea";
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  for(let i=0;i<20;i++){
+    const ang = (i*18-90) * Math.PI/180;
+    const x = CX+Math.cos(ang)*R*1.09, y = CY+Math.sin(ang)*R*1.09;
+    ctx.fillText(DARTS_SECTORS[i], x, y);
+  }
+}
+function dartsScoreAt(px, py, W, R, CX, CY){
+  const dx = px-CX, dy = py-CY;
+  const frac = Math.hypot(dx,dy)/R;
+  if(frac>1.02) return {points:0, label:"Daneben"};
+  let angle = Math.atan2(dx,-dy)*180/Math.PI; angle=(angle+360)%360;
+  const idx = Math.floor(((angle+9)%360)/18);
+  const val = DARTS_SECTORS[idx];
+  if(frac<0.037) return {points:50, label:"Bullseye! 50"};
+  if(frac<0.093) return {points:25, label:"Bull 25"};
+  if(frac<0.582) return {points:val, label:val+""};
+  if(frac<0.629) return {points:val*3, label:"Triple "+val};
+  if(frac<0.953) return {points:val, label:val+""};
+  if(frac<1.0)   return {points:val*2, label:"Double "+val};
+  return {points:0, label:"Daneben"};
+}
+function playDartsGame(p, val){
+  return new Promise(res=>{
+    if(!dartsBoardDrawn){ drawDartsBoard(); dartsBoardDrawn = true; }
+    const overlay = $("#dartsOverlay");
+    const boardWrap = $("#dartsBoardWrap");
+    const canvas = $("#dartsCanvas");
+    const W = canvas.width, CX = W/2, CY = W/2, R = W/2 - 4;
+    const statusEl = $("#dartsStatus");
+    const throwBtn = $("#dartsThrowBtn");
+    const leftEl = $("#dartsLeftLabel");
+    const timerFillEl = $("#dartsTimerFill");
+    const timerLabelEl = $("#dartsTimerLabel");
+    const botTotalEl = $("#dartsBotTotal"), youTotalEl = $("#dartsYouTotal");
+    const botRoundsEl = $("#dartsBotRounds"), youRoundsEl = $("#dartsYouRounds");
+    $("#dartsYouLabel").textContent = `${p.icon} ${p.name}`;
+
+    let botTotal=0, youTotal=0, botRounds=[], youRounds=[];
+    let aimPhase=null, aimLineEl=null, aimPhaseVal=0, lastFrameTs=null, aimRaf=null;
+    let lockedX=null, lockedY=null, pendingResolve=null;
+    let roundDeadline=0, timedOut=false;
+
+    function refreshScores(){
+      botTotalEl.textContent = botTotal; youTotalEl.textContent = youTotal;
+      botRoundsEl.textContent = botRounds.length ? botRounds.join(" · ") : "–";
+      youRoundsEl.textContent = youRounds.length ? youRounds.join(" · ") : "–";
+    }
+    function updateTimerUI(remainingMs){
+      const remaining = Math.max(0, remainingMs/1000);
+      timerFillEl.style.width = (remaining/30*100)+"%";
+      timerFillEl.classList.toggle("critical", remaining<=8);
+      timerLabelEl.textContent = Math.ceil(remaining)+"s";
+    }
+    function resetRoundTimer(){
+      roundDeadline = performance.now()+30000; timedOut=false; updateTimerUI(30000);
+    }
+    function startAimPhase(phase){
+      return new Promise(r=>{
+        pendingResolve = r; aimPhase = phase; aimPhaseVal = 0; lastFrameTs = null;
+        aimLineEl = document.createElement("div");
+        aimLineEl.className = "darts-aimline " + (phase==="h"?"h":"v");
+        boardWrap.appendChild(aimLineEl);
+        throwBtn.disabled = false;
+        throwBtn.textContent = phase==="h" ? "STOPP (horizontal)" : "STOPP (vertikal)";
+        statusEl.textContent = phase==="h"
+          ? "Ziel wackelt – stoppe die horizontale Position!"
+          : "Jetzt die vertikale Position stoppen!";
+        aimRaf = requestAnimationFrame(tickAim);
+      });
+    }
+    function tickAim(ts){
+      if(!aimPhase) return;
+      if(lastFrameTs===null) lastFrameTs = ts;
+      const dt = (ts-lastFrameTs)/1000; lastFrameTs = ts;
+      const remaining = roundDeadline - ts;
+      updateTimerUI(remaining);
+      if(remaining<=0){ timedOut = true; lockAim(); return; }
+      const rect = boardWrap.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      const baseFreq = aimPhase==="h" ? 1.1 : 1.25;
+      const phaseOffset = aimPhase==="h" ? 0 : 1.7;
+      const speedMult = 1 + 0.75*Math.sin(ts/1000*0.32 + phaseOffset);
+      aimPhaseVal += dt*baseFreq*speedMult;
+      const wiggle = Math.sin(ts/1000*23)*5 + Math.sin(ts/1000*11)*3.5;
+      if(aimPhase==="h"){
+        const sweep = (Math.sin(aimPhaseVal)*0.5+0.5)*w;
+        const x = Math.max(4, Math.min(w-4, sweep+wiggle));
+        aimLineEl.style.left = x+"px"; aimLineEl.dataset.pos = x;
+      } else {
+        const sweep = (Math.sin(aimPhaseVal)*0.5+0.5)*h;
+        const y = Math.max(4, Math.min(h-4, sweep+wiggle));
+        aimLineEl.style.top = y+"px"; aimLineEl.dataset.pos = y;
+      }
+      aimRaf = requestAnimationFrame(tickAim);
+    }
+    function lockAim(){
+      if(!aimPhase) return;
+      cancelAnimationFrame(aimRaf);
+      const pos = parseFloat(aimLineEl.dataset.pos);
+      const rect = boardWrap.getBoundingClientRect();
+      const scaleX = W/rect.width, scaleY = W/rect.height;
+      const jitter = (Math.random()-0.5)*10;
+      if(aimPhase==="h") lockedX = (pos+jitter)*scaleX;
+      else lockedY = (pos+jitter)*scaleY;
+      aimLineEl.remove(); aimLineEl = null;
+      aimPhase = null; throwBtn.disabled = true;
+      pendingResolve();
+    }
+    function onThrowBtn(e){ e.preventDefault(); lockAim(); }
+    throwBtn.addEventListener("pointerdown", onThrowBtn);
+
+    function placeDart(px, py, label){
+      const d = document.createElement("div");
+      d.className = "darts-dartmark";
+      d.style.left = (px/W*100)+"%"; d.style.top = (py/W*100)+"%";
+      d.innerHTML = `<div class="pts">${label}</div>`;
+      boardWrap.appendChild(d);
+    }
+    async function throwPlayerDart(){
+      if(timedOut) return 0;
+      await startAimPhase("h");
+      if(timedOut) return 0;
+      await startAimPhase("v");
+      if(timedOut) return 0;
+      const r = dartsScoreAt(lockedX, lockedY, W, R, CX, CY);
+      placeDart(lockedX, lockedY, r.label);
+      return r.points;
+    }
+
+    function cleanup(){
+      throwBtn.removeEventListener("pointerdown", onThrowBtn);
+      document.querySelectorAll(".darts-dartmark").forEach(d=>d.remove());
+    }
+
+    (async ()=>{
+      overlay.style.display = "flex";
+      refreshScores();
+      for(let round=1; round<=3; round++){
+        statusEl.textContent = `Aufnahme ${round}/3 – Der Fremde wirft…`;
+        leftEl.textContent = "";
+        await wait(800);
+        const botScore = DARTS_BOT_SCORES[Math.floor(Math.random()*DARTS_BOT_SCORES.length)];
+        botTotal += botScore; botRounds.push(botScore); refreshScores();
+        await showModal({emoji:"🧔", tag:"FREMDER", tagCol:"linear-gradient(140deg,#8a8a8a,#4a4a4a)",
+          title:"Der Fremde wirft!", text:`Er erzielt <b>${botScore}</b> Punkte in dieser Aufnahme.`,
+          buttons:[{label:"Weiter", cls:"green", value:1}]});
+
+        statusEl.textContent = `Aufnahme ${round}/3 – Du bist dran, 3 Darts! (30 Sek. für alle 3)`;
+        let roundScore = 0;
+        resetRoundTimer();
+        for(let d=1; d<=3; d++){
+          leftEl.textContent = `Dart ${d} von 3`;
+          const pts = await throwPlayerDart();
+          roundScore += pts;
+          if(timedOut){
+            statusEl.textContent = "⏱ Zeit abgelaufen! Restliche Darts verfallen.";
+            leftEl.textContent = ""; await wait(1000); break;
+          }
+          await wait(450);
+        }
+        youTotal += roundScore; youRounds.push(roundScore); refreshScores();
+        await showModal({emoji:"🥷", tag:"DU", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
+          title:"Deine Aufnahme!", text:`Du hast <b>${roundScore}</b> Punkte geworfen.`,
+          buttons:[{label:"Weiter", cls:"green", value:1}]});
+      }
+
+      const won = youTotal > botTotal;
+      const tie = youTotal === botTotal;
+      await showModal({
+        emoji: tie ? "🤝" : (won ? "🎉" : "😬"),
+        tag:"ENDSTAND", tagCol:"linear-gradient(140deg,#c0272d,#7a1418)",
+        title: tie ? "Unentschieden!" : (won ? "Gewonnen!" : "Verloren!"),
+        text:`Endstand: Du <b>${youTotal}</b> – <b>${botTotal}</b> Fremder. ${won? `Du gehst ${val} Felder vor.` : `Du gehst ${val} Felder zurück.`}`,
+        buttons:[{label:"OK", cls:"green", value:1}]
+      });
+      cleanup();
+      overlay.style.display = "none";
+      res(won);
+    })();
+  });
+}
+
+
+/* ---------- Minispiel „Namen merken" (eigenes Feld auf der Mono-Wiese) ----------
+   10 Personen (5 Männer/5 Frauen aus je einem Namenspool), unterscheidbare Emojis.
+   Lernphase: der Reihe nach (nicht zufällig) zeigt jede Person 3s eine Sprechblase
+   mit Name + was sie mag. Danach Quiz-Phase: in zufälliger Reihenfolge fragt jede
+   Person "Wie heiße ich?" – Name eintippen (Groß-/Kleinschreibung egal). Falsch:
+   Emoji wird sauer, Fehler zählt. Am Ende: Fehleranzahl trinken, bei 0 Fehlern
+   5 Schlücke verteilen. */
+const NAMEN_MALE_POOL = [
+  ["Klaus","Kokosnüsse"],["Otto","Orgeln"],["Atomfried","Aggressive Albaner"],["Lennart","Läuse"],
+  ["René","Ritter"],["Adrian","die Agentur für Arbeit"],["Peter","die Poccistraße"],["Ingo","Igel"],
+  ["Sören","Schokolade"],["Werner","Weißwein"],["Attila","die AfD"],["Rainer","Rosmarin"],
+  ["Christian","CR7"],["Kai","Kartoffelsalat"],["Theodor","Tassen"],["Leandro","Luftmatratzen"],
+  ["Rico","Ryanair"],["Florian","Feuerwerk"],["Bertram","Bionade"],["Thorsten","Tinder"]
+];
+const NAMEN_FEMALE_POOL = [
+  ["Susanne","Salbei"],["Tabea","Tollwood"],["Rita","Ritalin"],["Agnes","Augustiner"],
+  ["Agnieszka","Algebra"],["Aische","Allah"],["Gertrude","Gänse"],["Maria","Moos"],
+  ["Lea","Lilien"],["Sophia","SV Darmstadt 98"],["Daniela","Dunkelbier"],["Hannah","Hanuta"],
+  ["Hermine","Harry Potter"],["Pia","Pädagogen"],["Arielle","Astronauten"],["Romina","Russen"],
+  ["Agathe","Austern"],["Rachel","Radler"],["Svenja","Socken"],["Bea","Basketball"],
+  ["Sina","Shrek"],["Karina","Katzen"]
+];
+const NAMEN_MALE_EMOJIS = ["🧔","👴","👨‍🦰","👨‍🦱","👨‍🦳","🕴️","🤠","👨‍🌾"];
+const NAMEN_FEMALE_EMOJIS = ["👩‍🦰","👵","👩‍🦱","👩‍🦳","👸","🧕","👩‍🌾","🕵️‍♀️"];
+
+function playNamenGame(p, pi){
+  return new Promise(res=>{
+    const overlay = $("#namenOverlay");
+    const gridEl = $("#namenGrid");
+    const statusEl = $("#namenStatus");
+    const errorCounterEl = $("#namenErrorCounter");
+    const answerBar = $("#namenAnswerBar");
+    const answerInput = $("#namenAnswerInput");
+    const answerBtn = $("#namenAnswerBtn");
+
+    const men = shuffled(NAMEN_MALE_POOL).slice(0,5).map(([name,likes],i)=>({name, likes, emoji: NAMEN_MALE_EMOJIS[i]}));
+    const women = shuffled(NAMEN_FEMALE_POOL).slice(0,5).map(([name,likes],i)=>({name, likes, emoji: NAMEN_FEMALE_EMOJIS[i]}));
+    const people = shuffled(men.concat(women));
+    let errorCount = 0;
+
+    function renderGrid(){
+      gridEl.innerHTML = "";
+      people.forEach((person,i)=>{
+        const card = document.createElement("div");
+        card.className = "namen-pcard";
+        card.id = "namen-card-"+i;
+        card.innerHTML = `<div class="namen-emoji">${person.emoji}</div>`;
+        gridEl.appendChild(card);
+      });
+    }
+    function showBubble(idx, text, cls){
+      const card = document.getElementById("namen-card-"+idx);
+      const old = card.querySelector(".namen-bubble");
+      if(old) old.remove();
+      const b = document.createElement("div");
+      let classes = "namen-bubble";
+      if(idx % 5 === 0) classes += " edge-left";
+      else if(idx % 5 === 4) classes += " edge-right";
+      if(cls) classes += " "+cls;
+      b.className = classes;
+      b.textContent = text;
+      card.appendChild(b);
+    }
+    function hideBubble(idx){
+      const card = document.getElementById("namen-card-"+idx);
+      const b = card.querySelector(".namen-bubble");
+      if(b) b.remove();
+    }
+    function setActive(idx, on){
+      document.getElementById("namen-card-"+idx).classList.toggle("active", on);
+    }
+    function normalize(s){ return s.trim().toLowerCase(); }
+
+    async function introPhase(){
+      const order = people.map((_,i)=>i); // der Reihe nach, nicht zufällig
+      for(let k=0;k<order.length;k++){
+        const idx = order[k];
+        const person = people[idx];
+        statusEl.textContent = `Lernphase – ${k+1}/10 stellt sich vor…`;
+        setActive(idx,true);
+        showBubble(idx, `Ich bin ${person.name} und mag ${person.likes}!`);
+        await wait(3000);
+        hideBubble(idx);
+        setActive(idx,false);
+        await wait(200);
+      }
+    }
+    async function quizPhase(){
+      const order = shuffled(people.map((_,i)=>i));
+      answerBar.style.display = "flex";
+      for(let k=0;k<order.length;k++){
+        const idx = order[k];
+        const person = people[idx];
+        statusEl.textContent = `Quiz – Frage ${k+1}/10: Wer ist das?`;
+        setActive(idx,true);
+        showBubble(idx, "Wie heiße ich?", "ask");
+        answerInput.value = "";
+        answerInput.focus();
+
+        const answer = await new Promise(r=>{
+          function onSubmit(){
+            answerBtn.removeEventListener("click", onSubmit);
+            answerInput.removeEventListener("keydown", onKey);
+            r(answerInput.value);
+          }
+          function onKey(e){ if(e.key==="Enter") onSubmit(); }
+          answerBtn.addEventListener("click", onSubmit);
+          answerInput.addEventListener("keydown", onKey);
+        });
+
+        hideBubble(idx);
+        const correct = normalize(answer) === normalize(person.name);
+        const card = document.getElementById("namen-card-"+idx);
+        if(correct){
+          card.classList.add("happy");
+          showBubble(idx, "Richtig! 🎉");
+        } else {
+          errorCount++;
+          errorCounterEl.textContent = `Fehler bisher: ${errorCount}`;
+          card.classList.add("angry");
+          showBubble(idx, `Falsch! Ich bin ${person.name}.`, "reveal");
+        }
+        await wait(1300);
+        hideBubble(idx);
+        card.classList.remove("happy","angry");
+        setActive(idx,false);
+        await wait(150);
+      }
+      answerBar.style.display = "none";
+    }
+
+    (async ()=>{
+      overlay.style.display = "flex";
+      errorCounterEl.textContent = "";
+      statusEl.textContent = "Du lernst gleich eine neue Gruppe kennen…";
+      renderGrid();
+      await wait(1000);
+      await introPhase();
+      statusEl.textContent = "Alle vorgestellt! Gleich kommt das Quiz…";
+      await wait(1000);
+      await quizPhase();
+      overlay.style.display = "none";
+
+      if(errorCount===0){
+        distributeSips(5, pi);
+        await showModal({emoji:"🏆", tag:"NAMEN MERKEN", tagCol:"linear-gradient(140deg,#5ec9e8,#2472ad)",
+          title:"Perfekt gemerkt!",
+          text:`${p.name} hat alle 10 Namen richtig! Verteile 5 Schlücke.`,
+          buttons:[{label:"Nice!", cls:"green", value:1}]});
+      } else {
+        addSips(pi, errorCount);
+        await showModal({emoji:"🍻", tag:"NAMEN MERKEN", tagCol:"linear-gradient(140deg,#5ec9e8,#2472ad)",
+          title:"Quiz vorbei!",
+          text:`${p.name} hatte ${errorCount} Fehler – trinke ${errorCount} Schlücke.`,
+          buttons:[{label:"OK", value:1}]});
+      }
+      res(errorCount);
+    })();
+  });
+}
+
 const MINIGAMES = [
   {key:"zeche-prellen", name:"Zeche prellen", emoji:"🍺", run: playSneakGame},
   {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame},
@@ -1783,7 +2355,7 @@ async function moveSteps(pi, steps){
 async function teleport(pi, target){
   const p = players[pi];
   p.pos = target;
-  renderTokens(pi); focusOn(p.pos); updateHud();
+  renderTokens(pi); focusOn(p.pos, true); updateHud();
   await wait(650);
 }
 
@@ -1860,12 +2432,29 @@ async function resolveField(pi){
     case T.MINIGAME: {
       const val = rand(6);
       await showDice([val]);
-      setLog(`🎰 ${p.icon} ${p.name} lost ein Minispiel aus …`);
-      const chosen = MINIGAMES[Math.floor(Math.random()*MINIGAMES.length)];
-      await spinSlotMachine(chosen);
+      const candidates = (f.games||[]).map(key=>MINIGAMES.find(g=>g.key===key)).filter(Boolean);
+      let chosen = candidates[0];
+      if(candidates.length>1){
+        setLog(`🎰 ${p.icon} ${p.name} lost ein Minispiel aus …`);
+        chosen = candidates[Math.floor(Math.random()*candidates.length)];
+        await spinSlotMachine(chosen);
+      }
       setLog(`${chosen.emoji} ${p.icon} ${p.name} spielt: ${chosen.name}`);
       const won = await chosen.run(p, val);
       await moveSteps(pi, won ? val : -val);
+      break;
+    }
+    case T.DARTS: {
+      const val = rand(6);
+      await showDice([val]);
+      setLog(`🎯 ${p.icon} ${p.name} tritt in der Boazn zum Darts an …`);
+      const won = await playDartsGame(p, val);
+      await moveSteps(pi, won ? val : -val);
+      break;
+    }
+    case T.NAMEN: {
+      setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} lernt eine neue Gruppe kennen …`);
+      await playNamenGame(p, pi);
       break;
     }
   }
@@ -1879,7 +2468,7 @@ rollBtn.onclick = async ()=>{
   $("#wishBtn").style.display = "none";
 
   const p = players[current];
-  focusOn(p.pos);
+  focusOn(p.pos, true);
 
   const isScooter = p.scooter;
   p.scooter = false;
@@ -1931,7 +2520,7 @@ async function endTurn(){
     if(q.skip>0){
       current = next;
       updateHud();
-      focusOn(q.pos);
+      focusOn(q.pos, true);
       setLog(`${q.icon} ${q.name} wäre dran …`);
       await showSkipX(q);
       q.skip--;
@@ -1944,7 +2533,7 @@ async function endTurn(){
   p.wishUsedThisTurn = false;
   busy = false; rollBtn.disabled = false;
   updateHud();
-  focusOn(p.pos);
+  focusOn(p.pos, true);
   setLog(`${p.icon} ${p.name} ist dran – GO drücken!`);
 }
 </script>
