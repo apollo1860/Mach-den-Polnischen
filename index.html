@@ -110,6 +110,19 @@
   .zone-4{--tf1:#efdff6;--tf2:#dcc2ea;--td:#8f60a8;}
   .zone-5{--tf1:#fbe9c6;--tf2:#f1d097;--td:#b17f34;}
   .zone-6{--tf1:#d8f0e7;--tf2:#b4ddcd;--td:#48927b;}
+  .tile.type-minigame{
+    --tf1:#f9e0b8;--tf2:#e8b877;--td:#a8752e;
+    animation: starGlow 1.8s ease-in-out infinite;
+  }
+  @keyframes starGlow{
+    0%,100%{ box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 14px #ffd54a55; }
+    50%    { box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 32px #ffd54acc; }
+  }
+  .tile.type-minigame .t-emoji{
+    width:68px;height:68px;font-size:50px;
+    background:radial-gradient(circle at 35% 28%, #fff9 0%, #fff3 55%, transparent 100%);
+  }
+  .tile.type-minigame .t-name{display:none;}
   .tile.type-start{
     --tf1:#fff3cf;--tf2:#ffdf8e;--td:#c29a2e;
     box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 26px #ffd76e55;
@@ -184,6 +197,40 @@
   }
   #hud .p-name{font-weight:800;font-size:16px;color:#fdf7ea;letter-spacing:.2px;}
   #hud .p-sub{font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#ffcf4d;}
+
+  /* ---------- Schlücke-Anzeige & Wunsch ---------- */
+  #sipsPanel{
+    position:fixed;top:14px;right:12px;z-index:21;
+    display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  }
+  #sipsHud{display:flex;gap:5px;align-items:flex-end;}
+  .sip-bar{
+    position:relative;width:15px;height:70px;border-radius:8px;
+    background:rgba(22,28,54,.55);
+    box-shadow:inset 0 0 0 1.5px #ffffff28, 0 4px 10px #0006;
+    overflow:hidden;display:flex;align-items:flex-end;
+  }
+  .sip-fill{
+    width:100%;height:0%;
+    background:var(--player-color,#ff5a3c);
+    border-radius:0 0 6px 6px;
+    transition:height .3s ease;
+  }
+  .sip-bar.light{box-shadow:inset 0 0 0 1.5px #ffffff28, 0 0 10px 2px #ffcf4dcc, 0 4px 10px #0006;}
+  .sip-bar.full{box-shadow:inset 0 0 0 1.5px #ffffff28, 0 0 14px 3px #3ddc97cc, 0 4px 10px #0006;}
+  .sip-icon{
+    position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+    font-size:11px;opacity:.85;
+  }
+  #wishBtn{
+    display:none;pointer-events:auto;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:11.5px;letter-spacing:.2px;
+    color:#4a3413;padding:9px 14px;border-radius:999px;
+    background:linear-gradient(160deg,#ffe08a,#ffcf4d 55%,#e0a92e);
+    box-shadow:0 5px 0 #a8781e, 0 8px 16px #0007, inset 0 1.5px 0 #ffffffa0;
+    animation:wishPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes wishPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.18);}}
 
   #bottom{
     position:fixed;left:0;right:0;bottom:0;
@@ -314,6 +361,281 @@
   .btn.gray{background:linear-gradient(160deg,#a8a294,#7c766a 55%,#57524a);box-shadow:0 6px 0 #3c3830, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff50;}
   .btn.gray:active{box-shadow:0 1px 0 #3c3830;}
 
+  /* ---------- Minispiel „Zeche prellen" ---------- */
+  #sneakOverlay{
+    position:fixed;inset:0;z-index:52;display:none;
+    align-items:center;justify-content:center;padding:18px;
+    background:rgba(10,14,30,.7);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .sneak-card{
+    position:relative;width:min(420px,94vw);
+    background:linear-gradient(178deg,#2b1c14 0%,#1a100b 100%);
+    border-radius:26px;padding:22px 20px 26px;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    text-align:center;color:#f3e6d0;
+    border:1.5px solid #ffffff18;
+    animation:popIn .38s cubic-bezier(.2,1.45,.4,1);
+  }
+  .sneak-title{font-size:21px;font-weight:900;letter-spacing:-.2px;}
+  .sneak-sub{margin-top:6px;font-size:13.5px;font-weight:800;color:#e8c98a;min-height:20px;transition:color .15s;}
+  .sneak-sub.danger{color:#ff6a54;animation:sneakPulseText .35s ease-in-out infinite alternate;}
+  @keyframes sneakPulseText{from{opacity:1;}to{opacity:.5;}}
+  .sneak-scene{
+    margin-top:16px;position:relative;
+    background:linear-gradient(180deg,#3a2a1c 0%,#241812 100%);
+    border-radius:16px;padding:16px 14px 20px;
+    box-shadow:inset 0 0 0 2px #ffffff12, inset 0 10px 22px #00000055;
+  }
+  .sneak-track{position:relative;height:56px;margin-bottom:16px;}
+  .sneak-player{
+    position:absolute;left:0%;top:50%;transform:translate(-50%,-50%);
+    font-size:30px;transition:left .05s linear;
+    filter:drop-shadow(0 3px 3px #0008);
+  }
+  .sneak-door{position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:32px;}
+  .sneak-wirt-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .sneak-wirt{
+    font-size:46px;display:inline-block;
+    transition:transform .3s cubic-bezier(.3,.9,.4,1.2);
+    filter:drop-shadow(0 4px 4px #0008);
+  }
+  .sneak-wirt.turned{transform:rotateY(180deg);}
+  .sneak-wirt.facing{transform:rotateY(0deg) scale(1.1);}
+  .sneak-bar{font-size:14px;opacity:.75;margin-top:2px;}
+  .sneak-progress{
+    margin-top:14px;height:10px;border-radius:999px;
+    background:#00000055;overflow:hidden;box-shadow:inset 0 2px 4px #0008;
+  }
+  .sneak-progress-fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,#3ddc97,#1d9e66);
+    transition:width .05s linear;
+  }
+  .sneak-hold{
+    margin-top:18px;width:100%;border:none;cursor:pointer;
+    touch-action:none;user-select:none;
+    font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.4px;
+    color:#fff;padding:16px;border-radius:16px;
+    background:linear-gradient(160deg,var(--coral-hi),var(--coral) 55%,var(--coral-dk));
+    box-shadow:0 6px 0 #8f1f09, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;
+    transition:transform .08s, box-shadow .08s, background .15s;
+  }
+  .sneak-hold.active{
+    transform:translateY(4px) scale(.98);
+    box-shadow:0 2px 0 #10704a, 0 4px 10px #0006, inset 0 1.5px 0 #ffffff70;
+    background:linear-gradient(160deg,#5ceea0,var(--mint) 55%,var(--mint-dk));
+  }
+  #sneakOverlay.caught .sneak-card{animation:sneakShake .4s;box-shadow:0 24px 60px #000c, 0 0 0 3px #ff5a3c99;}
+  #sneakOverlay.won .sneak-card{box-shadow:0 24px 60px #000c, 0 0 0 3px #3ddc9799;}
+  @keyframes sneakShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+
+  /* ---------- Zeitlimit-Balken ---------- */
+  .sneak-timer{
+    margin-top:12px;height:9px;border-radius:999px;
+    background:#00000055;overflow:hidden;box-shadow:inset 0 2px 4px #0008;
+  }
+  .sneak-timer-fill{
+    height:100%;width:100%;
+    background:linear-gradient(90deg,#ffd54a,#ff8a3c);
+    transition:width .1s linear;
+  }
+  .sneak-timer-fill.critical{background:linear-gradient(90deg,#ff6a54,#c22f14);}
+  .sneak-timer-label{
+    margin-top:4px;font-size:11px;font-weight:900;letter-spacing:1px;
+    color:#e8c98a;
+  }
+
+  /* ---------- Deutlich sichtbares Umdrehen ---------- */
+  .sneak-scene.danger{
+    box-shadow:inset 0 0 0 3px #ff3b2c99, inset 0 0 34px #ff3b2c66;
+  }
+  .sneak-wirt.facing{transform:rotateY(0deg) scale(1.28);}
+  .sneak-alert{
+    position:absolute;top:10px;right:14px;font-size:38px;
+    opacity:0;transform:scale(.4) rotate(-15deg);
+    filter:drop-shadow(0 4px 8px #000a);pointer-events:none;
+  }
+  .sneak-alert.show{animation:alertPop .8s cubic-bezier(.2,1.6,.3,1) forwards;}
+  @keyframes alertPop{
+    0%{opacity:0;transform:scale(.3) rotate(-20deg);}
+    30%{opacity:1;transform:scale(1.4) rotate(10deg);}
+    50%{transform:scale(1) rotate(-6deg);}
+    70%{transform:scale(1.12) rotate(3deg);}
+    100%{opacity:0;transform:scale(1) rotate(0deg);}
+  }
+  .sneak-card.flash{animation:cardFlash .45s ease-out;}
+  @keyframes cardFlash{
+    0%{box-shadow:0 24px 60px #000c, 0 0 0 0 #ff3b2c00;}
+    30%{box-shadow:0 24px 60px #000c, 0 0 70px 14px #ff3b2cbb;}
+    100%{box-shadow:0 24px 60px #000c, 0 0 0 0 #ff3b2c00;}
+  }
+  .sneak-sub.danger{font-size:15px;text-transform:uppercase;}
+
+  /* ---------- Minispiel-Slotmachine (Auslosung) ---------- */
+  #slotOverlay{
+    position:fixed;inset:0;z-index:53;display:none;
+    align-items:center;justify-content:center;padding:18px;
+    background:rgba(10,14,30,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .slot-card{
+    position:relative;width:min(340px,90vw);
+    background:linear-gradient(178deg,#3a1030,#1a0818);
+    border-radius:28px;padding:26px 20px 24px;text-align:center;
+    box-shadow:0 26px 60px #000c, inset 0 2px 0 #ffffff18;
+    border:3px solid #ffcf4d;
+    animation:popIn .4s cubic-bezier(.2,1.45,.4,1);
+  }
+  .slot-title{
+    font-size:16px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;
+    color:#ffd54a;text-shadow:0 0 12px #ffd54a99;
+  }
+  .slot-lights{
+    display:flex;justify-content:center;gap:7px;margin-top:10px;
+  }
+  .slot-lights span{
+    width:8px;height:8px;border-radius:50%;
+    background:#ffd54a;box-shadow:0 0 8px #ffd54a;
+    animation:slotBlink 1s ease-in-out infinite;
+  }
+  .slot-lights span:nth-child(2n){background:#ff5a9c;box-shadow:0 0 8px #ff5a9c;animation-delay:.15s;}
+  .slot-lights span:nth-child(3n){background:#4aa8e8;box-shadow:0 0 8px #4aa8e8;animation-delay:.3s;}
+  @keyframes slotBlink{0%,100%{opacity:.3;}50%{opacity:1;}}
+  .slot-window{
+    margin-top:16px;height:96px;border-radius:16px;overflow:hidden;
+    background:linear-gradient(178deg,#fffdf6,#f3ead6);
+    box-shadow:inset 0 4px 10px #00000055, 0 0 0 4px #2b1030, 0 0 0 6px #ffd54a;
+    position:relative;
+  }
+  .slot-window::before, .slot-window::after{
+    content:"";position:absolute;left:0;right:0;height:30px;pointer-events:none;z-index:2;
+  }
+  .slot-window::before{top:0;background:linear-gradient(180deg,#fffdf6dd,transparent);}
+  .slot-window::after{bottom:0;background:linear-gradient(0deg,#f3ead6dd,transparent);}
+  .slot-reel{display:flex;flex-direction:column;}
+  .slot-item{
+    height:96px;flex-shrink:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  }
+  .slot-emoji{font-size:44px;line-height:1;}
+  .slot-name{font-size:12px;font-weight:900;letter-spacing:.3px;color:#4a3d2c;text-transform:uppercase;}
+
+  /* ---------- Minispiel „Flaschenpuzzle" ---------- */
+  #puzzleOverlay{
+    position:fixed;inset:0;z-index:52;display:none;
+    align-items:center;justify-content:center;padding:18px;
+    background:rgba(10,14,30,.7);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .puzzle-card{
+    position:relative;width:min(440px,94vw);
+    max-height:92vh;overflow-y:auto;
+    background:linear-gradient(178deg,#20261e 0%,#12160f 100%);
+    border-radius:26px;padding:20px 18px 22px;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    text-align:center;color:#e9f0e3;border:1.5px solid #ffffff18;
+    animation:popIn .38s cubic-bezier(.2,1.45,.4,1);
+  }
+  .puzzle-title{font-size:20px;font-weight:900;letter-spacing:-.2px;}
+  .puzzle-sub{margin-top:6px;font-size:13px;font-weight:700;color:#bcd9a8;min-height:32px;}
+  .puzzle-timer{
+    margin-top:10px;height:9px;border-radius:999px;
+    background:#00000055;overflow:hidden;box-shadow:inset 0 2px 4px #0008;
+  }
+  .puzzle-timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#3ddc97,#1d9e66);transition:width .1s linear;}
+  .puzzle-timer-fill.critical{background:linear-gradient(90deg,#ff6a54,#c22f14);}
+  .puzzle-timer-label{margin-top:4px;font-size:11px;font-weight:900;letter-spacing:1px;color:#bcd9a8;}
+
+  .puzzle-board{
+    margin-top:14px;background:linear-gradient(180deg,#2c3427,#1a2016);
+    border-radius:16px;padding:16px 0 14px;
+    box-shadow:inset 0 0 0 2px #ffffff10, inset 0 10px 22px #00000055;
+  }
+  .puzzle-slots{display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .puzzle-slot{
+    position:relative;display:flex;align-items:center;justify-content:center;
+    background:#ffffff0d;border:2px dashed #ffffff40;
+    transition:background .2s, border-color .2s;
+  }
+  .puzzle-slot[data-part="cap"]{width:44px;height:20px;border-radius:10px 10px 4px 4px;}
+  .puzzle-slot[data-part="neck"]{width:26px;height:22px;border-radius:2px;}
+  .puzzle-slot[data-part="shoulder"]{width:64px;height:18px;border-radius:8px 8px 2px 2px;}
+  .puzzle-slot[data-part="label"]{width:88px;height:28px;border-radius:2px;}
+  .puzzle-slot[data-part="body"]{width:88px;height:46px;border-radius:2px;}
+  .puzzle-slot[data-part="base"]{width:96px;height:16px;border-radius:2px 2px 10px 10px;}
+  .puzzle-slot-label{font-size:8.5px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;color:#ffffff80;}
+  .puzzle-slot.filled{border-style:solid;border-color:#ffffff55;}
+  .puzzle-slot.filled .pp-emoji{font-size:20px;}
+  .puzzle-slot.reject{animation:slotReject .4s;}
+  @keyframes slotReject{
+    0%,100%{box-shadow:0 0 0 0 #ff3b2c00;border-color:#ffffff40;}
+    30%{box-shadow:0 0 0 5px #ff3b2c99;border-color:#ff3b2c;}
+  }
+
+  .puzzle-tray{
+    margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;
+    justify-content:center;
+  }
+  .puzzle-piece{
+    position:relative;width:46px;height:46px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(165deg,#9a9284,#726b5e);
+    box-shadow:0 4px 0 #4a453c, 0 7px 12px #0007, inset 0 2px 0 #ffffff30;
+    cursor:grab;touch-action:none;user-select:none;
+  }
+  .puzzle-piece.dragging{cursor:grabbing;box-shadow:0 2px 0 #4a453c, 0 14px 26px #000a;}
+  .puzzle-piece.face-up{
+    background:linear-gradient(165deg, var(--piece-bg,#eee) 0%, var(--piece-bg,#ccc) 100%);
+    box-shadow:0 4px 0 #00000040, 0 7px 12px #0007, inset 0 2px 0 #ffffff40;
+  }
+  .pp-back{font-size:20px;color:#e8e2d4;}
+  .pp-front{display:none;flex-direction:column;align-items:center;justify-content:center;color:var(--piece-fg,#333);}
+  .puzzle-piece.face-up .pp-back{display:none;}
+  .puzzle-piece.face-up .pp-front{display:flex;}
+  .pp-emoji{font-size:17px;line-height:1;}
+  .pp-label{font-size:7.5px;font-weight:900;letter-spacing:.2px;text-transform:uppercase;margin-top:2px;}
+  #puzzleOverlay.caught .puzzle-card{animation:sneakShake .4s;box-shadow:0 24px 60px #000c, 0 0 0 3px #ff5a3c99;}
+  #puzzleOverlay.won .puzzle-card{box-shadow:0 24px 60px #000c, 0 0 0 3px #3ddc9799;}
+
+  /* ---------- Aussetzer-Anzeige ---------- */
+  #skipOverlay{
+    position:fixed;inset:0;z-index:55;display:none;
+    align-items:center;justify-content:center;pointer-events:none;
+  }
+  .skip-card{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    animation:skipPop .38s cubic-bezier(.2,1.4,.4,1);
+  }
+  .skip-x{
+    width:126px;height:126px;border-radius:50%;
+    background:radial-gradient(circle at 32% 26%, #ff7a5e 0%, #e2432a 45%, #a8210e 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-size:66px;font-weight:900;color:#fff;
+    box-shadow:0 16px 34px #000a, inset 0 3px 0 #ffffff80, 0 0 0 6px #ff5a3c33;
+    text-shadow:0 3px 0 #00000040;
+  }
+  .skip-label{
+    background:rgba(22,28,54,.78);color:#fdf7ea;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    font-weight:800;font-size:15px;letter-spacing:.3px;
+    padding:9px 20px;border-radius:999px;
+    box-shadow:0 8px 20px #0007;
+  }
+  @keyframes skipPop{
+    0%{transform:scale(.35);opacity:0;}
+    55%{transform:scale(1.1);opacity:1;}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #skipOverlay.hide .skip-card{animation:skipOut .28s ease-in forwards;}
+  @keyframes skipOut{to{transform:scale(.7);opacity:0;}}
+
   /* ---------- Konfetti ---------- */
   #confetti{position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden;display:none;}
   #confetti i{
@@ -416,6 +738,11 @@
   </div>
 </div>
 
+<div id="sipsPanel">
+  <div id="sipsHud"></div>
+  <button id="wishBtn">🌟 Wunsch einlösen</button>
+</div>
+
 <div id="bottom">
   <div id="scooterTag">🛴 E-SCOOTER AKTIV – 2 WÜRFEL</div>
   <div id="log">Willkommen beim Polnischen!</div>
@@ -425,6 +752,48 @@
 <div id="diceLayer"></div>
 <div id="confetti"></div>
 <div id="modalWrap"><div id="modal"></div></div>
+<div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
+
+<div id="sneakOverlay">
+  <div class="sneak-card">
+    <div class="sneak-alert" id="sneakAlert">‼️</div>
+    <div class="sneak-title">🍻 Zeche prellen</div>
+    <div class="sneak-sub" id="sneakStatus">Der Wirt schaut weg – jetzt tippen!</div>
+    <div class="sneak-timer"><div class="sneak-timer-fill" id="sneakTimerFill"></div></div>
+    <div class="sneak-timer-label" id="sneakTimerLabel">30s</div>
+    <div class="sneak-scene" id="sneakScene">
+      <div class="sneak-track">
+        <div class="sneak-player" id="sneakPlayer">🥷</div>
+        <div class="sneak-door">🚪</div>
+      </div>
+      <div class="sneak-wirt-wrap">
+        <div class="sneak-wirt" id="sneakWirt">🧔</div>
+        <div class="sneak-bar">🍻 · Boazn · 🍺</div>
+      </div>
+    </div>
+    <div class="sneak-progress"><div class="sneak-progress-fill" id="sneakFill"></div></div>
+    <button id="sneakHoldBtn" class="sneak-hold">TIPPEN, UM ZU SCHLEICHEN</button>
+  </div>
+</div>
+
+<div id="slotOverlay">
+  <div class="slot-card">
+    <div class="slot-title">🎰 Minispiel wird ausgelost</div>
+    <div class="slot-lights"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="slot-window"><div class="slot-reel" id="slotReel"></div></div>
+  </div>
+</div>
+
+<div id="puzzleOverlay">
+  <div class="puzzle-card">
+    <div class="puzzle-title">🧩 Flaschenpuzzle</div>
+    <div class="puzzle-sub" id="puzzleStatus">Baue die Bierflasche zusammen, bevor die Zeit abläuft!</div>
+    <div class="puzzle-timer"><div class="puzzle-timer-fill" id="puzzleTimerFill"></div></div>
+    <div class="puzzle-timer-label" id="puzzleTimerLabel">30s</div>
+    <div class="puzzle-board"><div class="puzzle-slots" id="puzzleSlots"></div></div>
+    <div class="puzzle-tray" id="puzzleTray"></div>
+  </div>
+</div>
 
 <script>
 /* =====================================================
@@ -434,20 +803,22 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame" };
 
 const FIELDS = [
-  {n:"Balkon",              e:"🚬", t:T.START,   z:1, d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
+  {n:"Balkon",              e:"🚬", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
   {n:"Küche",               e:"🍳", t:T.EVENT,   z:1},
   {n:"Schlafzimmer",        e:"🛏️", t:T.EVENT,   z:1},
   {n:"Wohnzimmer",          e:"🛋️", t:T.EVENT,   z:1},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:1},
   {n:"Garderobe",           e:"🧥", t:T.EVENT,   z:1},
-  {n:"Flur",                e:"🚪", t:T.EVENT,   z:1},
-  {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:10, d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
+  {n:"Flur",                e:"🚪", t:T.EVENT,   z:1, key:"flur"},
+  {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:"sendlinger-tor", key:"hauptbahnhof", d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
-  {n:"Giesinger Stehausschank",e:"🦁",t:T.EVENT, z:2},
+  {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
   {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
-  {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:26, d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Münchner Freiheit."},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:2},
+  {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"muenchner-freiheit", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Münchner Freiheit."},
   {n:"Rathaus",             e:"🏛️", t:T.EVENT,   z:2},
   {n:"Marienplatz",         e:"⭐", t:T.EVENT,   z:2},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:2},
@@ -455,36 +826,42 @@ const FIELDS = [
   {n:"Alter Peter",         e:"⛪", t:T.EVENT,   z:2},
   {n:"Hofbräuhaus",         e:"🍺", t:T.EVENT,   z:2},
   {n:"ATM",                 e:"🏧", t:T.FIXED,   z:2, d:"Der Geldautomat zieht deine Karte ein – sperre schnell deine Karte und setze eine Runde aus.", skip:1},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:2},
   {n:"Englischer Garten",   e:"🌳", t:T.EVENT,   z:3},
   {n:"Monopterus",          e:"🏛️", t:T.EVENT,   z:3},
-  {n:"Universität",         e:"🎓", t:T.TELEPORT,z:3, tp:26, d:"Die U-Bahn an der Uni steht schon da! Sie bringt dich zur Münchner Freiheit."},
+  {n:"Universität",         e:"🎓", t:T.TELEPORT,z:3, tp:"muenchner-freiheit", key:"universitaet", d:"Die U-Bahn an der Uni steht schon da! Sie bringt dich zur Münchner Freiheit."},
   {n:"Mono-Wiese",          e:"🌼", t:T.EVENT,   z:3},
   {n:"Parkbank",            e:"🪑", t:T.FIXED,   z:3, d:"Kurze Verschnaufpause auf der Parkbank – setze eine Runde aus.", skip:1},
   {n:"P1",                  e:"🪩", t:T.FIXED,   z:3, d:"Ein Kumpel holt dich für einen Drink in den Club – trinke 3 Schlücke."},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:3},
   {n:"Siegestor",           e:"🏆", t:T.EVENT,   z:3},
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
-  {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:20, d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
+  {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
   {n:"Tanke",               e:"⛽", t:T.FIXED,   z:4, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
   {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
   {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
   {n:"Spielplatz",          e:"🛝", t:T.EVENT,   z:4},
   {n:"Hopfendolde",         e:"🌿", t:T.FIXED,   z:4, d:"Du lädst Fremde auf ein Getränk ein – verteile 3 Schlücke."},
-  {n:"Taxistand",           e:"🚕", t:T.FIXED,   z:4, d:"Kein Taxifahrer will dich mitnehmen – setze eine Runde aus.", skip:1},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:4},
+  {n:"Taxistand",           e:"🚕", t:T.TAXI,    z:4},
   {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
   {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:5},
   {n:"Tanke",               e:"⛽", t:T.FIXED,   z:5, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:5},
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
   {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5},
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
-  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:6, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:5},
+  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
   {n:"Boazn",               e:"🍻", t:T.FIXED,   z:6, d:"Du lädst Fremde auf ein Getränk ein – verteile 3 Schlücke."},
   {n:"Theresienwiese",      e:"🎡", t:T.EVENT,   z:6},
   {n:"Schwanthaler Höhe",   e:"🏘️", t:T.EVENT,   z:6},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:6},
   {n:"Stadtviertelfest",    e:"🎪", t:T.FIXED,   z:6, d:"Du wirst auf ein Getränk eingeladen – trinke 2 Schlücke."},
+  {n:"",                     e:"⭐", t:T.MINIGAME,z:6},
   {n:"Herzog-Ernst-Platz",  e:"🌲", t:T.EVENT,   z:6},
   {n:"Sendlinger Kirche",   e:"⛪", t:T.EVENT,   z:6},
   {n:"Geile Party",         e:"🎉", t:T.GOAL,    z:6, d:"Angekommen – und keiner hat es gemerkt!"}
@@ -495,8 +872,8 @@ const PARTY_CARDS = [
   {e:"🚪", txt:"Jemand blockiert die Tür – setze 1 Runde aus.", skip:1},
   {e:"🖼️", txt:"Der Gastgeber zeigt dir Urlaubsbilder – trinke 2 Schlücke und grinse dabei."},
   {e:"🍺", txt:"Du klaust ein Bier für den Weg – trinke 3 Schlücke."},
-  {e:"👟", txt:"Der Gastgeber erwischt dich beim Schuheanziehen – zurück zum Start + 1 Schluck aus Scham.", goto:0},
-  {e:"🧥", txt:"Der Gastgeber erwischt dich beim Anziehen der Jacke – zurück zum Start + 1 Schluck aus Scham.", goto:0},
+  {e:"👟", txt:"Der Gastgeber erwischt dich beim Schuheanziehen – zurück zum Start + 1 Schluck aus Scham.", goto:"start"},
+  {e:"🧥", txt:"Der Gastgeber erwischt dich beim Anziehen der Jacke – zurück zum Start + 1 Schluck aus Scham.", goto:"start"},
   {e:"🥂", txt:"Jemand fordert alle zum Anstoßen auf – alle trinken 1 Schluck."},
   {e:"🎸", txt:"Jemand packt die Gitarre aus und spielt Wonderwall – trinke 2 Schlücke und spiel den Song ab (wenn möglich)."},
   {e:"👶", txt:"Ein Pärchen zeigt dir Babyfotos – trinke 2 Schlücke und grinse dabei."},
@@ -509,9 +886,9 @@ const PARTY_CARDS = [
 ];
 
 const FORGOT_CARDS = [
-  {e:"📱", txt:"Du hast dein Handy vergessen – zurück zur Party!", goto:5},
-  {e:"🍺", txt:"Du hast dein Wegbier vergessen – zurück zur Party!", goto:5},
-  {e:"👛", txt:"Du hast deinen Geldbeutel vergessen – zurück zur Party!", goto:5},
+  {e:"📱", txt:"Du hast dein Handy vergessen – zurück zur Party!", goto:"flur"},
+  {e:"🍺", txt:"Du hast dein Wegbier vergessen – zurück zur Party!", goto:"flur"},
+  {e:"👛", txt:"Du hast deinen Geldbeutel vergessen – zurück zur Party!", goto:"flur"},
 ];
 
 const STREET_CARDS = [
@@ -554,13 +931,16 @@ const TYPE_META = {
   teleport:{tag:"MVG",           col:"linear-gradient(140deg,#4aa8e8,#2472ad)"},
   scooter: {tag:"E-SCOOTER",     col:"linear-gradient(140deg,#4fdd8f,#1d9e66)"},
   goal:    {tag:"ZIEL",          col:"linear-gradient(140deg,#f06ae0,#ab2f9e)"},
+  taxi:    {tag:"TAXISTAND",     col:"linear-gradient(140deg,#f0c94a,#c9971a)"},
+  minigame:{tag:"MINISPIEL",     col:"linear-gradient(140deg,#f472b6,#a8266b)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
 const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
 const TOKEN_ICONS = ["🔴","🔵","🟢","🟡","🟣","🟠","⚫","⚪"];
+const PLAYER_COLORS = ["#ff5a3c","#4aa8e8","#3ddc97","#ffcf4d","#b57fd0","#ff9a3c","#9a9a9a","#f0ede4"];
 
 /* ---------- Ring-Geometrie im Uhrzeigersinn ---------- */
-const TILE = 100, COLS = 12, ROWS = 16;
+const TILE = 100, COLS = 14, ROWS = 18;
 function buildCoords(){
   const c=[];
   for(let x=0;x<=COLS-1;x++) c.push([x,0]);
@@ -579,6 +959,11 @@ function shuffled(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
+}
+/* Löst ein Zielfeld über seinen "key" auf (robuster als feste Indizes, die sich beim Einfügen neuer Felder verschieben würden) */
+function fieldIndexByKey(key){
+  const idx = FIELDS.findIndex(f=>f.key===key);
+  return idx>=0 ? idx : 0;
 }
 function drawCard(zone){
   if(zone===1){
@@ -625,7 +1010,8 @@ $("#startBtn").onclick = ()=>{
   players = [...playerList.children].map((r,i)=>({
     name: r.querySelector("input").value.trim() || `Spieler ${i+1}`,
     icon: TOKEN_ICONS[i],
-    pos:0, skip:0, scooter:false
+    pos:0, skip:0, scooter:false,
+    sips:0, wishUsedThisTurn:false, extraDie:false
   }));
   if(players.length<2) return;
   decks.party = shuffled(PARTY_CARDS);
@@ -634,15 +1020,25 @@ $("#startBtn").onclick = ()=>{
   $("#setup").style.display="none";
   buildBoard();
   renderTokens();
+  renderSipsHud();
   updateHud();
   focusOn(0);
   setLog(`${players[0].icon} ${players[0].name} schleicht zuerst – GO drücken!`);
 };
 
 /* ---------- Board ---------- */
+/* Fließende Schlangenlinie: zwei überlagerte Sinuswellen entlang des Feld-Index,
+   statt zufälligem Versatz pro Kachel – dadurch entstehen weiche, durchgehende Kurven. */
 function tilePos(i){
   const [gx,gy] = COORDS[i];
-  return {x: gx*TILE, y: gy*TILE};
+  let x = gx*TILE, y = gy*TILE;
+  const isHorizontal = (gy===0 || gy===ROWS-1); // obere/untere Kante
+  const isVertical   = (gx===0 || gx===COLS-1); // linke/rechte Kante
+  const perp  = Math.sin(i*0.5)*42 + Math.sin(i*0.19 + 1.4)*22;  // Schwung quer zum Pfad
+  const along = Math.sin(i*0.33 + 2.6)*10;                       // leichter Schwung entlang des Pfads
+  if(isHorizontal){ y += perp; x += along; }
+  if(isVertical){   x += perp; y += along; }
+  return {x, y};
 }
 function buildBoard(){
   const w = COLS*TILE, h = ROWS*TILE;
@@ -657,7 +1053,7 @@ function buildBoard(){
   });
   Object.entries(zoneTiles).forEach(([z,pts])=>{
     const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
-    const pad = 24;
+    const pad = 76;
     const el = document.createElement("div");
     el.className="zone-panel";
     el.style.setProperty("--zc", ZONE_COLORS[z]);
@@ -670,10 +1066,10 @@ function buildBoard(){
 
   // Deko im Innenraum (gedimmt, wie bemalter Boden)
   const deco = [
-    ["🍺",7.2,1.7],["🥨",5.0,1.8],["🏰",9.6,2.6],
-    ["⛪",8.7,5.4],["🏢",9.3,8.2],["🌳",8.6,11.0],["🌲",7.4,12.8],
-    ["🎠",4.2,13.0],["🛝",2.6,12.6],["🚏",2.2,9.6],["🌉",2.5,6.4],
-    ["🍻",2.6,3.6],["🎡",4.6,5.2],["🌙",6.2,8.4],
+    ["🍺",8.40,1.91],["🥨",5.83,2.03],["🏰",11.20,2.93],
+    ["⛪",10.15,6.08],["🏢",10.85,9.23],["🌳",10.03,12.38],["🌲",8.63,14.40],
+    ["🎠",4.90,14.63],["🛝",3.03,14.18],["🚏",2.57,10.80],["🌉",2.92,7.20],
+    ["🍻",3.03,4.05],["🎡",5.37,5.85],["🌙",7.23,9.45],
   ];
   deco.forEach(([em,x,y])=>{
     const el = document.createElement("div");
@@ -704,12 +1100,12 @@ function buildBoard(){
 
   // Bezirks-Namen
   const zones = [
-    {txt:"Öde Party",         z:1, x:2.4*TILE, y:1.62*TILE},
-    {txt:"Innenstadt",        z:2, x:9.35*TILE, y:3.7*TILE,  rot:-90},
-    {txt:"Englischer Garten", z:3, x:9.35*TILE, y:10.6*TILE, rot:-90},
-    {txt:"Münchner Freiheit", z:4, x:5.6*TILE, y:13.55*TILE},
-    {txt:"Neuhausen",         z:5, x:1.75*TILE, y:12.5*TILE, rot:90},
-    {txt:"Sendling",          z:6, x:1.75*TILE, y:6.2*TILE,  rot:90},
+    {txt:"Öde Party",         z:1, x:2.80*TILE, y:1.82*TILE},
+    {txt:"Innenstadt",        z:2, x:10.91*TILE, y:4.16*TILE,  rot:-90},
+    {txt:"Englischer Garten", z:3, x:10.91*TILE, y:11.93*TILE, rot:-90},
+    {txt:"Münchner Freiheit", z:4, x:6.53*TILE, y:15.24*TILE},
+    {txt:"Neuhausen",         z:5, x:2.04*TILE, y:14.06*TILE, rot:90},
+    {txt:"Sendling",          z:6, x:2.04*TILE, y:6.98*TILE,  rot:90},
   ];
   zones.forEach(z=>{
     const el = document.createElement("div");
@@ -748,24 +1144,29 @@ function tokenOffset(pi,pos){
   return {x:(same%3)*14 - 7, y:Math.floor(same/3)*14 - 4};
 }
 
-/* ---------- Kamera (mit Zoom & Pan) ---------- */
+/* ---------- Kamera (Vogelperspektive, zeigt dauerhaft das ganze Brett) ---------- */
 let zoom = 1.35;
-const ZOOM_MIN = 0.55, ZOOM_MAX = 2.6;
+const ZOOM_MIN = 0.25, ZOOM_MAX = 2.6;
 let lastFocus = 0;
 let panX = 0, panY = 0;
+function fitBoardToViewport(){
+  const squash = Math.cos(54*Math.PI/180);
+  const w = COLS*TILE, h = ROWS*TILE*squash;
+  const availW = window.innerWidth * 0.94;
+  const availH = window.innerHeight * 0.58; // Platz für HUD oben & Steuerung unten lassen
+  zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(availW/w, availH/h)));
+}
 function focusOn(fieldIndex){
-  lastFocus = fieldIndex;
-  panX = 0; panY = 0;          // Fokuswechsel zentriert wieder aufs Feld
+  lastFocus = fieldIndex; // wird nur noch für aktives Tile-Highlight verwendet, nicht mehr für die Kamera
+  panX = 0; panY = 0;
+  fitBoardToViewport();
   applyCamera();
 }
 function applyCamera(){
-  const {x,y} = tilePos(lastFocus);
-  const w = COLS*TILE, h = ROWS*TILE;
-  const cx = (x + TILE/2) - w/2;
-  const cy = (y + TILE/2) - h/2;
-  const squash = Math.cos(54*Math.PI/180);
+  // Das Board ist bereits über sein eigenes -w/2/-h/2 auf den Ursprung von #world zentriert,
+  // daher zeigt eine Kamera ohne Feld-Offset dauerhaft das komplette Brett.
   world.style.transform =
-    `translate3d(${-cx*zoom + panX}px, ${(-cy*squash*zoom)+60 + panY}px, 0) scale(${zoom})`;
+    `translate3d(${panX}px, ${60 + panY}px, 0) scale(${zoom})`;
 }
 function instantCamera(){
   world.style.transition = "none";
@@ -776,6 +1177,7 @@ function setZoom(z, instant=false){
   zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z));
   instant ? instantCamera() : applyCamera();
 }
+window.addEventListener("resize", ()=>{ fitBoardToViewport(); instantCamera(); });
 
 /* Mausrad-Zoom (Desktop) */
 const vp = document.getElementById("viewport");
@@ -845,8 +1247,122 @@ function updateHud(){
   document.querySelectorAll(".tile").forEach(t=>t.classList.remove("active-tile"));
   const at = document.getElementById("tile-"+p.pos);
   if(at) at.classList.add("active-tile");
+  updateSipsUI();
 }
 function setLog(t){ log.textContent = t; }
+
+/* ---------- Schlücke-Zähler & Wunsch-Mechanik ----------
+   Jede Karte/jedes Ereignis mit „trinke/verteile/alle trinken X Schlücke“
+   wird automatisch erkannt und dem jeweiligen Spieler gutgeschrieben.
+   Ab 25 Schlücken gibt es eine „Light“-Zufallsauslosung, ab 30 die freie Wahl:
+   Extra-Würfel, einen Gegner zurückschicken, oder selbst zusätzlich vorrücken. */
+function renderSipsHud(){
+  const hud = $("#sipsHud");
+  hud.innerHTML = players.map((p,i)=>`
+    <div class="sip-bar" id="sipBar-${i}">
+      <div class="sip-icon">${p.icon}</div>
+      <div class="sip-fill" id="sipFill-${i}" style="--player-color:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"></div>
+    </div>`).join("");
+}
+function updateSipsUI(){
+  players.forEach((p,i)=>{
+    const fill = document.getElementById("sipFill-"+i);
+    const bar = document.getElementById("sipBar-"+i);
+    if(!fill || !bar) return;
+    fill.style.height = Math.min(100, (p.sips/25)*100)+"%";
+    bar.classList.toggle("light", p.sips>=20 && p.sips<25);
+    bar.classList.toggle("full", p.sips>=25);
+  });
+  updateWishButton();
+}
+function updateWishButton(){
+  const btn = $("#wishBtn");
+  if(!players.length){ btn.style.display="none"; return; }
+  const p = players[current];
+  const eligible = !gameOver && !busy && p.sips>=20 && !p.wishUsedThisTurn;
+  btn.style.display = eligible ? "block" : "none";
+}
+function addSips(idx, amount){
+  if(!players[idx] || !amount) return;
+  players[idx].sips += amount;
+  updateSipsUI();
+}
+function distributeSips(amount, excludeIdx){
+  const others = players.map((_,i)=>i).filter(i=>i!==excludeIdx);
+  if(others.length===0) return;
+  for(let k=0;k<amount;k++) addSips(others[k % others.length], 1);
+}
+function parseSips(text){
+  if(!text) return null;
+  if(/verteile/i.test(text)) return null; // Verteilen füllt die Zähler bewusst nicht
+  const matches = [...text.matchAll(/(\d+)\s*[A-Za-zÄÖÜäöüß]*schl(?:uck|ücke)/gi)];
+  if(matches.length===0) return null;
+  const amount = parseInt(matches[0][1], 10);
+  if(!amount) return null;
+  const target = /alle trinken/i.test(text) ? "all" : "self";
+  return {amount, target};
+}
+function applySipsFromText(text, pi){
+  const parsed = parseSips(text);
+  if(!parsed) return;
+  if(parsed.target==="self") addSips(pi, parsed.amount);
+  else if(parsed.target==="all") players.forEach((_,i)=>addSips(i, parsed.amount));
+}
+const WISH_OPTIONS = [
+  {key:"extra",   name:"Extra-Würfel",     emoji:"🎲"},
+  {key:"back",    name:"Gegner zurück",    emoji:"⬅️"},
+  {key:"forward", name:"Selbst vorwärts",  emoji:"➡️"},
+];
+async function applyWishOption(key, p){
+  const idx = players.indexOf(p);
+  if(key==="extra"){
+    p.extraDie = true;
+    await showModal({emoji:"🎲", tag:"WUNSCH", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+      title:"Extra-Würfel!",
+      text:`${p.name} würfelt beim nächsten Zug mit einem zusätzlichen Würfel.`,
+      buttons:[{label:"Nice!", cls:"green", value:1}]});
+  } else if(key==="back"){
+    const targets = players.filter((_,i)=>i!==idx);
+    const targetIdx = await showModal({emoji:"⬅️", tag:"WUNSCH", tagCol:"linear-gradient(140deg,#ff8a5c,#c22f14)",
+      title:"Wen schickst du zurück?", text:"Wähle einen Gegner.",
+      buttons: targets.map(t=>({label:`${t.icon} ${t.name}`, value: players.indexOf(t)}))});
+    const val = rand(6);
+    await showDice([val]);
+    await moveSteps(targetIdx, -val);
+  } else if(key==="forward"){
+    const val = rand(6);
+    await showDice([val]);
+    await moveSteps(idx, val);
+  }
+}
+async function useWish(){
+  if(busy || gameOver) return;
+  const p = players[current];
+  if(p.sips<20 || p.wishUsedThisTurn) return;
+  busy = true; rollBtn.disabled = true;
+  $("#wishBtn").style.display = "none";
+  let key;
+  if(p.sips>=25){
+    key = await showModal({emoji:"🌟", tag:"WUNSCH", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
+      title:"Wunsch frei!",
+      text:`${p.name} hat 25 Schlücke voll! Was darf's sein?`,
+      buttons:[
+        {label:"🎲 Extra-Würfel", value:"extra"},
+        {label:"⬅️ Gegner zurück", value:"back"},
+        {label:"➡️ Selbst vorwärts", value:"forward"},
+      ]});
+  } else {
+    const chosen = WISH_OPTIONS[Math.floor(Math.random()*WISH_OPTIONS.length)];
+    await spinSlotMachine(chosen);
+    key = chosen.key;
+  }
+  await applyWishOption(key, p);
+  p.sips = 0;
+  p.wishUsedThisTurn = true;
+  updateSipsUI();
+  busy = false; rollBtn.disabled = false;
+}
+$("#wishBtn").onclick = useWish;
 
 /* ---------- 3D-Würfel ---------- */
 const PIP_MAP = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
@@ -902,6 +1418,335 @@ function showModal({emoji, tag, tagCol, title, text, buttons}){
       btnWrap.appendChild(el);
     });
     modalWrap.style.display="flex";
+  });
+}
+
+/* ---------- Minispiel „Zeche prellen" ----------
+   Wie beim „Türsteher/Statue“-Prinzip: gedrückt halten bewegt langsam vorwärts,
+   der Wirt dreht sich alle 2-4 Sekunden zufällig um – schleicht man während er
+   herschaut, ist man erwischt. Zusätzlich läuft ein 30-Sekunden-Zeitlimit. */
+function playSneakGame(p, val){
+  return new Promise(res=>{
+    const overlay = $("#sneakOverlay");
+    const card = overlay.querySelector(".sneak-card");
+    const sceneEl = $("#sneakScene");
+    const statusEl = $("#sneakStatus");
+    const wirtEl = $("#sneakWirt");
+    const playerEl = $("#sneakPlayer");
+    const fillEl = $("#sneakFill");
+    const holdBtn = $("#sneakHoldBtn");
+    const alertEl = $("#sneakAlert");
+    const timerFillEl = $("#sneakTimerFill");
+    const timerLabelEl = $("#sneakTimerLabel");
+    const STEP = 6;             // % Fortschritt pro einzelnem Tipp (halb so groß wie zuvor)
+    const TAP_COOLDOWN = 320;  // ms zwischen zwei zählenden Tipps
+    const TIME_LIMIT = 20;     // Sekunden Gesamt-Zeitlimit
+
+    let progress = 0, finished = false, lastTapTs = -Infinity;
+    let phase = "weg";       // "weg" = Wirt schaut weg (sicher), "schaut" = er schaut her (gefährlich)
+    let rafId = null, phaseTimer = null, startTs = null;
+
+    function triggerAlert(){
+      alertEl.classList.remove("show"); void alertEl.offsetWidth; alertEl.classList.add("show");
+      card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+    }
+    function setPhase(next){
+      phase = next;
+      wirtEl.classList.toggle("turned", phase==="weg");
+      wirtEl.classList.toggle("facing", phase==="schaut");
+      sceneEl.classList.toggle("danger", phase==="schaut");
+      statusEl.classList.toggle("danger", phase==="schaut");
+      statusEl.textContent = phase==="weg"
+        ? "Der Wirt schaut weg – jetzt tippen!"
+        : "‼️ ER DREHT SICH UM! ‼️";
+      if(phase==="schaut") triggerAlert();
+    }
+    function scheduleNext(){
+      const dur = phase==="weg" ? (1800+Math.random()*1600) : (900+Math.random()*700);
+      phaseTimer = setTimeout(()=>{
+        setPhase(phase==="weg" ? "schaut" : "weg");
+        scheduleNext();
+      }, dur);
+    }
+    function tick(ts){
+      if(finished) return;
+      if(startTs===null) startTs = ts;
+      const elapsed = (ts-startTs)/1000;
+      const remaining = Math.max(0, TIME_LIMIT - elapsed);
+      timerFillEl.style.width = (remaining/TIME_LIMIT*100)+"%";
+      timerFillEl.classList.toggle("critical", remaining<=8);
+      timerLabelEl.textContent = Math.ceil(remaining)+"s";
+      if(remaining<=0){ finish(false); return; }
+      rafId = requestAnimationFrame(tick);
+    }
+    function handleTap(e){
+      e.preventDefault();
+      if(finished) return;
+      holdBtn.classList.add("active");
+      setTimeout(()=>holdBtn.classList.remove("active"), 140);
+      if(phase==="schaut"){ finish(false); return; }
+      const now = performance.now();
+      if(now - lastTapTs < TAP_COOLDOWN) return; // zu schnell hintereinander getippt, zählt nicht
+      lastTapTs = now;
+      progress = Math.min(100, progress + STEP);
+      fillEl.style.width = progress+"%";
+      playerEl.style.left = progress+"%";
+      if(progress>=100){ finish(true); return; }
+    }
+    function cleanup(){
+      clearTimeout(phaseTimer);
+      cancelAnimationFrame(rafId);
+      holdBtn.removeEventListener("pointerdown", handleTap);
+    }
+    function finish(won){
+      if(finished) return;
+      finished = true;
+      cleanup();
+      statusEl.classList.remove("danger");
+      sceneEl.classList.remove("danger");
+      statusEl.textContent = won
+        ? `Geschafft! 🎉 ${p.name} geht ${val} Felder vor.`
+        : `Erwischt! 😬 ${p.name} geht ${val} Felder zurück.`;
+      overlay.classList.toggle("won", won);
+      overlay.classList.toggle("caught", !won);
+      setTimeout(()=>{
+        overlay.style.display = "none";
+        overlay.classList.remove("won","caught");
+        res(won);
+      }, 1500);
+    }
+
+    // Reset & Start
+    progress = 0; fillEl.style.width="0%"; playerEl.style.left="0%";
+    startTs = null; lastTapTs = -Infinity;
+    timerFillEl.style.width = "100%"; timerFillEl.classList.remove("critical");
+    timerLabelEl.textContent = TIME_LIMIT+"s";
+    alertEl.classList.remove("show"); card.classList.remove("flash");
+    setPhase("weg");
+    holdBtn.addEventListener("pointerdown", handleTap);
+    overlay.style.display = "flex";
+    rafId = requestAnimationFrame(tick);
+    scheduleNext();
+  });
+}
+
+/* ---------- Minispiel „Flaschenpuzzle" ----------
+   Eine kaputte Bierflasche muss aus 6 Teilen (Verschluss, Hals, Schulter,
+   Etikett, Bauch, Boden) per Drag&Drop wieder zusammengebaut werden – dazwischen
+   liegen Ablenkungsteile von Wein-/Wasserflaschen. Die Hälfte aller Teile startet
+   umgedreht (graue Rückseite) und muss erst per Antippen aufgedeckt werden;
+   bereits aufgedeckte Teile lassen sich per Antippen wieder umdrehen.
+   Zeitlimit: 30 Sekunden. */
+function playBottlePuzzleGame(p, val){
+  return new Promise(res=>{
+    const overlay = $("#puzzleOverlay");
+    const statusEl = $("#puzzleStatus");
+    const timerFillEl = $("#puzzleTimerFill");
+    const timerLabelEl = $("#puzzleTimerLabel");
+    const slotsEl = $("#puzzleSlots");
+    const trayEl = $("#puzzleTray");
+    const TIME_LIMIT = 20;
+
+    const PARTS = ["cap","neck","shoulder","label","body","base"];
+    const PART_LABELS = {cap:"Verschluss",neck:"Hals",shoulder:"Schulter",label:"Etikett",body:"Bauch",base:"Boden"};
+    const TYPES = {
+      bier:   {emoji:"🍺", bg:"#c98a3e", fg:"#3a2410"},
+      wein:   {emoji:"🍷", bg:"#7a2035", fg:"#f5dde2"},
+      wasser: {emoji:"💧", bg:"#bcdcea", fg:"#1a4a66"},
+    };
+    const DECOY_TYPES = ["wein","wasser"];
+
+    let finished = false, filledCount = 0, rafId = null, startTs = null;
+
+    // Teile zusammenstellen: 6 richtige Bier-Teile + 14 Ablenkungsteile (viel schwerer)
+    let pieces = PARTS.map(part=>({type:"bier", part}));
+    for(let i=0;i<14;i++){
+      pieces.push({type: DECOY_TYPES[Math.floor(Math.random()*2)], part: PARTS[Math.floor(Math.random()*PARTS.length)]});
+    }
+    pieces = shuffled(pieces);
+    const faceDownCount = Math.round(pieces.length/2);
+    const faceDownIdx = new Set(shuffled(pieces.map((_,i)=>i)).slice(0, faceDownCount));
+
+    // Slots (Flaschen-Silhouette) rendern
+    slotsEl.innerHTML = "";
+    PARTS.forEach(part=>{
+      const slot = document.createElement("div");
+      slot.className = "puzzle-slot";
+      slot.dataset.part = part;
+      slot.innerHTML = `<span class="puzzle-slot-label">${PART_LABELS[part]}</span>`;
+      slotsEl.appendChild(slot);
+    });
+
+    function makeDraggable(tile){
+      let dragging = false, startX = 0, startY = 0;
+      function onDown(e){
+        if(finished || tile.classList.contains("placed")) return;
+        dragging = true;
+        startX = e.clientX; startY = e.clientY;
+        tile.style.transition = "none";
+        tile.style.zIndex = 80;
+        tile.classList.add("dragging");
+        try{ tile.setPointerCapture(e.pointerId); }catch(err){}
+      }
+      function onMove(e){
+        if(!dragging) return;
+        const dx=e.clientX-startX, dy=e.clientY-startY;
+        tile.style.transform = `translate(${dx}px,${dy}px) scale(1.1)`;
+      }
+      function onUp(e){
+        if(!dragging) return;
+        dragging = false;
+        tile.classList.remove("dragging");
+        tile.style.transition = "transform .28s cubic-bezier(.3,.9,.4,1.1)";
+        const dx=e.clientX-startX, dy=e.clientY-startY;
+        if(Math.hypot(dx,dy) < 6){
+          // Tap statt Drag: Teil umdrehen
+          tile.style.transform = "translate(0,0) scale(1)";
+          if(!tile.classList.contains("placed")) tile.classList.toggle("face-up");
+          return;
+        }
+        tile.style.pointerEvents = "none";
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        tile.style.pointerEvents = "";
+        const slotEl = el ? el.closest(".puzzle-slot") : null;
+        let matched = false;
+        if(slotEl && !slotEl.classList.contains("filled")){
+          if(slotEl.dataset.part===tile.dataset.part && tile.dataset.type==="bier"){
+            matched = true;
+            lockPiece(tile, slotEl);
+          } else {
+            slotEl.classList.add("reject");
+            setTimeout(()=>slotEl.classList.remove("reject"), 400);
+          }
+        }
+        if(!matched){
+          tile.style.transform = "translate(0,0) scale(1)";
+          tile.style.zIndex = "";
+        }
+      }
+      tile.addEventListener("pointerdown", onDown);
+      tile.addEventListener("pointermove", onMove);
+      tile.addEventListener("pointerup", onUp);
+      tile.addEventListener("pointercancel", onUp);
+    }
+
+    function lockPiece(tile, slotEl){
+      tile.classList.add("placed");
+      tile.style.display = "none";
+      slotEl.classList.add("filled");
+      slotEl.innerHTML = `<div class="pp-emoji">${TYPES.bier.emoji}</div>`;
+      slotEl.style.background = TYPES.bier.bg;
+      filledCount++;
+      if(filledCount>=PARTS.length) finish(true);
+    }
+
+    // Tray (Teile-Ablage) rendern
+    trayEl.innerHTML = "";
+    pieces.forEach((piece,i)=>{
+      const tile = document.createElement("div");
+      tile.className = "puzzle-piece" + (faceDownIdx.has(i) ? "" : " face-up");
+      tile.dataset.type = piece.type;
+      tile.dataset.part = piece.part;
+      const t = TYPES[piece.type];
+      tile.style.setProperty("--piece-bg", t.bg);
+      tile.style.setProperty("--piece-fg", t.fg);
+      tile.innerHTML = `
+        <div class="pp-back">❔</div>
+        <div class="pp-front">
+          <div class="pp-emoji">${t.emoji}</div>
+          <div class="pp-label">${PART_LABELS[piece.part]}</div>
+        </div>`;
+      trayEl.appendChild(tile);
+      makeDraggable(tile);
+    });
+
+    function finish(won){
+      if(finished) return;
+      finished = true;
+      cancelAnimationFrame(rafId);
+      statusEl.textContent = won
+        ? `Zusammengebaut! 🎉 ${p.name} geht ${val} Felder vor.`
+        : `Zeit abgelaufen! 😬 ${p.name} geht ${val} Felder zurück.`;
+      overlay.classList.toggle("won", won);
+      overlay.classList.toggle("caught", !won);
+      setTimeout(()=>{
+        overlay.style.display = "none";
+        overlay.classList.remove("won","caught");
+        res(won);
+      }, 1500);
+    }
+    function tick(ts){
+      if(finished) return;
+      if(startTs===null) startTs = ts;
+      const elapsed = (ts-startTs)/1000;
+      const remaining = Math.max(0, TIME_LIMIT-elapsed);
+      timerFillEl.style.width = (remaining/TIME_LIMIT*100)+"%";
+      timerFillEl.classList.toggle("critical", remaining<=8);
+      timerLabelEl.textContent = Math.ceil(remaining)+"s";
+      if(remaining<=0){ finish(false); return; }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    statusEl.textContent = "Baue die Bierflasche zusammen, bevor die Zeit abläuft!";
+    timerFillEl.style.width = "100%"; timerFillEl.classList.remove("critical");
+    timerLabelEl.textContent = TIME_LIMIT+"s";
+    overlay.style.display = "flex";
+    rafId = requestAnimationFrame(tick);
+  });
+}
+
+/* ---------- Minispiel-Register ----------
+   Zentrale Liste aller Minispiele. Die Slot-Machine lost eines zufällig aus –
+   aktuell „Zeche prellen“ und „Flaschenpuzzle“, weitere lassen sich hier einfach ergänzen. */
+const MINIGAMES = [
+  {key:"zeche-prellen", name:"Zeche prellen", emoji:"🍺", run: playSneakGame},
+  {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame},
+];
+
+/* ---------- Slot-Machine: lost das Minispiel bunt & zufällig aus ---------- */
+function spinSlotMachine(chosen){
+  return new Promise(res=>{
+    const overlay = $("#slotOverlay");
+    const reel = $("#slotReel");
+    const fillers = ["🎲","🍻","🃏","🎯","🥂","🔥","⚡","🍸","🎉","🍾"];
+    const itemH = 96;
+    const totalFillers = 22;
+    let html = "";
+    for(let i=0;i<totalFillers;i++){
+      const em = fillers[Math.floor(Math.random()*fillers.length)];
+      html += `<div class="slot-item"><div class="slot-emoji">${em}</div></div>`;
+    }
+    html += `<div class="slot-item"><div class="slot-emoji">${chosen.emoji}</div><div class="slot-name">${chosen.name}</div></div>`;
+    reel.innerHTML = html;
+    reel.style.transition = "none";
+    reel.style.transform = "translateY(0px)";
+    overlay.style.display = "flex";
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      reel.style.transition = "transform 2.3s cubic-bezier(.12,.85,.15,1)";
+      reel.style.transform = `translateY(-${totalFillers*itemH}px)`;
+    }));
+    setTimeout(()=>{
+      overlay.style.display = "none";
+      res();
+    }, 2600);
+  });
+}
+
+/* ---------- Aussetzer-Anzeige ---------- */
+const skipOverlay = $("#skipOverlay");
+function showSkipX(p){
+  return new Promise(res=>{
+    skipOverlay.querySelector(".skip-label").textContent = `${p.icon} ${p.name} setzt aus`;
+    skipOverlay.classList.remove("hide");
+    skipOverlay.style.display="flex";
+    setTimeout(()=>{
+      skipOverlay.classList.add("hide");
+      setTimeout(()=>{
+        skipOverlay.style.display="none";
+        skipOverlay.classList.remove("hide");
+        res();
+      }, 280);
+    }, 950);
   });
 }
 
@@ -963,21 +1808,23 @@ async function resolveField(pi){
       const c = drawCard(f.z);
       await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
+      applySipsFromText(c.txt, pi);
       if(c.skip){ p.skip = c.skip; }
-      if(c.goto!==undefined){ await teleport(pi, c.goto); }
+      if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
       else if(c.mv){ await moveSteps(pi, c.mv); }
       break;
     }
     case T.FIXED: {
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.d, buttons:[{label:"OK", value:1}]});
+      applySipsFromText(f.d, pi);
       if(f.skip) p.skip = f.skip;
       break;
     }
     case T.TELEPORT: {
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.d, buttons:[{label:"Einsteigen", value:1}]});
-      await teleport(pi, f.tp);
+      await teleport(pi, fieldIndexByKey(f.tp));
       break;
     }
     case T.SCOOTER: {
@@ -988,6 +1835,39 @@ async function resolveField(pi){
       if(choice){ p.scooter = true; setLog(`${p.icon} ${p.name} fährt nächsten Zug E-Scooter!`); }
       break;
     }
+    case T.TAXI: {
+      await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
+        title:f.n,
+        text:"Du versuchst ein Taxi anzuhalten. Würfle, ob dich jemand mitnimmt!",
+        buttons:[{label:"Würfeln", value:1}]});
+      const val = rand(6);
+      await showDice([val]);
+      if(val<=3){
+        await showModal({emoji:"🚕", tag:meta.tag, tagCol:meta.col,
+          title:"Kein Glück!",
+          text:`Kein Taxifahrer will dich mitnehmen (${val} gewürfelt) – setze eine Runde aus.`,
+          buttons:[{label:"Mist", value:1}]});
+        p.skip = 1;
+      } else {
+        await showModal({emoji:"🚕", tag:meta.tag, tagCol:meta.col,
+          title:"Mitgenommen!",
+          text:`Ein Taxifahrer nimmt dich mit (${val} gewürfelt) – gehe ${val} Felder vor!`,
+          buttons:[{label:"Auf geht's", cls:"green", value:1}]});
+        await moveSteps(pi, val);
+      }
+      break;
+    }
+    case T.MINIGAME: {
+      const val = rand(6);
+      await showDice([val]);
+      setLog(`🎰 ${p.icon} ${p.name} lost ein Minispiel aus …`);
+      const chosen = MINIGAMES[Math.floor(Math.random()*MINIGAMES.length)];
+      await spinSlotMachine(chosen);
+      setLog(`${chosen.emoji} ${p.icon} ${p.name} spielt: ${chosen.name}`);
+      const won = await chosen.run(p, val);
+      await moveSteps(pi, won ? val : -val);
+      break;
+    }
   }
   updateHud();
 }
@@ -996,13 +1876,17 @@ async function resolveField(pi){
 rollBtn.onclick = async ()=>{
   if(busy || gameOver) return;
   busy = true; rollBtn.disabled = true;
+  $("#wishBtn").style.display = "none";
 
   const p = players[current];
   focusOn(p.pos);
 
   const isScooter = p.scooter;
   p.scooter = false;
+  const isExtra = p.extraDie;
+  p.extraDie = false;
   const vals = isScooter ? [rand(6), rand(6)] : [rand(6)];
+  if(isExtra) vals.push(rand(6));
   const sum = vals.reduce((a,b)=>a+b,0);
   setLog(isScooter ? `${p.icon} ${p.name} würfelt mit 2 Würfeln…` : `${p.icon} ${p.name} würfelt…`);
   await showDice(vals);
@@ -1010,17 +1894,21 @@ rollBtn.onclick = async ()=>{
   if(isScooter){
     const r = Math.random();
     if(r < 0.10){
+      const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird kassiert und zurück zur öden Party gebracht. Trinke 2 Schlücke zum Trost.`;
       await showModal({emoji:"🚔", tag:"BUSTED", tagCol:"linear-gradient(140deg,#f0564a,#a8241a)", title:"Polizei!",
-        text:`Ohne Licht durch die Stadt… ${p.name} wird kassiert und zurück zur öden Party gebracht. Trink 2 zum Trost.`,
+        text:bustedText,
         buttons:[{label:"Mist!", value:1}]});
+      applySipsFromText(bustedText, current);
       await teleport(current, 0);
-      endTurn(); return;
+      await endTurn(); return;
     } else if(r < 0.35){
+      const unfallText = `${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trinke 1 Schluck zum Trost.`;
       await showModal({emoji:"🤕", tag:"UNFALL", tagCol:"linear-gradient(140deg,#f09044,#c9641a)", title:"Bordsteinkante!",
-        text:`${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trink 1 zum Trost.`,
+        text:unfallText,
         buttons:[{label:"Autsch", value:1}]});
+      applySipsFromText(unfallText, current);
       p.skip = 1;
-      endTurn(); return;
+      await endTurn(); return;
     } else {
       setLog(`🛴 Freie Fahrt! ${p.name} zieht ${sum} Felder.`);
       await wait(600);
@@ -1029,30 +1917,36 @@ rollBtn.onclick = async ()=>{
 
   await moveSteps(current, sum);
   await resolveField(current);
-  if(!gameOver) endTurn();
+  if(!gameOver) await endTurn();
 };
 
-/* Aussetzer werden reihum verbraucht – kein Deadlock. */
-function endTurn(){
+/* Aussetzer werden reihum verbraucht – kein Deadlock.
+   Wer aussetzen muss, wird trotzdem kurz angezeigt (Kamera + HUD),
+   bevor ein rotes X erscheint und automatisch zum nächsten Spieler weitergeschaltet wird. */
+async function endTurn(){
   let next = current;
   while(true){
     next = (next+1) % players.length;
     const q = players[next];
     if(q.skip>0){
+      current = next;
+      updateHud();
+      focusOn(q.pos);
+      setLog(`${q.icon} ${q.name} wäre dran …`);
+      await showSkipX(q);
       q.skip--;
-      setLog(`${q.icon} ${q.name} setzt aus …`);
       continue;
     }
     break;
   }
   current = next;
   const p = players[current];
+  p.wishUsedThisTurn = false;
+  busy = false; rollBtn.disabled = false;
   updateHud();
   focusOn(p.pos);
   setLog(`${p.icon} ${p.name} ist dran – GO drücken!`);
-  busy = false; rollBtn.disabled = false;
 }
 </script>
 </body>
 </html>
-
