@@ -220,6 +220,48 @@
   }
   @keyframes wishPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.18);}}
 
+  /* ---------- Schlücke-Editor (vergrößerte Ansicht mit +/-) ---------- */
+  .sip-bar{cursor:pointer;}
+  #sipEditOverlay{
+    position:fixed;inset:0;z-index:56;display:none;
+    align-items:center;justify-content:center;
+    background:rgba(10,14,30,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .sipedit-card{
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    animation:popIn .35s cubic-bezier(.2,1.45,.4,1);
+  }
+  .sipedit-name{font-size:17px;font-weight:900;color:#fdf7ea;text-shadow:0 2px 6px #0009;}
+  .sipedit-bar{
+    position:relative;width:56px;height:220px;border-radius:20px;
+    background:rgba(255,255,255,.1);
+    box-shadow:inset 0 0 0 2px #ffffff28, 0 10px 26px #0008;
+    overflow:hidden;display:flex;align-items:flex-end;
+  }
+  .sipedit-fill{
+    width:100%;height:0%;
+    background:var(--player-color,#ff5a3c);
+    transition:height .25s ease;
+  }
+  .sipedit-controls{display:flex;align-items:center;gap:18px;}
+  .sipedit-btn{
+    width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:26px;color:#fff;
+    background:linear-gradient(160deg,var(--coral-hi),var(--coral) 55%,var(--coral-dk));
+    box-shadow:0 6px 0 #8f1f09, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .sipedit-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #8f1f09, 0 4px 10px #0006;}
+  .sipedit-btn.minus{background:linear-gradient(160deg,#a8a294,#7c766a 55%,#57524a);box-shadow:0 6px 0 #3c3830, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff50;}
+  .sipedit-btn.minus:active{box-shadow:0 1px 0 #3c3830;}
+  .sipedit-count{min-width:52px;text-align:center;font-size:28px;font-weight:900;color:#fdf7ea;text-shadow:0 2px 6px #0009;}
+  .sipedit-close{
+    margin-top:2px;width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:18px;color:#fdf7ea;
+    background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px #ffffff30;
+  }
+
   #bottom{
     position:fixed;left:0;right:0;bottom:0;
     display:flex;flex-direction:column;align-items:center;gap:10px;
@@ -729,6 +771,68 @@
   }
   .namen-answerbtn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f1f09;}
 
+  /* ---------- Minispiel „Wühlmaus-Alarm" (Whac-a-Mole) ---------- */
+  #wamOverlay{
+    position:fixed;inset:0;z-index:49;display:none;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(10,14,30,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .wam-card{
+    position:relative;width:min(380px,94vw);max-height:94vh;overflow-y:auto;
+    background:linear-gradient(178deg,#1c2414 0%,#10150c 100%);
+    border-radius:26px;padding:18px 16px 18px;text-align:center;
+    color:#fdf7ea;border:1.5px solid #ffffff18;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    animation:popIn .38s cubic-bezier(.2,1.45,.4,1);
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .wam-title{font-size:18px;font-weight:900;letter-spacing:-.2px;}
+  .wam-hitbar{display:flex;align-items:center;justify-content:center;gap:8px;}
+  .wam-hitlabel{font-size:12.5px;font-weight:800;color:#bcd0ff;}
+  .wam-hitdots{display:flex;gap:4px;}
+  .wam-hitdot{
+    width:14px;height:14px;border-radius:50%;
+    background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px #ffffff2a;
+    transition:background .2s, box-shadow .2s, transform .2s;
+  }
+  .wam-hitdot.filled{background:linear-gradient(160deg,#8affc7,var(--mint));box-shadow:0 0 8px #3ddc97cc;transform:scale(1.12);}
+  .wam-timer{height:8px;border-radius:999px;background:#00000055;overflow:hidden;box-shadow:inset 0 2px 4px #0008;}
+  .wam-timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#3ddc97,#1d9e66);transition:width .1s linear;}
+  .wam-timer-fill.critical{background:linear-gradient(90deg,#ff6a54,#c22f14);}
+  .wam-timer-label{font-size:10.5px;font-weight:800;color:#9aa6cc;}
+  .wam-status{font-size:12.5px;font-weight:800;min-height:18px;}
+  .wam-field{
+    position:relative;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+    gap:10px;margin-top:4px;aspect-ratio:1;
+  }
+  .wam-holewrap{position:relative;overflow:hidden;cursor:pointer;}
+  .wam-hole{
+    position:absolute;inset:11%;border-radius:50%;
+    background:radial-gradient(circle at 50% 35%, #2a1c10 0%, #100a06 70%);
+    box-shadow:inset 0 8px 14px #000c, inset 0 -4px 8px #4a3520aa, 0 4px 0 #0006;
+  }
+  .wam-hole::before{
+    content:"";position:absolute;inset:0;border-radius:50%;
+    box-shadow:inset 0 0 0 5px #3a2818;
+  }
+  .wam-mole{
+    position:absolute;left:50%;bottom:-70%;transform:translateX(-50%);
+    font-size:clamp(30px,9vw,46px);
+    transition:bottom .16s cubic-bezier(.3,1.4,.4,1);
+    filter:drop-shadow(0 6px 6px #0008);
+  }
+  .wam-holewrap.up .wam-mole{bottom:22%;}
+  .wam-holewrap.hit .wam-mole{animation:wamMoleHit .3s ease forwards;}
+  @keyframes wamMoleHit{0%{transform:translateX(-50%) scale(1);}50%{transform:translateX(-50%) scale(1.3) rotate(-10deg);}100%{transform:translateX(-50%) scale(.2) rotate(20deg);bottom:-70%;opacity:0;}}
+  .wam-holewrap.miss .wam-hole{animation:wamHoleMiss .3s ease;}
+  @keyframes wamHoleMiss{
+    0%,100%{box-shadow:inset 0 8px 14px #000c, inset 0 -4px 8px #4a3520aa, 0 4px 0 #0006;}
+    50%{box-shadow:inset 0 8px 14px #000c, inset 0 -4px 8px #4a3520aa, 0 0 0 4px #ff5a3c99;}
+  }
+  #wamOverlay.caught .wam-card{animation:sneakShake .4s;box-shadow:0 24px 60px #000c, 0 0 0 3px #ff5a3c99;}
+  #wamOverlay.won .wam-card{box-shadow:0 24px 60px #000c, 0 0 0 3px #3ddc9799;}
+
   /* ---------- Aussetzer-Anzeige ---------- */
   #skipOverlay{
     position:fixed;inset:0;z-index:55;display:none;
@@ -868,6 +972,19 @@
   <button id="wishBtn">🌟 Wunsch einlösen</button>
 </div>
 
+<div id="sipEditOverlay">
+  <div class="sipedit-card">
+    <div class="sipedit-name" id="sipEditName">🔴 Spieler 1</div>
+    <div class="sipedit-bar"><div class="sipedit-fill" id="sipEditFill"></div></div>
+    <div class="sipedit-controls">
+      <button class="sipedit-btn minus" id="sipEditMinus">–</button>
+      <div class="sipedit-count" id="sipEditCount">0</div>
+      <button class="sipedit-btn plus" id="sipEditPlus">+</button>
+    </div>
+    <button class="sipedit-close" id="sipEditClose">✕</button>
+  </div>
+</div>
+
 <div id="bottom">
   <div id="scooterTag">🛴 E-SCOOTER AKTIV – 2 WÜRFEL</div>
   <div id="log">Willkommen beim Polnischen!</div>
@@ -959,6 +1076,20 @@
   </div>
 </div>
 
+<div id="wamOverlay">
+  <div class="wam-card">
+    <div class="wam-title">🔨 Wühlmaus-Alarm</div>
+    <div class="wam-hitbar">
+      <div class="wam-hitlabel" id="wamHitLabel">Treffer: 0/8</div>
+      <div class="wam-hitdots" id="wamHitDots"></div>
+    </div>
+    <div class="wam-timer"><div class="wam-timer-fill" id="wamTimerFill"></div></div>
+    <div class="wam-timer-label" id="wamTimerLabel">30s</div>
+    <div class="wam-status" id="wamStatus">Tippe die Mäuse an, sobald sie hochkommen!</div>
+    <div class="wam-field" id="wamField"></div>
+  </div>
+</div>
+
 <script>
 /* =====================================================
    DER POLNISCHE – v0.4 „Nacht-München"
@@ -1017,7 +1148,7 @@ const FIELDS = [
   {n:"Theresienwiese",      e:"🎡", t:T.MINIGAME, z:6, games:["flaschenpuzzle"], d:"Ein Fremder fordert dich zu einem Minispiel heraus."},
   {n:"Schwanthaler Höhe",   e:"🏘️", t:T.EVENT,   z:6},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:6},
-  {n:"Stadtviertelfest",    e:"🎪", t:T.FIXED,   z:6, d:"Du wirst auf ein Getränk eingeladen – trinke 2 Schlücke."},
+  {n:"Stadtviertelfest",    e:"🎪", t:T.MINIGAME, z:6, games:["wuehlmaus"], d:"Ein Wühlmaus-Alarm-Stand auf dem Fest fordert dich heraus."},
   {n:"Herzog-Ernst-Platz",  e:"🌲", t:T.EVENT,   z:6},
   {n:"Sendlinger Kirche",   e:"⛪", t:T.EVENT,   z:6},
   {n:"Geile Party",         e:"🎉", t:T.GOAL,    z:6, d:"Angekommen – und keiner hat es gemerkt!"}
@@ -1308,6 +1439,7 @@ const ZOOM_MIN = 0.4, ZOOM_MAX = 3.2;
 let lastFocus = 0;
 let panX = 0, panY = 0;
 let lastQuadrantKey = null;
+let camVerticalShift = 0;
 function quadrantForTile(fieldIndex){
   const [gx,gy] = COORDS[fieldIndex];
   return { qx: gx < COLS/2 ? 0 : 1, qy: gy < ROWS/2 ? 0 : 1 };
@@ -1315,9 +1447,16 @@ function quadrantForTile(fieldIndex){
 function fitBoardToViewport(){
   // Zeigt nur ein Viertel (halbe Breite/Höhe) des Bretts, damit die Felder lesbar bleiben.
   const w = (COLS/2)*TILE, h = (ROWS/2)*TILE;
+  const hudH = document.getElementById("hud").getBoundingClientRect().height;
+  const bottomH = document.getElementById("bottom").getBoundingClientRect().height;
   const availW = window.innerWidth * 0.94;
-  const availH = window.innerHeight * 0.58; // Platz für HUD oben & Steuerung unten lassen
-  zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(availW/w, availH/h)));
+  const bandH = Math.max(140, window.innerHeight - hudH - bottomH - 20);
+  zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.min(availW/w, bandH/h)));
+  // Vertikale Mitte des Bereichs zwischen HUD (oben) und GO-Button/Log (unten) –
+  // dorthin zentrieren wir, statt auf die reine Bildschirmmitte, damit Felder
+  // nicht hinter der unteren Steuerung verschwinden.
+  const bandCenter = hudH + bandH/2 + 10;
+  camVerticalShift = bandCenter - window.innerHeight/2;
 }
 function focusOn(fieldIndex, force=false){
   lastFocus = fieldIndex;
@@ -1339,7 +1478,7 @@ function applyCamera(){
   const offsetX = (qx*quadW + quadW/2) - boardW/2;
   const offsetY = (qy*quadH + quadH/2) - boardH/2;
   world.style.transform =
-    `translate3d(${-offsetX*zoom + panX}px, ${-offsetY*zoom + 40 + panY}px, 0) scale(${zoom})`;
+    `translate3d(${-offsetX*zoom + panX}px, ${-offsetY*zoom + camVerticalShift + panY}px, 0) scale(${zoom})`;
 }
 function instantCamera(){
   world.style.transition = "none";
@@ -1436,6 +1575,9 @@ function renderSipsHud(){
       <div class="sip-icon">${p.icon}</div>
       <div class="sip-fill" id="sipFill-${i}" style="--player-color:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"></div>
     </div>`).join("");
+  players.forEach((p,i)=>{
+    document.getElementById("sipBar-"+i).addEventListener("click", ()=>openSipEditor(i));
+  });
 }
 function updateSipsUI(){
   players.forEach((p,i)=>{
@@ -1447,6 +1589,7 @@ function updateSipsUI(){
     bar.classList.toggle("full", p.sips>=25);
   });
   updateWishButton();
+  if(sipEditIdx!==null) refreshSipEditor();
 }
 function updateWishButton(){
   const btn = $("#wishBtn");
@@ -1455,9 +1598,43 @@ function updateWishButton(){
   const eligible = !gameOver && !busy && p.sips>=20 && !p.wishUsedThisTurn;
   btn.style.display = eligible ? "block" : "none";
 }
+
+/* ---------- Schlücke-Editor (Tippen auf Leiste → vergrößert mit +/-) ---------- */
+let sipEditIdx = null;
+function refreshSipEditor(){
+  if(sipEditIdx===null) return;
+  const p = players[sipEditIdx];
+  if(!p) return;
+  $("#sipEditName").textContent = `${p.icon} ${p.name}`;
+  $("#sipEditFill").style.setProperty("--player-color", PLAYER_COLORS[sipEditIdx % PLAYER_COLORS.length]);
+  $("#sipEditFill").style.height = Math.min(100, (p.sips/25)*100)+"%";
+  $("#sipEditCount").textContent = p.sips;
+}
+function openSipEditor(idx){
+  sipEditIdx = idx;
+  refreshSipEditor();
+  $("#sipEditOverlay").style.display = "flex";
+}
+function closeSipEditor(){
+  $("#sipEditOverlay").style.display = "none";
+  sipEditIdx = null;
+}
+$("#sipEditPlus").addEventListener("click", ()=>{
+  if(sipEditIdx===null) return;
+  addSips(sipEditIdx, 1);
+  refreshSipEditor();
+});
+$("#sipEditMinus").addEventListener("click", ()=>{
+  if(sipEditIdx===null) return;
+  const p = players[sipEditIdx];
+  if(!p || p.sips<=0) return;
+  addSips(sipEditIdx, -1);
+  refreshSipEditor();
+});
+$("#sipEditClose").addEventListener("click", closeSipEditor);
 function addSips(idx, amount){
   if(!players[idx] || !amount) return;
-  players[idx].sips += amount;
+  players[idx].sips = Math.max(0, players[idx].sips + amount);
   updateSipsUI();
 }
 function distributeSips(amount, excludeIdx){
@@ -2270,9 +2447,134 @@ function playNamenGame(p, pi){
   });
 }
 
+/* ---------- Minispiel „Wühlmaus-Alarm" (Whac-a-Mole) ----------
+   3x3 Löcher, eine Maus poppt zufällig hoch – 8 Treffer innerhalb
+   von 30 Sekunden nötig, sonst verloren. Sieg/Niederlage bestimmt
+   wie üblich vor/zurück um die gewürfelte Zahl. */
+function playWhacAMole(p, val){
+  return new Promise(res=>{
+    const overlay = $("#wamOverlay");
+    const fieldEl = $("#wamField");
+    const hitLabelEl = $("#wamHitLabel");
+    const hitDotsEl = $("#wamHitDots");
+    const timerFillEl = $("#wamTimerFill");
+    const timerLabelEl = $("#wamTimerLabel");
+    const statusEl = $("#wamStatus");
+    const NEEDED_HITS = 8, TIME_LIMIT = 30, HOLE_COUNT = 9, MOLE_EMOJI = "🐭";
+
+    let holes = [], hits = 0, finished = false;
+    let startTs = null, rafId = null, spawnTimer = null;
+    const activeMoleTimers = new Map();
+
+    function buildHoles(){
+      fieldEl.innerHTML = "";
+      holes = [];
+      for(let i=0;i<HOLE_COUNT;i++){
+        const wrap = document.createElement("div");
+        wrap.className = "wam-holewrap";
+        wrap.innerHTML = `<div class="wam-hole"></div><div class="wam-mole">${MOLE_EMOJI}</div>`;
+        wrap.addEventListener("pointerdown", ()=>onHolePress(i));
+        fieldEl.appendChild(wrap);
+        holes.push({el:wrap, up:false});
+      }
+    }
+    function renderHitDots(){
+      hitDotsEl.innerHTML = "";
+      for(let i=0;i<NEEDED_HITS;i++){
+        const d = document.createElement("div");
+        d.className = "wam-hitdot" + (i<hits ? " filled" : "");
+        hitDotsEl.appendChild(d);
+      }
+    }
+    function updateTimerUI(remainingMs){
+      const remaining = Math.max(0, remainingMs/1000);
+      timerFillEl.style.width = (remaining/TIME_LIMIT*100)+"%";
+      timerFillEl.classList.toggle("critical", remaining<=8);
+      timerLabelEl.textContent = Math.ceil(remaining)+"s";
+    }
+    function popRandomMole(){
+      if(finished) return;
+      const downHoles = holes.map((h,i)=>({h,i})).filter(o=>!o.h.up);
+      if(downHoles.length===0){ scheduleSpawn(); return; }
+      const pick = downHoles[Math.floor(Math.random()*downHoles.length)];
+      const holeObj = pick.h, idx = pick.i;
+      holeObj.up = true;
+      holeObj.el.classList.add("up");
+      const upDuration = 650 + Math.random()*350;
+      const t = setTimeout(()=>{
+        if(holeObj.up){ holeObj.up = false; holeObj.el.classList.remove("up"); }
+        activeMoleTimers.delete(idx);
+      }, upDuration);
+      activeMoleTimers.set(idx, t);
+      scheduleSpawn();
+    }
+    function scheduleSpawn(){
+      if(finished) return;
+      spawnTimer = setTimeout(popRandomMole, 380 + Math.random()*420);
+    }
+    function onHolePress(idx){
+      if(finished) return;
+      const holeObj = holes[idx];
+      if(holeObj.up){
+        holeObj.up = false;
+        holeObj.el.classList.remove("up");
+        holeObj.el.classList.add("hit");
+        clearTimeout(activeMoleTimers.get(idx));
+        activeMoleTimers.delete(idx);
+        setTimeout(()=>holeObj.el.classList.remove("hit"), 320);
+        hits++;
+        renderHitDots();
+        hitLabelEl.textContent = `Treffer: ${hits}/${NEEDED_HITS}`;
+        if(hits>=NEEDED_HITS) finish(true);
+      } else {
+        holeObj.el.classList.add("miss");
+        setTimeout(()=>holeObj.el.classList.remove("miss"), 300);
+      }
+    }
+    function tick(ts){
+      if(finished) return;
+      if(startTs===null) startTs = ts;
+      const remaining = Math.max(0, TIME_LIMIT-(ts-startTs)/1000);
+      updateTimerUI(remaining*1000);
+      if(remaining<=0){ finish(false); return; }
+      rafId = requestAnimationFrame(tick);
+    }
+    function cleanup(){
+      cancelAnimationFrame(rafId);
+      clearTimeout(spawnTimer);
+      activeMoleTimers.forEach(t=>clearTimeout(t));
+      activeMoleTimers.clear();
+    }
+    async function finish(won){
+      if(finished) return;
+      finished = true;
+      cleanup();
+      statusEl.textContent = won
+        ? `Geschafft! 🎉 ${p.name} geht ${val} Felder vor.`
+        : `Zeit abgelaufen! 😬 ${p.name} geht ${val} Felder zurück.`;
+      overlay.classList.toggle("won", won);
+      overlay.classList.toggle("caught", !won);
+      await wait(1400);
+      overlay.style.display = "none";
+      overlay.classList.remove("won","caught");
+      res(won);
+    }
+
+    buildHoles();
+    hits = 0; renderHitDots();
+    hitLabelEl.textContent = `Treffer: 0/${NEEDED_HITS}`;
+    updateTimerUI(TIME_LIMIT*1000);
+    statusEl.textContent = "Tippe die Mäuse an, sobald sie hochkommen!";
+    overlay.style.display = "flex";
+    scheduleSpawn();
+    rafId = requestAnimationFrame(tick);
+  });
+}
+
 const MINIGAMES = [
   {key:"zeche-prellen", name:"Zeche prellen", emoji:"🍺", run: playSneakGame},
   {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame},
+  {key:"wuehlmaus", name:"Wühlmaus-Alarm", emoji:"🔨", run: playWhacAMole},
 ];
 
 /* ---------- Slot-Machine: lost das Minispiel bunt & zufällig aus ---------- */
