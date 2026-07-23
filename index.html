@@ -1228,6 +1228,7 @@ const FIELDS = [
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
   {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
   {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
+  {n:"Polizeistation",      e:"🚓", t:T.EVENT,   z:2, key:"polizeistation"},
   {n:"Tipico",              e:"🎰", t:T.WETTE,   z:2, d:"Du schaust schnell bei Tipico vorbei und tippst auf ein Bundesliga-Spiel."},
   {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"universitaet", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Universität."},
   {n:"Rathaus",             e:"🏛️", t:T.EVENT,   z:2},
@@ -1310,7 +1311,7 @@ const STREET_CARDS = [
   {e:"📊", txt:"Dein Promillegehalt sinkt leicht – trinke 1 Schluck."},
   {e:"🤝", txt:"Du gibst dein Norgerl einem Fremden – verteile 2 Schlücke."},
   {e:"😤", txt:"Jemand wirft dir vor, dass du „nicht saufen kannst“ – zeig's ihm und trinke 4 Schlücke."},
-  {e:"🍻", txt:"Du holst dir Nachschub in einer naheliegenden Boazn – trinke 3 Schlücke."},
+  {e:"🍻", txt:"Du holst dir Nachschub in einer Boazn – trinke 3 Schlücke."},
   {e:"🥃", txt:"Du findest einen Shot in deiner Hosentasche (einen Kurzen hast du da ja bereits) – trinke 1 Shot oder 5 Schlücke."},
   {e:"💧", txt:"Du bekommst Durst – trinke 2 Schlücke."},
   {e:"🛣️", txt:"Du bist in die falsche Straße abgebogen – gehe 2 Felder zurück.", mv:-2},
@@ -1326,7 +1327,7 @@ const STREET_CARDS = [
   {e:"🚋", txt:"Du erwischst pünktlich deine Tram – gehe 2 Felder vor.", mv:2},
   {e:"💨", txt:"Du ziehst einen kurzen Sprint an – gehe 1 Feld vor.", mv:1},
   {e:"🏘️", txt:"Du nimmst eine Abkürzung über ein Wohngebiet – gehe 1 Feld vor.", mv:1},
-  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade und gibt dir eine Verwarnung – setze eine Runde aus.", skip:1},
+  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade – du musst dich direkt auf der Polizeistation melden.", goto:"polizeistation"},
   {e:"💬", txt:"Ein Fremder verwickelt dich in ein Gespräch – setze eine Runde aus.", skip:1},
   {e:"🍟", txt:"Kurze Chicken-McNuggets-Pause bei McDonald's – setze eine Runde aus.", skip:1},
   {e:"⏳", txt:"Überbrücke die Wartezeit an der Ampel mit Bier – trinke 1 Schluck."},
@@ -1344,6 +1345,8 @@ const STREET_CARDS = [
   {e:"📱", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 2 Schlücke."},
   {e:"📲", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 3 Schlücke."},
   {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
+  {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
+  {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"},
 ];
 
 const TYPE_META = {
@@ -1451,14 +1454,12 @@ $("#startBtn").onclick = async ()=>{
   decks.street = shuffled(STREET_CARDS);
   $("#setup").style.display="none";
   buildBoard();
+  await showIntroStory();
+  await rollOffForStart();
   renderTokens();
   renderSipsHud();
   updateHud();
-  focusOn(0, true);
-  await showIntroStory();
-  await rollOffForStart();
   focusOn(players[current].pos, true);
-  updateHud();
   setLog(`${players[current].icon} ${players[current].name} beginnt – GO drücken!`);
 };
 
@@ -2992,50 +2993,73 @@ function showIntroStory(){
     buttons:[{label:"Auf geht's! 🏃", cls:"green", value:1}]});
 }
 
-/* ---------- Auswürfeln, wer beginnt ----------
-   Jeder Spieler würfelt mit 2 Würfeln; die höchste Augenzahl beginnt.
-   Bei Gleichstand würfeln nur die Gleichauf-Spieler erneut, bis einer
-   klar vorne liegt. Setzt am Ende "current" auf den Gewinner. */
-async function rollOffForStart(){
-  let candidates = players.map((p,i)=>i);
-  let round = 1;
-  while(true){
-    const totals = {};
-    for(const idx of candidates){
-      const p = players[idx];
-      await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
-        title: round>1 ? `Stichentscheid: ${p.name}` : `${p.name} ist dran`,
-        text: round>1 ? `Gleichstand! ${p.name} würfelt zum Stichentscheid nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
-        buttons:[{label:"Würfeln", cls:"green", value:1}]});
-      const vals = [rand(6), rand(6)];
-      await showDice(vals);
-      const sum = vals[0]+vals[1];
-      totals[idx] = sum;
-      setLog(`${p.icon} ${p.name} würfelt ${sum}.`);
-      await wait(500);
-    }
-    const maxVal = Math.max(...candidates.map(i=>totals[i]));
-    const tied = candidates.filter(i=>totals[i]===maxVal);
-    if(tied.length===1){ current = tied[0]; break; }
-    candidates = tied;
-    round++;
+/* ---------- Auswürfeln der kompletten Reihenfolge ----------
+   Alle Spieler würfeln mit 2 Würfeln. Wer bei einer Augenzahl
+   gleichauf liegt, sticht NUR mit den anderen Gleichauf-Spielern um
+   genau diesen Platz (bzw. den Platz-Block) erneut – so lange, bis
+   jeder Platz eindeutig vergeben ist. Danach wird "players" in die
+   ausgewürfelte Reihenfolge gebracht (current = 0 = Startspieler). */
+async function diceRollGroup(indices, isTiebreak){
+  const totals = {};
+  const groupNames = indices.map(idx=>`${players[idx].icon} ${players[idx].name}`).join(", ");
+  for(const idx of indices){
+    const p = players[idx];
+    const opponents = indices.filter(i=>i!==idx).map(i=>players[i].name).join(", ");
+    await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+      title: isTiebreak ? `Stechen: ${p.name}` : `${p.name} ist dran`,
+      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Platz – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
+      buttons:[{label:"Würfeln", cls:"green", value:1}]});
+    const vals = [rand(6), rand(6)];
+    await showDice(vals);
+    const sum = vals[0]+vals[1];
+    totals[idx] = sum;
+    setLog(`${p.icon} ${p.name} würfelt ${sum}.`);
+    await wait(400);
   }
-  const winner = players[current];
+  return totals;
+}
+async function diceRankOrder(indices, isTiebreak=false){
+  if(indices.length<=1) return indices.slice();
+  const totals = await diceRollGroup(indices, isTiebreak);
+  const byValue = {};
+  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
+  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
+  let order = [];
+  for(const val of sortedValues){
+    const group = byValue[val];
+    if(group.length===1) order.push(group[0]);
+    else order.push(...await diceRankOrder(group, true));
+  }
+  return order;
+}
+async function rollOffForStart(){
+  const order = await diceRankOrder(players.map((p,i)=>i));
+  players = order.map(idx=>players[idx]);
+  current = 0;
+  const winner = players[0];
+  const rankText = players.map((pl,rank)=> `${rank+1}. ${pl.icon} ${pl.name}`).join("<br>");
   await showModal({emoji:"🏆", tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
-    title:"Start steht fest!",
-    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!`,
+    title:"Reihenfolge steht fest!",
+    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!<br><br>${rankText}`,
     buttons:[{label:"Los geht's!", cls:"green", value:1}]});
 }
 /* Reine Berechnung ohne Animation, für den Host im Mehrgeräte-Modus
-   (jeder Client würfelt sonst unterschiedliche Zufallswerte). */
-function simulateRollOff(count){
-  let candidates = Array.from({length:count}, (_,i)=>i);
-  while(candidates.length>1){
-    const totals = candidates.map(()=> rand(6)+rand(6));
-    const maxVal = Math.max(...totals);
-    candidates = candidates.filter((_,k)=>totals[k]===maxVal);
-  }
-  return candidates[0];
+   (jeder Client würfelt sonst unterschiedliche Zufallswerte). Gleiche
+   Stechen-Logik wie diceRankOrder, nur ohne UI. */
+function simulateDiceRankOrder(indices){
+  if(indices.length<=1) return indices.slice();
+  const totals = {};
+  indices.forEach(idx=>{ totals[idx] = rand(6)+rand(6); });
+  const byValue = {};
+  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
+  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
+  let order = [];
+  sortedValues.forEach(val=>{
+    const group = byValue[val];
+    if(group.length===1) order.push(group[0]);
+    else order.push(...simulateDiceRankOrder(group));
+  });
+  return order;
 }
 
 /* ---------- Aussetzer-Anzeige ---------- */
@@ -3094,6 +3118,40 @@ async function teleport(pi, target){
 }
 
 /* ---------- Feld-Auflösung (nur nach Würfelzug) ---------- */
+/* ---------- Sonderkarten mit Spielerauswahl ----------
+   "Notfall vortäuschen": Zielspieler eilt sofort zum eigenen Feld,
+   kann aber auch abgelehnt werden. Löst dabei keine Ereignisse/
+   Minispiele aus. "Falsche Anzeige": Zielspieler muss 2 Runden
+   aussetzen und sofort zur Polizeistation. */
+async function handleSpecialCard(special, pi){
+  const p = players[pi];
+  const others = players.map((q,i)=>i).filter(i=>i!==pi);
+  if(others.length===0) return;
+  if(special==="fake-emergency"){
+    const targetIdx = await showModal({emoji:"📞", tag:"NOTFALL-TRICK", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+      title:"Wen rufst du an?",
+      text:"Wähle einen Spieler, der sofort zu deinem Feld eilen muss – oder verzichte darauf.",
+      buttons:[
+        ...others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i})),
+        {label:"Darauf verzichten", cls:"gray", value:"decline"},
+      ]});
+    if(targetIdx==="decline"){
+      setLog(`${p.icon} ${p.name} verzichtet darauf, jemanden anzurufen.`);
+    } else {
+      await teleport(targetIdx, p.pos);
+      setLog(`${players[targetIdx].icon} ${players[targetIdx].name} eilt zu ${p.icon} ${p.name}s Feld.`);
+    }
+  } else if(special==="false-tip"){
+    const targetIdx = await showModal({emoji:"🚨", tag:"FALSCHE ANZEIGE", tagCol:"linear-gradient(140deg,#c0272d,#7a1418)",
+      title:"Wen zeigst du an?",
+      text:"Wähle einen Spieler, den du bei der Polizei fälschlich beim Juwelier-Überfall gemeldet hast.",
+      buttons: others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i}))});
+    players[targetIdx].skip = 2;
+    await teleport(targetIdx, fieldIndexByKey("polizeistation"));
+    setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
+  }
+}
+
 async function resolveField(pi){
   const p = players[pi];
   const f = FIELDS[p.pos];
@@ -3107,23 +3165,27 @@ async function resolveField(pi){
   const isEncounter = occupants.length>0 && CARD_OR_MINIGAME_TYPES.includes(f.t);
 
   if(isEncounter){
-    const target = occupants[Math.floor(Math.random()*occupants.length)];
-    const targetIdx = players.indexOf(target);
+    const namesList = occupants.map(o=>`${o.icon} ${o.name}`).join(", ");
+    const single = occupants.length===1;
     const choice = await showModal({emoji:"👋", tag:"BEGEGNUNG", tagCol:"linear-gradient(140deg,#ffb347,#c96f18)",
-      title:`${target.icon} ${target.name} getroffen!`,
-      text:`${p.name} trifft ${target.name} auf „${f.n}“. Was tust du?`,
+      title: single ? `${occupants[0].icon} ${occupants[0].name} getroffen!` : `${occupants.length} Spieler getroffen!`,
+      text:`${p.name} trifft ${namesList} auf „${f.n}“. Was tust du?`,
       buttons:[
-        {label:`🥂 ${target.name} begrüßen & anstoßen`, cls:"green", value:"greet"},
-        {label:`🧭 Falsche Wegbeschreibung geben`, cls:"gray", value:"trick"},
+        {label: single ? `🥂 ${occupants[0].name} begrüßen & anstoßen` : "🥂 Alle begrüßen & anstoßen", cls:"green", value:"greet"},
+        {label: single ? "🧭 Falsche Wegbeschreibung geben" : "🧭 Allen falsche Wegbeschreibung geben", cls:"gray", value:"trick"},
       ]});
     if(choice==="greet"){
-      addSips(pi, 1); addSips(targetIdx, 1);
-      setLog(`${p.icon} ${p.name} stößt mit ${target.icon} ${target.name} an – beide trinken 1 Schluck.`);
+      addSips(pi, 1);
+      occupants.forEach(o=> addSips(players.indexOf(o), 1));
+      setLog(`${p.icon} ${p.name} stößt mit ${namesList} an – alle trinken 1 Schluck.`);
     } else {
-      setLog(`${p.icon} ${p.name} gibt ${target.icon} ${target.name} eine falsche Wegbeschreibung …`);
-      await moveSteps(targetIdx, -2);
-      addSips(targetIdx, 3);
-      setLog(`${target.icon} ${target.name} geht aus Frust 2 Felder zurück und trinkt 3 Schlücke.`);
+      setLog(`${p.icon} ${p.name} gibt ${namesList} eine falsche Wegbeschreibung …`);
+      for(const o of occupants){
+        const oIdx = players.indexOf(o);
+        await moveSteps(oIdx, -2);
+        addSips(oIdx, 3);
+      }
+      setLog(`${namesList} gehen aus Frust 2 Felder zurück und trinken je 3 Schlücke.`);
     }
   } else {
   switch(f.t){
@@ -3141,10 +3203,14 @@ async function resolveField(pi){
       const c = drawCard(f.z);
       await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
-      applySipsFromText(c.txt, pi);
-      if(c.skip){ p.skip = c.skip; }
-      if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
-      else if(c.mv){ await moveSteps(pi, c.mv); }
+      if(c.special){
+        await handleSpecialCard(c.special, pi);
+      } else {
+        applySipsFromText(c.txt, pi);
+        if(c.skip){ p.skip = c.skip; }
+        if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
+        else if(c.mv){ await moveSteps(pi, c.mv); }
+      }
       break;
     }
     case T.FIXED: {
@@ -3330,12 +3396,12 @@ rollBtn.onclick = async ()=>{
   if(isScooter){
     const r = Math.random();
     if(r < 0.10){
-      const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird kassiert und zurück zur öden Party gebracht. Trinke 2 Schlücke zum Trost.`;
+      const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird von der Polizei angehalten und zur Polizeistation gebracht. Trinke 2 Schlücke zum Trost.`;
       await showModal({emoji:"🚔", tag:"BUSTED", tagCol:"linear-gradient(140deg,#f0564a,#a8241a)", title:"Polizei!",
         text:bustedText,
         buttons:[{label:"Mist!", value:1}]});
       applySipsFromText(bustedText, current);
-      await teleport(current, 0);
+      await teleport(current, fieldIndexByKey("polizeistation"));
       await endTurn(); return;
     } else if(r < 0.35){
       const unfallText = `${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trinke 1 Schluck zum Trost.`;
