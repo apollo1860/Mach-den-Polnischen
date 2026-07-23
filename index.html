@@ -1217,7 +1217,8 @@
 const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal" };
 
 const FIELDS = [
-  {n:"Balkon",              e:"🚬", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
+  {n:"Start",               e:"🏁", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
+  {n:"Balkon",              e:"🚬", t:T.EVENT,   z:1},
   {n:"Küche",               e:"🍳", t:T.EVENT,   z:1},
   {n:"Schlafzimmer",        e:"🛏️", t:T.EVENT,   z:1},
   {n:"Wohnzimmer",          e:"🛋️", t:T.EVENT,   z:1},
@@ -1437,7 +1438,7 @@ function refreshIcons(){
 $("#addPlayer").onclick = ()=> addPlayerRow();
 addPlayerRow(); addPlayerRow();
 
-$("#startBtn").onclick = ()=>{
+$("#startBtn").onclick = async ()=>{
   players = [...playerList.children].map((r,i)=>({
     name: r.querySelector("input").value.trim() || `Spieler ${i+1}`,
     icon: TOKEN_ICONS[i],
@@ -1454,7 +1455,11 @@ $("#startBtn").onclick = ()=>{
   renderSipsHud();
   updateHud();
   focusOn(0, true);
-  setLog(`${players[0].icon} ${players[0].name} schleicht zuerst – GO drücken!`);
+  await showIntroStory();
+  await rollOffForStart();
+  focusOn(players[current].pos, true);
+  updateHud();
+  setLog(`${players[current].icon} ${players[current].name} beginnt – GO drücken!`);
 };
 
 /* ---------- Board ---------- */
@@ -2938,11 +2943,11 @@ function playWetteGame(p, pi){
 
 const MINIGAMES = [
   {key:"zeche-prellen", name:"Zeche prellen", emoji:"🍺", run: playSneakGame,
-    rules:"Halte den Wirt im Auge: Tippe wiederholt, um vorwärts zu schleichen, aber nur solange er wegschaut. Schaut er her, bist du erwischt. Zeitlimit läuft."},
+    rules:"Tippe wiederholt auf den Button, um vorwärts zu schleichen – aber nur, solange der Wirt wegschaut. Tippst du, während er sich zu dir umdreht, bist du sofort erwischt. Fülle den Fortschrittsbalken in 20 Sekunden."},
   {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame,
-    rules:"Ziehe die passenden Bierflaschen-Teile in die richtigen Slots, bevor die Zeit abläuft. Manche Teile liegen verdeckt – antippen deckt sie auf."},
+    rules:"Tippe verdeckte Teile an, um sie aufzudecken, und ziehe per Drag die 6 richtigen Bierflaschen-Teile in die passenden Slots. Wein- und Wasserflaschen-Teile sind Ablenkung. Alle 6 richtigen in 20 Sekunden platzieren."},
   {key:"wuehlmaus", name:"Wühlmaus-Alarm", emoji:"🔨", run: playWhacAMole,
-    rules:"Tippe die Mäuse an, sobald sie aus ihren Löchern kommen. Schaffe 8 Treffer, bevor die Zeit abläuft."},
+    rules:"Tippe auf ein Loch, sobald eine Maus daraus hochkommt. Du brauchst 8 Treffer in 30 Sekunden."},
 ];
 
 /* ---------- Slot-Machine: lost das Minispiel bunt & zufällig aus ---------- */
@@ -2978,6 +2983,59 @@ function spinSlotMachine(chosen){
 function showMiniGameIntro(emoji, title, text){
   return showModal({emoji, tag:"BEREIT MACHEN", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
     title, text, buttons:[{label:"Start", cls:"green", value:1}]});
+}
+
+/* ---------- Storyline-Intro nach Spielstart ---------- */
+function showIntroStory(){
+  return showModal({emoji:"🥱➡️🎉", title:"Nichts wie weg!",
+    text:"Diese Party ist eine Katastrophe: Die Playlist besteht gefühlt nur aus Fahrstuhlmusik 🎷, der Gastgeber erzählt zum dritten Mal dieselbe Geschichte und selbst die Chips sind weich. Nichts wie weg!<br><br>📱 Gerade hat dich die Nachricht erreicht: Auf der angesagtesten Party der Stadt ist genau noch ein Platz frei.<br><br>😬 Blöd nur: Deine Freunde, mit denen du auf dieser Party bist, haben dieselbe Nachricht bekommen und sprinten ebenfalls los, um sich den letzten freien Platz zu schnappen.<br><br>🏃 Renn, spring und weiche Hindernissen aus. Erreiche die Party vor deinen Freunden – denn nur der Schnellste kommt noch rein!",
+    buttons:[{label:"Auf geht's! 🏃", cls:"green", value:1}]});
+}
+
+/* ---------- Auswürfeln, wer beginnt ----------
+   Jeder Spieler würfelt mit 2 Würfeln; die höchste Augenzahl beginnt.
+   Bei Gleichstand würfeln nur die Gleichauf-Spieler erneut, bis einer
+   klar vorne liegt. Setzt am Ende "current" auf den Gewinner. */
+async function rollOffForStart(){
+  let candidates = players.map((p,i)=>i);
+  let round = 1;
+  while(true){
+    const totals = {};
+    for(const idx of candidates){
+      const p = players[idx];
+      await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+        title: round>1 ? `Stichentscheid: ${p.name}` : `${p.name} ist dran`,
+        text: round>1 ? `Gleichstand! ${p.name} würfelt zum Stichentscheid nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
+        buttons:[{label:"Würfeln", cls:"green", value:1}]});
+      const vals = [rand(6), rand(6)];
+      await showDice(vals);
+      const sum = vals[0]+vals[1];
+      totals[idx] = sum;
+      setLog(`${p.icon} ${p.name} würfelt ${sum}.`);
+      await wait(500);
+    }
+    const maxVal = Math.max(...candidates.map(i=>totals[i]));
+    const tied = candidates.filter(i=>totals[i]===maxVal);
+    if(tied.length===1){ current = tied[0]; break; }
+    candidates = tied;
+    round++;
+  }
+  const winner = players[current];
+  await showModal({emoji:"🏆", tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
+    title:"Start steht fest!",
+    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!`,
+    buttons:[{label:"Los geht's!", cls:"green", value:1}]});
+}
+/* Reine Berechnung ohne Animation, für den Host im Mehrgeräte-Modus
+   (jeder Client würfelt sonst unterschiedliche Zufallswerte). */
+function simulateRollOff(count){
+  let candidates = Array.from({length:count}, (_,i)=>i);
+  while(candidates.length>1){
+    const totals = candidates.map(()=> rand(6)+rand(6));
+    const maxVal = Math.max(...totals);
+    candidates = candidates.filter((_,k)=>totals[k]===maxVal);
+  }
+  return candidates[0];
 }
 
 /* ---------- Aussetzer-Anzeige ---------- */
@@ -3041,6 +3099,33 @@ async function resolveField(pi){
   const f = FIELDS[p.pos];
   const meta = TYPE_META[f.t];
 
+  // Wenn schon mind. 1 anderer Spieler auf diesem Feld steht und es sich um
+  // eine Ereigniskarte oder ein Minispiel handelt, gibt es statt der
+  // normalen Feld-Auflösung eine Begegnung mit Wahlmöglichkeit.
+  const CARD_OR_MINIGAME_TYPES = [T.EVENT, T.FIXED, T.MINIGAME, T.DARTS, T.NAMEN, T.WETTE];
+  const occupants = players.filter(q=>q!==p && q.pos===p.pos);
+  const isEncounter = occupants.length>0 && CARD_OR_MINIGAME_TYPES.includes(f.t);
+
+  if(isEncounter){
+    const target = occupants[Math.floor(Math.random()*occupants.length)];
+    const targetIdx = players.indexOf(target);
+    const choice = await showModal({emoji:"👋", tag:"BEGEGNUNG", tagCol:"linear-gradient(140deg,#ffb347,#c96f18)",
+      title:`${target.icon} ${target.name} getroffen!`,
+      text:`${p.name} trifft ${target.name} auf „${f.n}“. Was tust du?`,
+      buttons:[
+        {label:`🥂 ${target.name} begrüßen & anstoßen`, cls:"green", value:"greet"},
+        {label:`🧭 Falsche Wegbeschreibung geben`, cls:"gray", value:"trick"},
+      ]});
+    if(choice==="greet"){
+      addSips(pi, 1); addSips(targetIdx, 1);
+      setLog(`${p.icon} ${p.name} stößt mit ${target.icon} ${target.name} an – beide trinken 1 Schluck.`);
+    } else {
+      setLog(`${p.icon} ${p.name} gibt ${target.icon} ${target.name} eine falsche Wegbeschreibung …`);
+      await moveSteps(targetIdx, -2);
+      addSips(targetIdx, 3);
+      setLog(`${target.icon} ${target.name} geht aus Frust 2 Felder zurück und trinkt 3 Schlücke.`);
+    }
+  } else {
   switch(f.t){
     case T.GOAL: {
       gameOver = true;
@@ -3199,7 +3284,7 @@ async function resolveField(pi){
       await showDice([val]);
       setLog(`🎯 ${p.icon} ${p.name} tritt in der Boazn zum Darts an …`);
       await showMiniGameIntro("🎯", "Boazn-Darts",
-        "Ihr werft abwechselnd 3 Aufnahmen à 3 Darts. Stoppe je einen wackelnden Balken für die horizontale und vertikale Position. Wer mehr Punkte wirft, gewinnt.");
+        "Pro Dart schwingt erst eine senkrechte Linie hin und her – tippe STOPP, um die horizontale Position zu fixieren. Danach schwingt eine waagrechte Linie – nochmal STOPP für die vertikale Position. 3 Aufnahmen à 3 Darts, 30 Sekunden pro Aufnahme. Mehr Punkte als der Fremde gewinnt.");
       const won = await playDartsGame(p, val);
       await moveSteps(pi, won ? val : -val);
       break;
@@ -3207,17 +3292,18 @@ async function resolveField(pi){
     case T.NAMEN: {
       setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} hat spontan neue Freunde kennengelernt …`);
       await showMiniGameIntro("🧑‍🤝‍🧑", "Namen merken",
-        "Du hast spontan neue Freunde kennengelernt, deren Namen du dir jetzt merken musst. Lerne in der Lernphase alle 10 Namen – danach fragt jede Person nach ihrem eigenen Namen, tippe ihn ein.");
+        "Du hast spontan neue Freunde kennengelernt. In der Lernphase stellt sich nacheinander jede der 10 Personen 3 Sekunden lang vor – merke dir die Namen. Danach fragt jede Person in zufälliger Reihenfolge „Wie heiße ich?“: Namen ins Feld tippen und mit OK oder Enter bestätigen.");
       await playNamenGame(p, pi);
       break;
     }
     case T.WETTE: {
       setLog(`🎰 ${p.icon} ${p.name} tippt bei Tipico …`);
       await showMiniGameIntro("🎰", "Tipico-Wette",
-        "Tippe auf 1, X oder 2 und lege deinen Einsatz fest. Bei richtigem Tipp verteilst du Einsatz × Quote, bei falschem trinkst du deinen Einsatz.");
+        "Tippe 1, X oder 2 an, um deinen Tipp zu setzen. Stelle danach mit +/- deinen Einsatz ein und tippe auf „Wette bestätigen“. Bei richtigem Tipp verteilst du Einsatz × Quote (gerundet), bei falschem trinkst du deinen Einsatz selbst.");
       await playWetteGame(p, pi);
       break;
     }
+  }
   }
   updateHud();
 }
