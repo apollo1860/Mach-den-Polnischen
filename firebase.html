@@ -352,13 +352,13 @@
   .f2{transform:rotateX(-90deg) translateZ(46px);}
 
   /* ---------- Modal ---------- */
-  #modalWrap{
+  #modalWrap, .modal-overlay{
     position:fixed;inset:0;z-index:50;
     background:rgba(10,14,30,.62);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:18px;
   }
-  #modal{
+  #modal, .modal-card{
     position:relative;
     background:linear-gradient(178deg,#fffdf6 0%, var(--paper2) 100%);
     border-radius:26px;
@@ -367,20 +367,21 @@
     animation:popIn .42s cubic-bezier(.2,1.45,.4,1);
   }
   @keyframes popIn{0%{transform:scale(.55) translateY(30px);opacity:0;}100%{transform:scale(1) translateY(0);opacity:1;}}
-  #modal .m-emoji{
+  #modal .m-emoji, .modal-card .m-emoji{
     font-size:56px;line-height:1;filter:drop-shadow(0 4px 4px #0004);
     animation:emojiBob 2.2s ease-in-out infinite;
   }
   @keyframes emojiBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-  #modal .m-tag{
+  #modal .m-tag, .modal-card .m-tag{
     display:inline-block;margin-top:12px;
     font-size:10.5px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;
     color:#fff;padding:5px 15px;border-radius:999px;
     box-shadow:0 3px 8px #0004, inset 0 1px 0 #ffffff60;
   }
-  #modal h2{font-size:23px;font-weight:900;margin-top:10px;letter-spacing:-.3px;color:#332a1d;}
-  #modal p{font-size:15px;font-weight:600;margin-top:9px;line-height:1.5;color:#4f4433;}
-  #modal .m-btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  #modal h2, .modal-card h2{font-size:23px;font-weight:900;margin-top:10px;letter-spacing:-.3px;color:#332a1d;}
+  #modal p, .modal-card p{font-size:15px;font-weight:600;margin-top:9px;line-height:1.5;color:#4f4433;}
+  #modal .m-btns, .modal-card .m-btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  .modal-card .m-waiting{font-size:12px;font-weight:800;color:#8a7a5c;margin-top:16px;letter-spacing:.2px;}
   .btn{
     border:none;cursor:pointer;position:relative;overflow:hidden;
     font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.2px;
@@ -1108,6 +1109,7 @@
 <div id="diceLayer"></div>
 <div id="confetti"></div>
 <div id="modalWrap"><div id="modal"></div></div>
+<div id="cardRevealOverlay" class="modal-overlay"><div id="cardRevealCard" class="modal-card"></div></div>
 <div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
 
 <div id="sneakOverlay">
@@ -1591,7 +1593,16 @@ function beginMultiplayerGame(){
     if(!document.getElementById("sipsHud").children.length) renderSipsHud();
     renderTokens(); updateSipsUI(); updateHud();
     setLog(s.log || "");
+    mp.lastMiniGameBanner = s.miniGameBanner || null;
     refreshControlAccess();
+
+    const mine = isMyTurn();
+    renderSpectatorCard(!mine && s.cardReveal ? s.cardReveal : null);
+    if(!mine && s.skipAnnounce && s.skipAnnounce.nonce !== mp.lastSkipNonce){
+      mp.lastSkipNonce = s.skipAnnounce.nonce;
+      showSkipX(s.skipAnnounce);
+    }
+
     if(gameOver && !wasOver){
       throwConfetti();
       await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
@@ -1602,6 +1613,18 @@ function beginMultiplayerGame(){
   });
   refreshControlAccess();
   });
+}
+function renderSpectatorCard(card){
+  const overlay = document.getElementById("cardRevealOverlay");
+  const cardEl = document.getElementById("cardRevealCard");
+  if(!card){ overlay.style.display = "none"; return; }
+  cardEl.innerHTML = `
+    <div class="m-emoji">${card.emoji}</div>
+    ${card.tag?`<div class="m-tag" style="background:${card.tagCol}">${card.tag}</div>`:""}
+    <h2>${card.title}</h2>
+    ${card.text?`<p>${card.text}</p>`:""}
+    <div class="m-waiting">Warte, bis ${players[current] ? players[current].name : "der aktive Spieler"} bestätigt …</div>`;
+  overlay.style.display = "flex";
 }
 
 function refreshControlAccess(){
@@ -1616,7 +1639,10 @@ function refreshControlAccess(){
       hint.style.cssText = "background:rgba(22,28,54,.66);color:#fdf7ea;padding:8px 18px;border-radius:999px;font-weight:700;font-size:13px;";
       $("#bottom").insertBefore(hint, rollBtn);
     }
-    hint.textContent = `${players[current].icon} ${players[current].name} ist dran…`;
+    const banner = mp.lastMiniGameBanner;
+    hint.textContent = banner
+      ? `${banner.emoji} ${players[current].name} spielt gerade: ${banner.name} …`
+      : `${players[current].icon} ${players[current].name} ist dran…`;
     hint.style.display = "block";
   } else if(hint){ hint.style.display = "none"; }
 }
@@ -3196,6 +3222,18 @@ function showMiniGameIntro(emoji, title, text){
 }
 
 /* ---------- Storyline-Intro nach Spielstart ---------- */
+/* Leichtgewichtiger Merge-Write für kurzlebige Zuschauer-Signale
+   (Ereigniskarte gerade offen, Minispiel läuft, Aussetzer-Animation).
+   Lebt außerhalb des Multiplayer-Blocks, damit resolveField/endTurn
+   diese Funktion in JEDER Version (auch im 1-Gerät-Modus ohne
+   Firebase) gefahrlos aufrufen können – "typeof mp" wirft dort nie,
+   sondern liefert einfach "undefined". */
+function syncTransient(patch){
+  if(typeof mp === "undefined" || !mp.enabled) return Promise.resolve();
+  mp.suppressEcho = true;
+  return fbDb.ref(`rooms/${mp.code}/state`).update(patch);
+}
+
 function showIntroStory(){
   return showModal({emoji:"🥱➡️🎉", title:"Nichts wie weg!",
     text:"Diese Party ist eine Katastrophe: Die Playlist besteht gefühlt nur aus Fahrstuhlmusik 🎷, der Gastgeber erzählt zum dritten Mal dieselbe Geschichte und selbst die Chips sind weich. Nichts wie weg!<br><br>📱 Gerade hat dich die Nachricht erreicht: Auf der angesagtesten Party der Stadt ist genau noch ein Platz frei.<br><br>😬 Blöd nur: Deine Freunde, mit denen du auf dieser Party bist, haben dieselbe Nachricht bekommen und sprinten ebenfalls los, um sich den letzten freien Platz zu schnappen.<br><br>🏃 Renn, spring und weiche Hindernissen aus. Erreiche die Party vor deinen Freunden – denn nur der Schnellste kommt noch rein!",
@@ -3413,8 +3451,10 @@ async function resolveField(pi){
     }
     case T.EVENT: {
       const c = drawCard(f.z);
+      await syncTransient({cardReveal:{emoji:c.e, tag:meta.tag, tagCol:meta.col, title:f.n, text:c.txt}});
       await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
+      await syncTransient({cardReveal:null});
       if(c.special){
         await handleSpecialCard(c.special, pi);
       } else {
@@ -3426,8 +3466,10 @@ async function resolveField(pi){
       break;
     }
     case T.FIXED: {
+      await syncTransient({cardReveal:{emoji:f.e, tag:meta.tag, tagCol:meta.col, title:f.n, text:f.d}});
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.d, buttons:[{label:"OK", value:1}]});
+      await syncTransient({cardReveal:null});
       applySipsFromText(f.d, pi);
       if(f.skip) p.skip = f.skip;
       break;
@@ -3553,7 +3595,9 @@ async function resolveField(pi){
       }
       setLog(`${chosen.emoji} ${p.icon} ${p.name} spielt: ${chosen.name}`);
       await showMiniGameIntro(chosen.emoji, chosen.name, chosen.rules);
+      await syncTransient({miniGameBanner:{emoji:chosen.emoji, name:chosen.name}});
       const won = await chosen.run(p, val);
+      await syncTransient({miniGameBanner:null});
       await moveSteps(pi, won ? val : -val);
       break;
     }
@@ -3563,7 +3607,9 @@ async function resolveField(pi){
       setLog(`🎯 ${p.icon} ${p.name} tritt in der Boazn zum Darts an …`);
       await showMiniGameIntro("🎯", "Boazn-Darts",
         "Pro Dart schwingt erst eine senkrechte Linie hin und her – tippe STOPP, um die horizontale Position zu fixieren. Danach schwingt eine waagrechte Linie – nochmal STOPP für die vertikale Position. 3 Aufnahmen à 3 Darts, 30 Sekunden pro Aufnahme. Mehr Punkte als der Fremde gewinnt.");
+      await syncTransient({miniGameBanner:{emoji:"🎯", name:"Boazn-Darts"}});
       const won = await playDartsGame(p, val);
+      await syncTransient({miniGameBanner:null});
       await moveSteps(pi, won ? val : -val);
       break;
     }
@@ -3571,14 +3617,18 @@ async function resolveField(pi){
       setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} hat spontan neue Freunde kennengelernt …`);
       await showMiniGameIntro("🧑‍🤝‍🧑", "Namen merken",
         "Du hast spontan neue Freunde kennengelernt. In der Lernphase stellt sich nacheinander jede der 10 Personen 3 Sekunden lang vor – merke dir die Namen. Danach fragt jede Person in zufälliger Reihenfolge „Wie heiße ich?“: Namen ins Feld tippen und mit OK oder Enter bestätigen.");
+      await syncTransient({miniGameBanner:{emoji:"🧑‍🤝‍🧑", name:"Namen merken"}});
       await playNamenGame(p, pi);
+      await syncTransient({miniGameBanner:null});
       break;
     }
     case T.WETTE: {
       setLog(`🎰 ${p.icon} ${p.name} tippt bei Tipico …`);
       await showMiniGameIntro("🎰", "Tipico-Wette",
         "Tippe 1, X oder 2 an, um deinen Tipp zu setzen. Stelle danach mit +/- deinen Einsatz ein und tippe auf „Wette bestätigen“. Bei richtigem Tipp verteilst du Einsatz × Quote (gerundet), bei falschem trinkst du deinen Einsatz selbst.");
+      await syncTransient({miniGameBanner:{emoji:"🎰", name:"Tipico-Wette"}});
       await playWetteGame(p, pi);
+      await syncTransient({miniGameBanner:null});
       break;
     }
   }
@@ -3648,7 +3698,9 @@ async function endTurn(){
       updateHud();
       focusOn(q.pos, true);
       setLog(`${q.icon} ${q.name} wäre dran …`);
+      await syncTransient({skipAnnounce:{icon:q.icon, name:q.name, nonce: Date.now()+Math.random()}});
       await showSkipX(q);
+      await syncTransient({skipAnnounce:null});
       q.skip--;
       continue;
     }
