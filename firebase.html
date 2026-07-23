@@ -109,21 +109,22 @@
   .zone-4{--tf1:#efdff6;--tf2:#dcc2ea;--td:#8f60a8;}
   .zone-5{--tf1:#fbe9c6;--tf2:#f1d097;--td:#b17f34;}
   .zone-6{--tf1:#d8f0e7;--tf2:#b4ddcd;--td:#48927b;}
-  .tile.type-minigame{
-    --tf1:#f9e0b8;--tf2:#e8b877;--td:#a8752e;
-    animation: starGlow 1.8s ease-in-out infinite;
+  .tile.type-minigame, .tile.type-darts, .tile.type-namen, .tile.type-wette{
+    box-shadow:0 7px 0 var(--td,#c9b98f), 0 12px 24px #0007, inset 0 2px 0 #fff, inset 0 0 0 2px #ffffff30,
+      0 0 0 3px #e8342a;
+    animation: minigameGlow 1.8s ease-in-out infinite;
   }
-  @keyframes starGlow{
-    0%,100%{ box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 14px #ffd54a55; }
-    50%    { box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 32px #ffd54acc; }
+  @keyframes minigameGlow{
+    0%,100%{ box-shadow:0 7px 0 var(--td,#c9b98f),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 0 3px #e8342a, 0 0 10px #e8342a55; }
+    50%    { box-shadow:0 7px 0 var(--td,#c9b98f),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 0 3px #e8342a, 0 0 24px #e8342acc; }
   }
-  .tile.type-darts{
-    --tf1:#f2c9cb;--tf2:#dd8f92;--td:#8f3538;
-    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #c0272d55;
+  .tile.type-mcdonalds{
+    --tf1:#fff3cf;--tf2:#ffd88e;--td:#c9971a;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #ffcf4d66;
   }
-  .tile.type-namen{
-    --tf1:#c9e6f2;--tf2:#8fc0dd;--td:#356b8f;
-    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #4aa8e855;
+  .tile.type-tajmahal{
+    --tf1:#ffe0c2;--tf2:#f0a868;--td:#8a4a1f;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #ff9a3c66;
   }
   .tile.type-start{
     --tf1:#fff3cf;--tf2:#ffdf8e;--td:#c29a2e;
@@ -836,6 +837,83 @@
   #wamOverlay.caught .wam-card{animation:sneakShake .4s;box-shadow:0 24px 60px #000c, 0 0 0 3px #ff5a3c99;}
   #wamOverlay.won .wam-card{box-shadow:0 24px 60px #000c, 0 0 0 3px #3ddc9799;}
 
+  /* ---------- Minispiel „Tipico-Wette" ---------- */
+  #wetteOverlay{
+    position:fixed;inset:0;z-index:49;display:none;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(10,14,30,.72);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .wette-card{
+    position:relative;width:min(400px,94vw);max-height:94vh;overflow-y:auto;
+    background:linear-gradient(178deg,#0f2016 0%,#081108 100%);
+    border-radius:26px;padding:20px 18px 22px;text-align:center;
+    color:#f0f5ea;border:1.5px solid #ffffff18;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    animation:popIn .38s cubic-bezier(.2,1.45,.4,1);
+  }
+  .wette-title{font-size:19px;font-weight:900;letter-spacing:-.2px;}
+  .wette-matchup{
+    margin-top:16px;background:rgba(255,255,255,.06);border-radius:18px;
+    padding:20px 14px;box-shadow:inset 0 0 0 1.5px #ffffff14;
+  }
+  .wette-team{font-size:17px;font-weight:800;line-height:1.5;}
+  .wette-vs{font-size:11px;font-weight:900;letter-spacing:2px;color:#8fd8a8;margin:4px 0;}
+
+  .wette-picks{display:flex;gap:10px;justify-content:center;margin-top:18px;}
+  .wette-pickbtn{
+    flex:1;border:none;cursor:pointer;font-family:inherit;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:12px 4px;border-radius:16px;
+    background:rgba(255,255,255,.08);
+    box-shadow:inset 0 0 0 1.5px #ffffff20, 0 6px 14px #0004;
+    transition:transform .08s, box-shadow .08s, background .15s;
+  }
+  .wette-pickbtn .pk-label{font-size:11px;font-weight:800;color:#8fd8a8;letter-spacing:.5px;}
+  .wette-pickbtn .pk-quote{font-size:19px;font-weight:900;color:#fff;}
+  .wette-pickbtn:active{transform:translateY(3px);}
+  .wette-pickbtn.selected{background:linear-gradient(160deg,#3ddc97,#1d9e66);box-shadow:0 6px 0 #10704a, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;}
+  .wette-pickbtn.selected .pk-label, .wette-pickbtn.selected .pk-quote{color:#fff;}
+  .wette-pickbtn:disabled{opacity:.4;cursor:default;}
+
+  .wette-stake{display:none;margin-top:18px;}
+  .wette-stake.show{display:block;}
+  .wette-stake-label{font-size:12px;font-weight:800;color:#bcd0c4;letter-spacing:.3px;}
+  .wette-stake-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px;}
+  .stake-btn{
+    width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:20px;color:#fff;
+    background:linear-gradient(160deg,#ff8a5c,#c22f14);
+    box-shadow:0 5px 0 #8f1f09, 0 8px 14px #0006;
+  }
+  .stake-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f1f09;}
+  .stake-val{font-size:26px;font-weight:900;min-width:38px;}
+  .wette-confirm{
+    display:none;margin-top:16px;width:100%;border:none;cursor:pointer;font-family:inherit;
+    font-weight:900;font-size:16px;color:#fff;padding:14px;border-radius:16px;
+    background:linear-gradient(160deg,#3ddc97,#1d9e66);
+    box-shadow:0 6px 0 #10704a, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;
+  }
+  .wette-confirm.show{display:block;}
+  .wette-confirm:active{transform:translateY(4px);box-shadow:0 2px 0 #10704a;}
+  .wette-payout-preview{margin-top:8px;font-size:11.5px;font-weight:700;color:#8fd8a8;min-height:14px;}
+
+  .wette-scorebar{display:none;margin-top:16px;align-items:center;justify-content:center;gap:14px;}
+  .wette-scorebar.show{display:flex;}
+  .wette-scorebar .nm{font-size:12px;font-weight:800;max-width:110px;line-height:1.3;}
+  .wette-scoreval{font-size:34px;font-weight:900;letter-spacing:1px;color:#8fd8a8;}
+  .wette-minute{margin-top:6px;font-size:12px;font-weight:800;color:#ffcf4d;min-height:16px;}
+  .wette-ticker{
+    display:none;margin-top:14px;text-align:left;background:rgba(0,0,0,.28);
+    border-radius:14px;padding:10px 14px;max-height:180px;overflow-y:auto;
+    box-shadow:inset 0 0 0 1.5px #ffffff10;
+  }
+  .wette-ticker.show{display:block;}
+  .wette-ticker div{font-size:12.5px;font-weight:700;padding:4px 0;border-bottom:1px solid #ffffff0f;}
+  .wette-ticker div:last-child{border-bottom:none;}
+  .wette-ticker div.goal{color:#ff8a5c;font-weight:900;}
+  .wette-result{margin-top:14px;font-size:14px;font-weight:800;min-height:20px;}
+
   /* ---------- Aussetzer-Anzeige ---------- */
   #skipOverlay{
     position:fixed;inset:0;z-index:55;display:none;
@@ -1126,6 +1204,44 @@
   </div>
 </div>
 
+<div id="wetteOverlay">
+  <div class="wette-card">
+    <div class="wette-title">🎰 Tipico-Wette</div>
+    <div class="wette-matchup" id="wetteMatchup">
+      <div class="wette-team" id="wetteTeamA">Team A</div>
+      <div class="wette-vs">BUNDESLIGA 26/27</div>
+      <div class="wette-team" id="wetteTeamB">Team B</div>
+    </div>
+
+    <div class="wette-picks" id="wettePicks">
+      <button class="wette-pickbtn" data-pick="1"><span class="pk-label">1</span><span class="pk-quote" id="quote1">–</span></button>
+      <button class="wette-pickbtn" data-pick="X"><span class="pk-label">X</span><span class="pk-quote" id="quoteX">–</span></button>
+      <button class="wette-pickbtn" data-pick="2"><span class="pk-label">2</span><span class="pk-quote" id="quote2">–</span></button>
+    </div>
+
+    <div class="wette-stake" id="wetteStake">
+      <div class="wette-stake-label">Einsatz (Schlücke)</div>
+      <div class="wette-stake-row">
+        <button class="stake-btn" id="stakeMinus">–</button>
+        <div class="stake-val" id="stakeVal">2</div>
+        <button class="stake-btn" id="stakePlus">+</button>
+      </div>
+      <div class="wette-payout-preview" id="payoutPreview"></div>
+    </div>
+
+    <button class="wette-confirm" id="wetteConfirmBtn">Wette bestätigen</button>
+
+    <div class="wette-scorebar" id="wetteScorebar">
+      <div class="nm" id="wetteScoreNameA"></div>
+      <div class="wette-scoreval" id="wetteScoreVal">0:0</div>
+      <div class="nm" id="wetteScoreNameB"></div>
+    </div>
+    <div class="wette-minute" id="wetteMinute"></div>
+    <div class="wette-ticker" id="wetteTicker"></div>
+    <div class="wette-result" id="wetteResult"></div>
+  </div>
+</div>
+
 <script>
 /* =====================================================
    DER POLNISCHE – v0.4 „Nacht-München"
@@ -1134,7 +1250,7 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal" };
 
 const FIELDS = [
   {n:"Balkon",              e:"🚬", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
@@ -1147,6 +1263,7 @@ const FIELDS = [
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
   {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
   {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
+  {n:"Tipico",              e:"🎰", t:T.WETTE,   z:2, d:"Du schaust schnell bei Tipico vorbei und tippst auf ein Bundesliga-Spiel."},
   {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"universitaet", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Universität."},
   {n:"Rathaus",             e:"🏛️", t:T.EVENT,   z:2},
   {n:"Marienplatz",         e:"⭐", t:T.EVENT,   z:2},
@@ -1158,12 +1275,13 @@ const FIELDS = [
   {n:"Englischer Garten",   e:"🌳", t:T.EVENT,   z:3},
   {n:"Monopterus",          e:"🏛️", t:T.EVENT,   z:3},
   {n:"Universität",         e:"🎓", t:T.TELEPORT,z:3, tp:"muenchner-freiheit", key:"universitaet", d:"Die U-Bahn an der Uni steht schon da! Sie bringt dich zur Münchner Freiheit."},
-  {n:"Mono-Wiese",          e:"🧑‍🤝‍🧑", t:T.NAMEN,   z:3, d:"Du lernst eine neue Gruppe kennen und musst dir die Namen merken."},
+  {n:"Mono-Wiese",          e:"🧑‍🤝‍🧑", t:T.NAMEN,   z:3, d:"Du hast spontan neue Freunde kennengelernt, deren Namen du dir jetzt merken musst."},
   {n:"Parkbank",            e:"🪑", t:T.FIXED,   z:3, d:"Kurze Verschnaufpause auf der Parkbank – setze eine Runde aus.", skip:1},
   {n:"P1",                  e:"🪩", t:T.FIXED,   z:3, d:"Ein Kumpel holt dich für einen Drink in den Club – trinke 3 Schlücke."},
   {n:"Siegestor",           e:"🏆", t:T.EVENT,   z:3},
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
   {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
+  {n:"McDonald's",          e:"🍟", t:T.MCDONALDS, z:4},
   {n:"Tanke",               e:"⛽", t:T.FIXED,   z:4, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
   {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
   {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
@@ -1176,6 +1294,7 @@ const FIELDS = [
   {n:"Tanke",               e:"⛽", t:T.FIXED,   z:5, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
+  {n:"Taj Mahal",           e:"🍛", t:T.TAJMAHAL, z:5},
   {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5},
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
@@ -1245,6 +1364,21 @@ const STREET_CARDS = [
   {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade und gibt dir eine Verwarnung – setze eine Runde aus.", skip:1},
   {e:"💬", txt:"Ein Fremder verwickelt dich in ein Gespräch – setze eine Runde aus.", skip:1},
   {e:"🍟", txt:"Kurze Chicken-McNuggets-Pause bei McDonald's – setze eine Runde aus.", skip:1},
+  {e:"⏳", txt:"Überbrücke die Wartezeit an der Ampel mit Bier – trinke 1 Schluck."},
+  {e:"🎧", txt:"In deiner Spotify-Playlist kommen gerade die besten Sauflieder – trinke 1 Schluck und wünsche dir ein Sauflied."},
+  {e:"🥱", txt:"Töte deine Langeweile mit Bier – trinke 2 Schlücke."},
+  {e:"🕶️", txt:"Du gehst an einer Gruppe zwielichtiger Jugendlicher vorbei – trinke dir mit 2 Schlücken Mut an."},
+  {e:"✈️", txt:"Ein Flugzeug am Himmel erinnert dich an den letzten Malle-Trip – trinke 1 Schluck und teile eine Erinnerung."},
+  {e:"🚋", txt:"Überbrücke die Wartezeit an einer Tram-Station mit Bier – trinke 1 Schluck."},
+  {e:"🚌", txt:"Überbrücke die Wartezeit an einer Busstation mit Bier – trinke 1 Schluck."},
+  {e:"🚇", txt:"Überbrücke die Wartezeit an einer U-Bahn-Station mit Bier – trinke 1 Schluck."},
+  {e:"🤝", txt:"Ein Fremder schenkt dir seinen letzten Rest Bier – trinke 3 Schlücke."},
+  {e:"🍺", txt:"Du findest mehrere nicht ausgetrunkene Flaschen Bier am Straßenrand und schüttest sie zusammen – trinke 3 Schlücke."},
+  {e:"💪", txt:"Du musst dich stärken – trinke 1 Schluck."},
+  {e:"🏋️", txt:"Du musst dich stärken – trinke 2 Schlücke."},
+  {e:"📱", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 2 Schlücke."},
+  {e:"📲", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 3 Schlücke."},
+  {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
 ];
 
 const TYPE_META = {
@@ -1258,6 +1392,9 @@ const TYPE_META = {
   minigame:{tag:"MINISPIEL",     col:"linear-gradient(140deg,#f472b6,#a8266b)"},
   darts:   {tag:"BOAZN-DARTS",   col:"linear-gradient(140deg,#c0272d,#7a1418)"},
   namen:   {tag:"NAMEN MERKEN",  col:"linear-gradient(140deg,#5ec9e8,#2472ad)"},
+  mcdonalds:{tag:"MCDONALD'S",   col:"linear-gradient(140deg,#ffcf4d,#da291c)"},
+  tajmahal:{tag:"TAJ MAHAL",     col:"linear-gradient(140deg,#ff9a3c,#8a1f1f)"},
+  wette:   {tag:"TIPICO-WETTE",  col:"linear-gradient(140deg,#0f7a41,#0a4d29)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
 const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
@@ -1265,7 +1402,12 @@ const TOKEN_ICONS = ["🔴","🔵","🟢","🟡","🟣","🟠","⚫","⚪"];
 const PLAYER_COLORS = ["#ff5a3c","#4aa8e8","#3ddc97","#ffcf4d","#b57fd0","#ff9a3c","#9a9a9a","#f0ede4"];
 
 /* ---------- Ring-Geometrie im Uhrzeigersinn ---------- */
-const TILE = 100, COLS = 12, ROWS = 16;
+const TILE = 100, COLS = 12;
+// ROWS wird aus der aktuellen Feldanzahl berechnet, damit der Ring immer
+// genau so viele Zellen hat wie FIELDS Einträge – sonst würde tilePos()
+// bei neu hinzugefügten Feldern auf undefined COORDS-Einträge treffen
+// und das ganze Board bliebe unsichtbar.
+const ROWS = Math.ceil((FIELDS.length + 5) / 2 - COLS);
 function buildCoords(){
   const c=[];
   for(let x=0;x<=COLS-1;x++) c.push([x,0]);
@@ -1591,7 +1733,7 @@ function buildBoard(){
   const zones = [
     {txt:"Öde Party",         z:1, x:2.4*TILE, y:1.62*TILE},
     {txt:"Innenstadt",        z:2, x:9.35*TILE, y:3.7*TILE,  rot:-90},
-    {txt:"Englischer Garten", z:3, x:9.35*TILE, y:10.6*TILE, rot:-90},
+    {txt:"Englischer Garten", z:3, x:8.5*TILE, y:10.6*TILE, rot:-90},
     {txt:"Münchner Freiheit", z:4, x:5.6*TILE, y:13.55*TILE},
     {txt:"Neuhausen",         z:5, x:1.75*TILE, y:12.5*TILE, rot:90},
     {txt:"Sendling",          z:6, x:1.75*TILE, y:6.2*TILE,  rot:90},
@@ -2775,10 +2917,237 @@ function playWhacAMole(p, val){
   });
 }
 
+/* ---------- Minispiel „Tipico-Wette" (eigenes Feld: Tipico) ----------
+   Fester 10er-Team-Pool mit Stärke; jedes Team kommt erst dann ein
+   zweites Mal dran, wenn alle 10 einmal in einer Begegnung waren
+   ("Bag"-Rotation). Beide Teams bekommen eine Tor-Erwartung (Poisson-
+   Lambda) aus ihrer Stärke-Differenz plus einem kleinen festen
+   Tiebreak pro Team (damit gleich starke Teams nie exakt 1:1-Quoten
+   bekommen). Die angezeigten Quoten UND die simulierten Tore stammen
+   aus denselben Lambdas, damit der Favorit auch tatsächlich öfter
+   gewinnt. Nach der Tipp-Wahl (1/X/2) legt der Spieler seinen Einsatz
+   fest; bei Treffer verteilt er Einsatz×Quote (gerundet), bei Fehltipp
+   trinkt er seinen Einsatz selbst. */
+const STRENGTH = {"schwach":1, "mittel":2, "stark":3, "sehr stark":4};
+const WETTE_TEAMS = [
+  {name:"FC Bayern München",     level:"sehr stark", micro: 0.00},
+  {name:"Borussia Dortmund",     level:"stark",      micro: 0.02},
+  {name:"VfB Stuttgart",         level:"stark",      micro:-0.02},
+  {name:"Borussia Mönchengladbach", level:"mittel",  micro: 0.03},
+  {name:"Hamburger SV",          level:"mittel",     micro:-0.03},
+  {name:"SV Elversberg 07",      level:"schwach",    micro: 0.01},
+  {name:"FC Augsburg",           level:"mittel",     micro:-0.01},
+  {name:"TSG 1899 Hoffenheim",   level:"mittel",     micro: 0.04},
+  {name:"SC Paderborn",          level:"schwach",    micro:-0.04},
+  {name:"Bayer 04 Leverkusen",   level:"stark",      micro:-0.05},
+];
+let wetteTeamBag = [];
+function drawWetteMatchup(){
+  if(wetteTeamBag.length < 2) wetteTeamBag = shuffled(WETTE_TEAMS);
+  const teamA = wetteTeamBag.shift();
+  const teamB = wetteTeamBag.shift();
+  return [teamA, teamB];
+}
+function roundHalfUp(n){ return Math.floor(n + 0.5); }
+function poissonPMF(k, lambda){
+  let res = Math.exp(-lambda);
+  for(let i=1;i<=k;i++) res *= lambda/i;
+  return res;
+}
+function poissonSample(lambda){
+  const L = Math.exp(-lambda);
+  let k = 0, p = 1;
+  do { k++; p *= Math.random(); } while(p > L);
+  return k-1;
+}
+function wetteTeamLambdas(teamA, teamB){
+  const sA = STRENGTH[teamA.level], sB = STRENGTH[teamB.level];
+  const diff = sA - sB; // -3..+3
+  const base = 1.4;
+  const k = 0.15, exp = 1.7;
+  const tierEffect = Math.sign(diff) * k * Math.pow(Math.abs(diff), exp);
+  const microEffect = teamA.micro - teamB.micro;
+  const effect = tierEffect + microEffect;
+  const lambdaA = Math.min(3.2, Math.max(0.4, base + effect));
+  const lambdaB = Math.min(3.2, Math.max(0.4, base - effect));
+  return { lambdaA, lambdaB };
+}
+function calcWetteOdds(teamA, teamB){
+  const { lambdaA, lambdaB } = wetteTeamLambdas(teamA, teamB);
+  const margin = 1.07;
+  let pA=0, pDraw=0, pB=0;
+  for(let i=0;i<=10;i++){
+    const pi = poissonPMF(i, lambdaA);
+    for(let j=0;j<=10;j++){
+      const p = pi * poissonPMF(j, lambdaB);
+      if(i>j) pA+=p; else if(i===j) pDraw+=p; else pB+=p;
+    }
+  }
+  const total = pA+pDraw+pB;
+  pA/=total; pDraw/=total; pB/=total;
+  const toOdds = p => Math.max(1.01, Math.round((1/(p*margin))*100)/100);
+  return { odds1: toOdds(pA), oddsX: toOdds(pDraw), odds2: toOdds(pB), lambdaA, lambdaB };
+}
+
+function playWetteGame(p, pi){
+  return new Promise(res=>{
+    const overlay = $("#wetteOverlay");
+    const teamAEl = $("#wetteTeamA"), teamBEl = $("#wetteTeamB");
+    const picksEl = $("#wettePicks");
+    const stakeEl = $("#wetteStake");
+    const stakeValEl = $("#stakeVal");
+    const payoutPreviewEl = $("#payoutPreview");
+    const confirmBtn = $("#wetteConfirmBtn");
+    const scorebarEl = $("#wetteScorebar");
+    const scoreNameAEl = $("#wetteScoreNameA"), scoreNameBEl = $("#wetteScoreNameB");
+    const scoreValEl = $("#wetteScoreVal");
+    const minuteEl = $("#wetteMinute");
+    const tickerEl = $("#wetteTicker");
+    const resultEl = $("#wetteResult");
+
+    const [teamA, teamB] = drawWetteMatchup();
+    const { odds1, oddsX, odds2, lambdaA, lambdaB } = calcWetteOdds(teamA, teamB);
+
+    teamAEl.textContent = teamA.name;
+    teamBEl.textContent = teamB.name;
+    $("#quote1").textContent = odds1.toFixed(2).replace(".",",");
+    $("#quoteX").textContent = oddsX.toFixed(2).replace(".",",");
+    $("#quote2").textContent = odds2.toFixed(2).replace(".",",");
+    picksEl.style.display = "flex";
+    picksEl.querySelectorAll(".wette-pickbtn").forEach(b=>{ b.disabled=false; b.classList.remove("selected"); });
+    stakeEl.classList.remove("show");
+    confirmBtn.classList.remove("show");
+    confirmBtn.disabled = false;
+    let stake = 2;
+    stakeValEl.textContent = stake;
+    payoutPreviewEl.textContent = "";
+    scorebarEl.classList.remove("show");
+    scoreNameAEl.textContent = teamA.name; scoreNameBEl.textContent = teamB.name;
+    scoreValEl.textContent = "0:0";
+    minuteEl.textContent = "";
+    tickerEl.classList.remove("show");
+    tickerEl.innerHTML = "";
+    resultEl.textContent = "";
+    overlay.style.display = "flex";
+
+    let selectedPick = null, selectedOdds = null;
+
+    function updatePayoutPreview(){
+      if(selectedOdds===null) return;
+      payoutPreviewEl.textContent = `Bei Treffer: ${roundHalfUp(stake*selectedOdds)} Schlücke verteilen`;
+    }
+    function onPick(e){
+      selectedPick = e.currentTarget.dataset.pick;
+      selectedOdds = selectedPick==="1" ? odds1 : (selectedPick==="X" ? oddsX : odds2);
+      picksEl.querySelectorAll(".wette-pickbtn").forEach(b=> b.classList.toggle("selected", b.dataset.pick===selectedPick));
+      stakeEl.classList.add("show");
+      confirmBtn.classList.add("show");
+      updatePayoutPreview();
+    }
+    picksEl.querySelectorAll(".wette-pickbtn").forEach(b=> b.addEventListener("click", onPick));
+
+    const stakeMinusBtn = $("#stakeMinus"), stakePlusBtn = $("#stakePlus");
+    stakeMinusBtn.onclick = ()=>{ if(stake>1){ stake--; stakeValEl.textContent = stake; updatePayoutPreview(); } };
+    stakePlusBtn.onclick  = ()=>{ if(stake<15){ stake++; stakeValEl.textContent = stake; updatePayoutPreview(); } };
+
+    confirmBtn.onclick = ()=>{
+      if(!selectedPick) return;
+      picksEl.querySelectorAll(".wette-pickbtn").forEach(b=>b.disabled=true);
+      stakeMinusBtn.disabled = true; stakePlusBtn.disabled = true;
+      confirmBtn.disabled = true; confirmBtn.classList.remove("show");
+      runMatch(selectedPick, selectedOdds, stake);
+    };
+
+    function addTicker(text, isGoal){
+      const line = document.createElement("div");
+      if(isGoal) line.className = "goal";
+      line.textContent = text;
+      tickerEl.appendChild(line);
+      tickerEl.scrollTop = tickerEl.scrollHeight;
+    }
+
+    async function runMatch(pick, odds, stakeAmount){
+      await wait(300);
+      scorebarEl.classList.add("show");
+      tickerEl.classList.add("show");
+
+      const goalsA = poissonSample(lambdaA), goalsB = poissonSample(lambdaB);
+
+      function randomMinutes(count, min, max){
+        const set = new Set();
+        while(set.size < count && set.size < (max-min+1)){
+          set.add(min + Math.floor(Math.random()*(max-min+1)));
+        }
+        return [...set].sort((a,b)=>a-b);
+      }
+      const minutesA = randomMinutes(goalsA, 1, 90).map(m=>({team:"A", minute:m}));
+      const minutesB = randomMinutes(goalsB, 1, 90).map(m=>({team:"B", minute:m}));
+      const goalEvents = minutesA.concat(minutesB).sort((a,b)=>a.minute-b.minute);
+
+      const stoppage1 = Math.floor(Math.random()*4);   // 0-3
+      const stoppage2 = 1 + Math.floor(Math.random()*5); // 1-5
+
+      let scoreA = 0, scoreB = 0, gi = 0;
+      addTicker("1' Anpfiff");
+      minuteEl.textContent = "1'";
+
+      for(let minute=1; minute<=45; minute++){
+        await wait(500);
+        minuteEl.textContent = minute+"'";
+        while(gi < goalEvents.length && goalEvents[gi].minute === minute){
+          const ev = goalEvents[gi];
+          if(ev.team==="A") scoreA++; else scoreB++;
+          scoreValEl.textContent = `${scoreA}:${scoreB}`;
+          addTicker(`${minute}' Tor für ${ev.team==="A"?teamA.name:teamB.name} - ${scoreA}:${scoreB}`, true);
+          gi++;
+        }
+      }
+      if(stoppage1>0) await wait(stoppage1*500);
+      addTicker(stoppage1>0 ? `45+${stoppage1}' Abpfiff 1. Halbzeit` : "45' Abpfiff 1. Halbzeit");
+      await wait(700);
+      addTicker("46' Anpfiff 2. Halbzeit");
+      minuteEl.textContent = "46'";
+
+      for(let minute=46; minute<=90; minute++){
+        await wait(500);
+        minuteEl.textContent = minute+"'";
+        while(gi < goalEvents.length && goalEvents[gi].minute === minute){
+          const ev = goalEvents[gi];
+          if(ev.team==="A") scoreA++; else scoreB++;
+          scoreValEl.textContent = `${scoreA}:${scoreB}`;
+          addTicker(`${minute}' Tor für ${ev.team==="A"?teamA.name:teamB.name} - ${scoreA}:${scoreB}`, true);
+          gi++;
+        }
+      }
+      await wait(stoppage2*500);
+      addTicker(`90+${stoppage2}' Abpfiff 2. Halbzeit`);
+      minuteEl.textContent = "Spielende";
+
+      const actual = scoreA>scoreB ? "1" : (scoreA<scoreB ? "2" : "X");
+      const correct = actual===pick;
+      await wait(600);
+      if(correct){
+        const payout = roundHalfUp(stakeAmount*odds);
+        distributeSips(payout, pi);
+        resultEl.textContent = `Richtig getippt (${scoreA}:${scoreB})! Quote ${odds.toFixed(2).replace(".",",")} × ${stakeAmount} → ${p.name} verteilt ${payout} Schlücke.`;
+      } else {
+        addSips(pi, stakeAmount);
+        resultEl.textContent = `Falsch getippt (${scoreA}:${scoreB}, richtig wäre "${actual}"). ${p.name} trinkt den Einsatz von ${stakeAmount} Schlücken.`;
+      }
+      await wait(2400);
+      overlay.style.display = "none";
+      res(correct);
+    }
+  });
+}
+
 const MINIGAMES = [
-  {key:"zeche-prellen", name:"Zeche prellen", emoji:"🍺", run: playSneakGame},
-  {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame},
-  {key:"wuehlmaus", name:"Wühlmaus-Alarm", emoji:"🔨", run: playWhacAMole},
+  {key:"zeche-prellen", name:"Zeche prellen", emoji:"🍺", run: playSneakGame,
+    rules:"Halte den Wirt im Auge: Tippe wiederholt, um vorwärts zu schleichen, aber nur solange er wegschaut. Schaut er her, bist du erwischt. Zeitlimit läuft."},
+  {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame,
+    rules:"Ziehe die passenden Bierflaschen-Teile in die richtigen Slots, bevor die Zeit abläuft. Manche Teile liegen verdeckt – antippen deckt sie auf."},
+  {key:"wuehlmaus", name:"Wühlmaus-Alarm", emoji:"🔨", run: playWhacAMole,
+    rules:"Tippe die Mäuse an, sobald sie aus ihren Löchern kommen. Schaffe 8 Treffer, bevor die Zeit abläuft."},
 ];
 
 /* ---------- Slot-Machine: lost das Minispiel bunt & zufällig aus ---------- */
@@ -2808,6 +3177,12 @@ function spinSlotMachine(chosen){
       res();
     }, 2600);
   });
+}
+
+/* ---------- Kurze Erklärung + „Start"-Button vor jedem Minispiel ---------- */
+function showMiniGameIntro(emoji, title, text){
+  return showModal({emoji, tag:"BEREIT MACHEN", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
+    title, text, buttons:[{label:"Start", cls:"green", value:1}]});
 }
 
 /* ---------- Aussetzer-Anzeige ---------- */
@@ -2916,6 +3291,79 @@ async function resolveField(pi){
       if(choice){ p.scooter = true; setLog(`${p.icon} ${p.name} fährt nächsten Zug E-Scooter!`); }
       break;
     }
+    case T.MCDONALDS: {
+      const choice = await showModal({emoji:"🍟", tag:meta.tag, tagCol:meta.col,
+        title:"McDonald's",
+        text:"Schnell noch was futtern? Kann gut oder schlecht ausgehen …",
+        buttons:[{label:"Rein da! 🍔", cls:"green", value:true},{label:"Nee, weiter", cls:"gray", value:false}]});
+      if(choice){
+        const positive = Math.random() < 0.5;
+        if(positive){
+          if(Math.random() < 0.5){
+            p.extraDie = true;
+            await showModal({emoji:"💪", tag:meta.tag, tagCol:meta.col, title:"Gestärkt!",
+              text:`${p.name} ist gestärkt und würfelt beim nächsten Zug mit 2 Würfeln.`,
+              buttons:[{label:"Nice!", cls:"green", value:1}]});
+          } else {
+            p.scooter = true;
+            await showModal({emoji:"🛴", tag:meta.tag, tagCol:meta.col, title:"E-Scooter gefunden!",
+              text:`Direkt um die Ecke vom Laden steht ein E-Scooter – ${p.name} fährt den nächsten Zug damit (2 Würfel, aber wie immer: 10% Polizei, 25% Unfall).`,
+              buttons:[{label:"Nice!", cls:"green", value:1}]});
+          }
+        } else {
+          if(Math.random() < 0.5){
+            p.skip = 1;
+            await showModal({emoji:"🤢", tag:meta.tag, tagCol:meta.col, title:"Zu voll gefressen!",
+              text:`${p.name} hat sich überfressen – setze eine Runde aus.`,
+              buttons:[{label:"Autsch", value:1}]});
+          } else {
+            addSips(pi, 3);
+            await showModal({emoji:"🌶️", tag:meta.tag, tagCol:meta.col, title:"Viel zu scharf!",
+              text:`Die Spicy Chicken McNuggets waren zu scharf – ${p.name} trinkt 3 Schlücke dagegen.`,
+              buttons:[{label:"Puh", value:1}]});
+          }
+        }
+      } else {
+        setLog(`${p.icon} ${p.name} lässt McDonald's links liegen.`);
+      }
+      break;
+    }
+    case T.TAJMAHAL: {
+      const choice = await showModal({emoji:"🍛", tag:meta.tag, tagCol:meta.col,
+        title:"Taj Mahal",
+        text:"Lust auf indisches Essen? Kann gut oder schlecht ausgehen …",
+        buttons:[{label:"Rein da! 🍛", cls:"green", value:true},{label:"Nee, weiter", cls:"gray", value:false}]});
+      if(choice){
+        const positive = Math.random() < 0.5;
+        if(positive){
+          if(Math.random() < 0.5){
+            p.extraDie = true;
+            await showModal({emoji:"💪", tag:meta.tag, tagCol:meta.col, title:"Gestärkt!",
+              text:`${p.name} ist gestärkt und würfelt beim nächsten Zug mit 2 Würfeln.`,
+              buttons:[{label:"Nice!", cls:"green", value:1}]});
+          } else {
+            p.scooter = true;
+            await showModal({emoji:"🛴", tag:meta.tag, tagCol:meta.col, title:"E-Scooter gefunden!",
+              text:`Direkt um die Ecke vom Laden steht ein E-Scooter – ${p.name} fährt den nächsten Zug damit (2 Würfel, aber wie immer: 10% Polizei, 25% Unfall).`,
+              buttons:[{label:"Nice!", cls:"green", value:1}]});
+          }
+        } else {
+          const negOptions = [
+            {emoji:"🤢", title:"Zu voll gefressen!", text:`${p.name} hat sich überfressen – setze eine Runde aus.`, apply:()=>{ p.skip = 1; }},
+            {emoji:"🤮", title:"Magen-Darm-Probleme!", text:`${p.name} hat sich den Magen verdorben – setze eine Runde aus.`, apply:()=>{ p.skip = 1; }},
+            {emoji:"🌶️", title:"Viel zu scharf!", text:`Das Curry war viel zu scharf – ${p.name} trinkt 3 Schlücke dagegen.`, apply:()=>{ addSips(pi, 3); }},
+            {emoji:"🔥", title:"Höllisch scharf!", text:`Das Vindaloo hat's in sich – ${p.name} trinkt 4 Schlücke dagegen.`, apply:()=>{ addSips(pi, 4); }},
+          ];
+          const neg = negOptions[Math.floor(Math.random()*negOptions.length)];
+          neg.apply();
+          await showModal({emoji:neg.emoji, tag:meta.tag, tagCol:meta.col, title:neg.title,
+            text:neg.text, buttons:[{label:"Autsch", value:1}]});
+        }
+      } else {
+        setLog(`${p.icon} ${p.name} lässt das Taj Mahal links liegen.`);
+      }
+      break;
+    }
     case T.TAXI: {
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n,
@@ -2949,6 +3397,7 @@ async function resolveField(pi){
         await spinSlotMachine(chosen);
       }
       setLog(`${chosen.emoji} ${p.icon} ${p.name} spielt: ${chosen.name}`);
+      await showMiniGameIntro(chosen.emoji, chosen.name, chosen.rules);
       const won = await chosen.run(p, val);
       await moveSteps(pi, won ? val : -val);
       break;
@@ -2957,13 +3406,24 @@ async function resolveField(pi){
       const val = rand(6);
       await showDice([val]);
       setLog(`🎯 ${p.icon} ${p.name} tritt in der Boazn zum Darts an …`);
+      await showMiniGameIntro("🎯", "Boazn-Darts",
+        "Ihr werft abwechselnd 3 Aufnahmen à 3 Darts. Stoppe je einen wackelnden Balken für die horizontale und vertikale Position. Wer mehr Punkte wirft, gewinnt.");
       const won = await playDartsGame(p, val);
       await moveSteps(pi, won ? val : -val);
       break;
     }
     case T.NAMEN: {
-      setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} lernt eine neue Gruppe kennen …`);
+      setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} hat spontan neue Freunde kennengelernt …`);
+      await showMiniGameIntro("🧑‍🤝‍🧑", "Namen merken",
+        "Du hast spontan neue Freunde kennengelernt, deren Namen du dir jetzt merken musst. Lerne in der Lernphase alle 10 Namen – danach fragt jede Person nach ihrem eigenen Namen, tippe ihn ein.");
       await playNamenGame(p, pi);
+      break;
+    }
+    case T.WETTE: {
+      setLog(`🎰 ${p.icon} ${p.name} tippt bei Tipico …`);
+      await showMiniGameIntro("🎰", "Tipico-Wette",
+        "Tippe auf 1, X oder 2 und lege deinen Einsatz fest. Bei richtigem Tipp verteilst du Einsatz × Quote, bei falschem trinkst du deinen Einsatz.");
+      await playWetteGame(p, pi);
       break;
     }
   }
