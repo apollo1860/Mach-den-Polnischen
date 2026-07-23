@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Der Polnische – Trinkspiel</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
   :root{
     --night1:#161c36; --night2:#232c52; --night3:#2e3a66;
@@ -1023,10 +1026,43 @@
     <div class="kicker">Das Münchner Trinkspiel</div>
     <h1>Der <span>Polnische</span></h1>
     <div class="sub">Schleich dich unbemerkt von der öden Party. Einmal quer durch München – wer zuerst auf der geilen Party ankommt, gewinnt. 🥱→🎉</div>
-    <div id="playerList"></div>
-    <button id="addPlayer">+ Spieler hinzufügen</button>
-    <div style="margin-top:20px">
-      <button class="btn green" id="startBtn" style="font-size:19px;padding:16px 44px;">Los geht's!</button>
+
+    <div id="modeToggle" style="display:flex;gap:10px;justify-content:center;margin:18px 0 4px;">
+      <button class="btn green" id="modeSingleBtn" style="flex:1;font-size:13.5px;padding:12px 8px;">📱 1 Gerät</button>
+      <button class="btn gray" id="modeMultiBtn" style="flex:1;font-size:13.5px;padding:12px 8px;">🌐 Mehrere Geräte</button>
+    </div>
+
+    <div id="singleSetup">
+      <div id="playerList"></div>
+      <button id="addPlayer">+ Spieler hinzufügen</button>
+      <div style="margin-top:20px">
+        <button class="btn green" id="startBtn" style="font-size:19px;padding:16px 44px;">Los geht's!</button>
+      </div>
+    </div>
+
+    <div id="multiSetup" style="display:none;">
+      <div id="multiChoice" style="display:flex;gap:10px;justify-content:center;margin-top:14px;">
+        <button class="btn" id="createRoomChoiceBtn" style="flex:1;font-size:13.5px;">Raum erstellen</button>
+        <button class="btn gray" id="joinRoomChoiceBtn" style="flex:1;font-size:13.5px;">Raum beitreten</button>
+      </div>
+
+      <div id="createRoomForm" style="display:none;margin-top:14px;">
+        <div class="p-row"><span class="ico">🔴</span><input id="hostNameInput" placeholder="Dein Name" maxlength="12"></div>
+        <button class="btn green" id="createRoomBtn" style="width:100%;margin-top:10px;">Raum erstellen</button>
+      </div>
+
+      <div id="joinRoomForm" style="display:none;margin-top:14px;">
+        <div class="p-row"><span class="ico">🔑</span><input id="joinCodeInput" placeholder="Code (z.B. AB3D)" maxlength="6" style="text-transform:uppercase;"></div>
+        <div class="p-row"><span class="ico">🟢</span><input id="joinNameInput" placeholder="Dein Name" maxlength="12"></div>
+        <button class="btn green" id="joinRoomBtn" style="width:100%;margin-top:10px;">Beitreten</button>
+      </div>
+
+      <div id="lobby" style="display:none;margin-top:18px;">
+        <div style="font-weight:900;font-size:14px;color:#332a1d;">Code: <span id="lobbyCode" style="letter-spacing:3px;color:var(--coral);"></span></div>
+        <div id="lobbyPlayers" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
+        <button class="btn green" id="lobbyStartBtn" style="width:100%;margin-top:14px;display:none;">Spiel starten</button>
+        <div id="lobbyWait" style="margin-top:14px;font-size:13px;color:#6b5f4c;">Warte auf Start durch Host…</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1228,6 +1264,7 @@ const FIELDS = [
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
   {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
   {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
+  {n:"Polizeistation",      e:"🚓", t:T.EVENT,   z:2, key:"polizeistation"},
   {n:"Tipico",              e:"🎰", t:T.WETTE,   z:2, d:"Du schaust schnell bei Tipico vorbei und tippst auf ein Bundesliga-Spiel."},
   {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"universitaet", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Universität."},
   {n:"Rathaus",             e:"🏛️", t:T.EVENT,   z:2},
@@ -1310,7 +1347,7 @@ const STREET_CARDS = [
   {e:"📊", txt:"Dein Promillegehalt sinkt leicht – trinke 1 Schluck."},
   {e:"🤝", txt:"Du gibst dein Norgerl einem Fremden – verteile 2 Schlücke."},
   {e:"😤", txt:"Jemand wirft dir vor, dass du „nicht saufen kannst“ – zeig's ihm und trinke 4 Schlücke."},
-  {e:"🍻", txt:"Du holst dir Nachschub in einer naheliegenden Boazn – trinke 3 Schlücke."},
+  {e:"🍻", txt:"Du holst dir Nachschub in einer Boazn – trinke 3 Schlücke."},
   {e:"🥃", txt:"Du findest einen Shot in deiner Hosentasche (einen Kurzen hast du da ja bereits) – trinke 1 Shot oder 5 Schlücke."},
   {e:"💧", txt:"Du bekommst Durst – trinke 2 Schlücke."},
   {e:"🛣️", txt:"Du bist in die falsche Straße abgebogen – gehe 2 Felder zurück.", mv:-2},
@@ -1326,7 +1363,7 @@ const STREET_CARDS = [
   {e:"🚋", txt:"Du erwischst pünktlich deine Tram – gehe 2 Felder vor.", mv:2},
   {e:"💨", txt:"Du ziehst einen kurzen Sprint an – gehe 1 Feld vor.", mv:1},
   {e:"🏘️", txt:"Du nimmst eine Abkürzung über ein Wohngebiet – gehe 1 Feld vor.", mv:1},
-  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade und gibt dir eine Verwarnung – setze eine Runde aus.", skip:1},
+  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade – du musst dich direkt auf der Polizeistation melden.", goto:"polizeistation"},
   {e:"💬", txt:"Ein Fremder verwickelt dich in ein Gespräch – setze eine Runde aus.", skip:1},
   {e:"🍟", txt:"Kurze Chicken-McNuggets-Pause bei McDonald's – setze eine Runde aus.", skip:1},
   {e:"⏳", txt:"Überbrücke die Wartezeit an der Ampel mit Bier – trinke 1 Schluck."},
@@ -1344,6 +1381,8 @@ const STREET_CARDS = [
   {e:"📱", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 2 Schlücke."},
   {e:"📲", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 3 Schlücke."},
   {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
+  {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
+  {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"},
 ];
 
 const TYPE_META = {
@@ -1419,6 +1458,175 @@ const modalWrap = $("#modalWrap"), modal = $("#modal");
 const diceLayer = $("#diceLayer");
 const scooterTag = $("#scooterTag");
 const confetti = $("#confetti");
+
+/* ======================================================
+   MULTIPLAYER (Firebase Realtime Database)
+   Ein Zustand pro Raum unter rooms/{code}/state. Nur das
+   Gerät, dessen players[current].uid der eigenen UID
+   entspricht, darf handeln – alle anderen sind Zuschauer.
+   Minispiele laufen nur lokal beim aktiven Spieler; andere
+   Geräte sehen nur das Ergebnis (kein Live-Mitverfolgen).
+====================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCtteX_EXHTLKiLdchWZLpTbRE0m15VMfw",
+  authDomain: "der-polnische.firebaseapp.com",
+  databaseURL: "https://der-polnische-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "der-polnische",
+  storageBucket: "der-polnische.firebasestorage.app",
+  messagingSenderId: "468173262504",
+  appId: "1:468173262504:web:41f7a81ba7c1c771b37c9d"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbDb = firebase.database();
+
+const mp = { enabled:false, code:null, uid:null, isHost:false, gameStarted:false, suppressEcho:false, lobbyUids:[], lobbyVal:{} };
+
+function ensureAuth(){
+  if(fbAuth.currentUser) return Promise.resolve(fbAuth.currentUser);
+  return fbAuth.signInAnonymously().then(()=> new Promise(res=>{
+    const unsub = fbAuth.onAuthStateChanged(u=>{ if(u){ unsub(); res(u); } });
+  }));
+}
+function genRoomCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = ""; for(let i=0;i<4;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function isMyTurn(){ return !mp.enabled || (players[current] && players[current].uid === mp.uid); }
+
+$("#modeSingleBtn").onclick = ()=>{
+  $("#modeSingleBtn").className = "btn green"; $("#modeMultiBtn").className = "btn gray";
+  $("#singleSetup").style.display = ""; $("#multiSetup").style.display = "none";
+};
+$("#modeMultiBtn").onclick = ()=>{
+  $("#modeMultiBtn").className = "btn green"; $("#modeSingleBtn").className = "btn gray";
+  $("#singleSetup").style.display = "none"; $("#multiSetup").style.display = "";
+  ensureAuth();
+};
+
+$("#createRoomChoiceBtn").onclick = ()=>{
+  $("#createRoomForm").style.display = ""; $("#joinRoomForm").style.display = "none";
+};
+$("#joinRoomChoiceBtn").onclick = ()=>{
+  $("#joinRoomForm").style.display = ""; $("#createRoomForm").style.display = "none";
+};
+
+$("#createRoomBtn").onclick = async ()=>{
+  const name = $("#hostNameInput").value.trim();
+  if(!name) return;
+  const user = await ensureAuth();
+  const code = genRoomCode();
+  mp.code = code; mp.uid = user.uid; mp.isHost = true; mp.enabled = true;
+  await fbDb.ref(`rooms/${code}/meta`).set({hostUid:user.uid, started:false, createdAt:Date.now()});
+  await fbDb.ref(`rooms/${code}/players/${user.uid}`).set({name, joinedAt:Date.now()});
+  enterLobby();
+};
+$("#joinRoomBtn").onclick = async ()=>{
+  const code = $("#joinCodeInput").value.trim().toUpperCase();
+  const name = $("#joinNameInput").value.trim();
+  if(!code || !name) return;
+  const user = await ensureAuth();
+  const metaSnap = await fbDb.ref(`rooms/${code}/meta`).get();
+  if(!metaSnap.exists()){ alert("Raum nicht gefunden – Code prüfen."); return; }
+  mp.code = code; mp.uid = user.uid; mp.isHost = false; mp.enabled = true;
+  await fbDb.ref(`rooms/${code}/players/${user.uid}`).set({name, joinedAt:Date.now()});
+  enterLobby();
+};
+
+function enterLobby(){
+  $("#multiChoice").style.display = "none";
+  $("#createRoomForm").style.display = "none";
+  $("#joinRoomForm").style.display = "none";
+  $("#lobby").style.display = "block";
+  $("#lobbyCode").textContent = mp.code;
+  $("#lobbyStartBtn").style.display = mp.isHost ? "block" : "none";
+  $("#lobbyWait").style.display = mp.isHost ? "none" : "block";
+
+  fbDb.ref(`rooms/${mp.code}/players`).on("value", snap=>{
+    const val = snap.val() || {};
+    const uids = Object.keys(val).sort((a,b)=> val[a].joinedAt - val[b].joinedAt);
+    mp.lobbyUids = uids; mp.lobbyVal = val;
+    $("#lobbyPlayers").innerHTML = uids.map((uid,i)=>`
+      <div class="p-row"><span class="ico">${TOKEN_ICONS[i]}</span>
+      <span style="flex:1;font-weight:700;">${val[uid].name}${uid===mp.uid?" (du)":""}</span></div>`).join("");
+    if(mp.isHost) $("#lobbyStartBtn").disabled = uids.length < 2;
+  });
+  fbDb.ref(`rooms/${mp.code}/meta/started`).on("value", snap=>{
+    if(snap.val()===true && !mp.gameStarted){
+      mp.gameStarted = true;
+      beginMultiplayerGame();
+    }
+  });
+}
+
+$("#lobbyStartBtn").onclick = async ()=>{
+  const uids = mp.lobbyUids, val = mp.lobbyVal;
+  const initPlayers = uids.map((uid,i)=>({
+    uid, name: val[uid].name, icon: TOKEN_ICONS[i],
+    pos:0, skip:0, scooter:false, sips:0, wishUsedThisTurn:false, extraDie:false
+  }));
+  const rankOrder = simulateDiceRankOrder(initPlayers.map((_,i)=>i));
+  const orderedPlayers = rankOrder.map(idx=>initPlayers[idx]);
+  await fbDb.ref(`rooms/${mp.code}/state`).set({
+    players: orderedPlayers, current: 0, gameOver:false,
+    log: `${orderedPlayers[0].icon} ${orderedPlayers[0].name} hat die Wer-beginnt-Auslosung gewonnen – GO drücken!`
+  });
+  await fbDb.ref(`rooms/${mp.code}/meta/started`).set(true);
+};
+
+function beginMultiplayerGame(){
+  fbDb.ref(`rooms/${mp.code}/players`).off();
+  $("#setup").style.display = "none";
+  decks.party = shuffled(PARTY_CARDS);
+  decks.city = shuffled(STREET_CARDS.concat(FORGOT_CARDS));
+  decks.street = shuffled(STREET_CARDS);
+  buildBoard();
+  showIntroStory().then(()=>{
+  fbDb.ref(`rooms/${mp.code}/state`).on("value", async snap=>{
+    const s = snap.val(); if(!s) return;
+    if(mp.suppressEcho){ mp.suppressEcho = false; return; }
+    const wasOver = gameOver;
+    players = s.players; current = s.current; gameOver = s.gameOver;
+    if(!document.getElementById("sipsHud").children.length) renderSipsHud();
+    renderTokens(); updateSipsUI(); updateHud();
+    setLog(s.log || "");
+    refreshControlAccess();
+    if(gameOver && !wasOver){
+      throwConfetti();
+      await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
+        title:"Angekommen!", text:"Ein Spieler ist auf der geilen Party – Polnischer geglückt! 🍻",
+        buttons:[{label:"Neu starten", cls:"green", value:1}]});
+      location.reload();
+    }
+  });
+  refreshControlAccess();
+  });
+}
+
+function refreshControlAccess(){
+  if(!mp.enabled || !players.length) return;
+  const mine = isMyTurn();
+  rollBtn.style.display = mine ? "" : "none";
+  let hint = document.getElementById("spectatorHint");
+  if(!mine){
+    if(!hint){
+      hint = document.createElement("div");
+      hint.id = "spectatorHint";
+      hint.style.cssText = "background:rgba(22,28,54,.66);color:#fdf7ea;padding:8px 18px;border-radius:999px;font-weight:700;font-size:13px;";
+      $("#bottom").insertBefore(hint, rollBtn);
+    }
+    hint.textContent = `${players[current].icon} ${players[current].name} ist dran…`;
+    hint.style.display = "block";
+  } else if(hint){ hint.style.display = "none"; }
+}
+
+async function syncState(){
+  if(!mp.enabled) return;
+  mp.suppressEcho = true;
+  await fbDb.ref(`rooms/${mp.code}/state`).set({ players, current, gameOver, log: log.textContent });
+}
+
 /* ---------- Setup ---------- */
 const playerList = $("#playerList");
 function addPlayerRow(name=""){
@@ -1451,14 +1659,12 @@ $("#startBtn").onclick = async ()=>{
   decks.street = shuffled(STREET_CARDS);
   $("#setup").style.display="none";
   buildBoard();
+  await showIntroStory();
+  await rollOffForStart();
   renderTokens();
   renderSipsHud();
   updateHud();
-  focusOn(0, true);
-  await showIntroStory();
-  await rollOffForStart();
   focusOn(players[current].pos, true);
-  updateHud();
   setLog(`${players[current].icon} ${players[current].name} beginnt – GO drücken!`);
 };
 
@@ -1741,7 +1947,7 @@ function updateWishButton(){
   const btn = $("#wishBtn");
   if(!players.length){ btn.style.display="none"; return; }
   const p = players[current];
-  const eligible = !gameOver && !busy && p.sips>=20 && !p.wishUsedThisTurn;
+  const eligible = !gameOver && !busy && p.sips>=20 && !p.wishUsedThisTurn && isMyTurn();
   btn.style.display = eligible ? "block" : "none";
 }
 
@@ -1757,6 +1963,7 @@ function refreshSipEditor(){
   $("#sipEditCount").textContent = p.sips;
 }
 function openSipEditor(idx){
+  if(mp.enabled && !isMyTurn()) return; // Zuschauer dürfen im Mehrgeräte-Modus nicht editieren
   sipEditIdx = idx;
   refreshSipEditor();
   $("#sipEditOverlay").style.display = "flex";
@@ -1769,6 +1976,7 @@ $("#sipEditPlus").addEventListener("click", ()=>{
   if(sipEditIdx===null) return;
   addSips(sipEditIdx, 1);
   refreshSipEditor();
+  syncState();
 });
 $("#sipEditMinus").addEventListener("click", ()=>{
   if(sipEditIdx===null) return;
@@ -1776,6 +1984,7 @@ $("#sipEditMinus").addEventListener("click", ()=>{
   if(!p || p.sips<=0) return;
   addSips(sipEditIdx, -1);
   refreshSipEditor();
+  syncState();
 });
 $("#sipEditClose").addEventListener("click", closeSipEditor);
 function addSips(idx, amount){
@@ -1832,7 +2041,7 @@ async function applyWishOption(key, p){
   }
 }
 async function useWish(){
-  if(busy || gameOver) return;
+  if(busy || gameOver || !isMyTurn()) return;
   const p = players[current];
   if(p.sips<20 || p.wishUsedThisTurn) return;
   busy = true; rollBtn.disabled = true;
@@ -1857,6 +2066,7 @@ async function useWish(){
   p.wishUsedThisTurn = true;
   updateSipsUI();
   busy = false; rollBtn.disabled = false;
+  await syncState();
 }
 $("#wishBtn").onclick = useWish;
 
@@ -2992,50 +3202,73 @@ function showIntroStory(){
     buttons:[{label:"Auf geht's! 🏃", cls:"green", value:1}]});
 }
 
-/* ---------- Auswürfeln, wer beginnt ----------
-   Jeder Spieler würfelt mit 2 Würfeln; die höchste Augenzahl beginnt.
-   Bei Gleichstand würfeln nur die Gleichauf-Spieler erneut, bis einer
-   klar vorne liegt. Setzt am Ende "current" auf den Gewinner. */
-async function rollOffForStart(){
-  let candidates = players.map((p,i)=>i);
-  let round = 1;
-  while(true){
-    const totals = {};
-    for(const idx of candidates){
-      const p = players[idx];
-      await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
-        title: round>1 ? `Stichentscheid: ${p.name}` : `${p.name} ist dran`,
-        text: round>1 ? `Gleichstand! ${p.name} würfelt zum Stichentscheid nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
-        buttons:[{label:"Würfeln", cls:"green", value:1}]});
-      const vals = [rand(6), rand(6)];
-      await showDice(vals);
-      const sum = vals[0]+vals[1];
-      totals[idx] = sum;
-      setLog(`${p.icon} ${p.name} würfelt ${sum}.`);
-      await wait(500);
-    }
-    const maxVal = Math.max(...candidates.map(i=>totals[i]));
-    const tied = candidates.filter(i=>totals[i]===maxVal);
-    if(tied.length===1){ current = tied[0]; break; }
-    candidates = tied;
-    round++;
+/* ---------- Auswürfeln der kompletten Reihenfolge ----------
+   Alle Spieler würfeln mit 2 Würfeln. Wer bei einer Augenzahl
+   gleichauf liegt, sticht NUR mit den anderen Gleichauf-Spielern um
+   genau diesen Platz (bzw. den Platz-Block) erneut – so lange, bis
+   jeder Platz eindeutig vergeben ist. Danach wird "players" in die
+   ausgewürfelte Reihenfolge gebracht (current = 0 = Startspieler). */
+async function diceRollGroup(indices, isTiebreak){
+  const totals = {};
+  const groupNames = indices.map(idx=>`${players[idx].icon} ${players[idx].name}`).join(", ");
+  for(const idx of indices){
+    const p = players[idx];
+    const opponents = indices.filter(i=>i!==idx).map(i=>players[i].name).join(", ");
+    await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+      title: isTiebreak ? `Stechen: ${p.name}` : `${p.name} ist dran`,
+      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Platz – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
+      buttons:[{label:"Würfeln", cls:"green", value:1}]});
+    const vals = [rand(6), rand(6)];
+    await showDice(vals);
+    const sum = vals[0]+vals[1];
+    totals[idx] = sum;
+    setLog(`${p.icon} ${p.name} würfelt ${sum}.`);
+    await wait(400);
   }
-  const winner = players[current];
+  return totals;
+}
+async function diceRankOrder(indices, isTiebreak=false){
+  if(indices.length<=1) return indices.slice();
+  const totals = await diceRollGroup(indices, isTiebreak);
+  const byValue = {};
+  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
+  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
+  let order = [];
+  for(const val of sortedValues){
+    const group = byValue[val];
+    if(group.length===1) order.push(group[0]);
+    else order.push(...await diceRankOrder(group, true));
+  }
+  return order;
+}
+async function rollOffForStart(){
+  const order = await diceRankOrder(players.map((p,i)=>i));
+  players = order.map(idx=>players[idx]);
+  current = 0;
+  const winner = players[0];
+  const rankText = players.map((pl,rank)=> `${rank+1}. ${pl.icon} ${pl.name}`).join("<br>");
   await showModal({emoji:"🏆", tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
-    title:"Start steht fest!",
-    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!`,
+    title:"Reihenfolge steht fest!",
+    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!<br><br>${rankText}`,
     buttons:[{label:"Los geht's!", cls:"green", value:1}]});
 }
 /* Reine Berechnung ohne Animation, für den Host im Mehrgeräte-Modus
-   (jeder Client würfelt sonst unterschiedliche Zufallswerte). */
-function simulateRollOff(count){
-  let candidates = Array.from({length:count}, (_,i)=>i);
-  while(candidates.length>1){
-    const totals = candidates.map(()=> rand(6)+rand(6));
-    const maxVal = Math.max(...totals);
-    candidates = candidates.filter((_,k)=>totals[k]===maxVal);
-  }
-  return candidates[0];
+   (jeder Client würfelt sonst unterschiedliche Zufallswerte). Gleiche
+   Stechen-Logik wie diceRankOrder, nur ohne UI. */
+function simulateDiceRankOrder(indices){
+  if(indices.length<=1) return indices.slice();
+  const totals = {};
+  indices.forEach(idx=>{ totals[idx] = rand(6)+rand(6); });
+  const byValue = {};
+  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
+  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
+  let order = [];
+  sortedValues.forEach(val=>{
+    const group = byValue[val];
+    if(group.length===1) order.push(group[0]);
+    else order.push(...simulateDiceRankOrder(group));
+  });
+  return order;
 }
 
 /* ---------- Aussetzer-Anzeige ---------- */
@@ -3083,6 +3316,7 @@ async function moveSteps(pi, steps){
     p.pos += dir;
     remaining--;
     renderTokens(pi); focusOn(p.pos); updateHud();
+    await syncState();
     await wait(400);
   }
 }
@@ -3090,10 +3324,45 @@ async function teleport(pi, target){
   const p = players[pi];
   p.pos = target;
   renderTokens(pi); focusOn(p.pos, true); updateHud();
+  await syncState();
   await wait(650);
 }
 
 /* ---------- Feld-Auflösung (nur nach Würfelzug) ---------- */
+/* ---------- Sonderkarten mit Spielerauswahl ----------
+   "Notfall vortäuschen": Zielspieler eilt sofort zum eigenen Feld,
+   kann aber auch abgelehnt werden. Löst dabei keine Ereignisse/
+   Minispiele aus. "Falsche Anzeige": Zielspieler muss 2 Runden
+   aussetzen und sofort zur Polizeistation. */
+async function handleSpecialCard(special, pi){
+  const p = players[pi];
+  const others = players.map((q,i)=>i).filter(i=>i!==pi);
+  if(others.length===0) return;
+  if(special==="fake-emergency"){
+    const targetIdx = await showModal({emoji:"📞", tag:"NOTFALL-TRICK", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+      title:"Wen rufst du an?",
+      text:"Wähle einen Spieler, der sofort zu deinem Feld eilen muss – oder verzichte darauf.",
+      buttons:[
+        ...others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i})),
+        {label:"Darauf verzichten", cls:"gray", value:"decline"},
+      ]});
+    if(targetIdx==="decline"){
+      setLog(`${p.icon} ${p.name} verzichtet darauf, jemanden anzurufen.`);
+    } else {
+      await teleport(targetIdx, p.pos);
+      setLog(`${players[targetIdx].icon} ${players[targetIdx].name} eilt zu ${p.icon} ${p.name}s Feld.`);
+    }
+  } else if(special==="false-tip"){
+    const targetIdx = await showModal({emoji:"🚨", tag:"FALSCHE ANZEIGE", tagCol:"linear-gradient(140deg,#c0272d,#7a1418)",
+      title:"Wen zeigst du an?",
+      text:"Wähle einen Spieler, den du bei der Polizei fälschlich beim Juwelier-Überfall gemeldet hast.",
+      buttons: others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i}))});
+    players[targetIdx].skip = 2;
+    await teleport(targetIdx, fieldIndexByKey("polizeistation"));
+    setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
+  }
+}
+
 async function resolveField(pi){
   const p = players[pi];
   const f = FIELDS[p.pos];
@@ -3107,29 +3376,34 @@ async function resolveField(pi){
   const isEncounter = occupants.length>0 && CARD_OR_MINIGAME_TYPES.includes(f.t);
 
   if(isEncounter){
-    const target = occupants[Math.floor(Math.random()*occupants.length)];
-    const targetIdx = players.indexOf(target);
+    const namesList = occupants.map(o=>`${o.icon} ${o.name}`).join(", ");
+    const single = occupants.length===1;
     const choice = await showModal({emoji:"👋", tag:"BEGEGNUNG", tagCol:"linear-gradient(140deg,#ffb347,#c96f18)",
-      title:`${target.icon} ${target.name} getroffen!`,
-      text:`${p.name} trifft ${target.name} auf „${f.n}“. Was tust du?`,
+      title: single ? `${occupants[0].icon} ${occupants[0].name} getroffen!` : `${occupants.length} Spieler getroffen!`,
+      text:`${p.name} trifft ${namesList} auf „${f.n}“. Was tust du?`,
       buttons:[
-        {label:`🥂 ${target.name} begrüßen & anstoßen`, cls:"green", value:"greet"},
-        {label:`🧭 Falsche Wegbeschreibung geben`, cls:"gray", value:"trick"},
+        {label: single ? `🥂 ${occupants[0].name} begrüßen & anstoßen` : "🥂 Alle begrüßen & anstoßen", cls:"green", value:"greet"},
+        {label: single ? "🧭 Falsche Wegbeschreibung geben" : "🧭 Allen falsche Wegbeschreibung geben", cls:"gray", value:"trick"},
       ]});
     if(choice==="greet"){
-      addSips(pi, 1); addSips(targetIdx, 1);
-      setLog(`${p.icon} ${p.name} stößt mit ${target.icon} ${target.name} an – beide trinken 1 Schluck.`);
+      addSips(pi, 1);
+      occupants.forEach(o=> addSips(players.indexOf(o), 1));
+      setLog(`${p.icon} ${p.name} stößt mit ${namesList} an – alle trinken 1 Schluck.`);
     } else {
-      setLog(`${p.icon} ${p.name} gibt ${target.icon} ${target.name} eine falsche Wegbeschreibung …`);
-      await moveSteps(targetIdx, -2);
-      addSips(targetIdx, 3);
-      setLog(`${target.icon} ${target.name} geht aus Frust 2 Felder zurück und trinkt 3 Schlücke.`);
+      setLog(`${p.icon} ${p.name} gibt ${namesList} eine falsche Wegbeschreibung …`);
+      for(const o of occupants){
+        const oIdx = players.indexOf(o);
+        await moveSteps(oIdx, -2);
+        addSips(oIdx, 3);
+      }
+      setLog(`${namesList} gehen aus Frust 2 Felder zurück und trinken je 3 Schlücke.`);
     }
   } else {
   switch(f.t){
     case T.GOAL: {
       gameOver = true;
       throwConfetti();
+      await syncState();
       await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:meta.col,
         title:`${p.name} ist auf der geilen Party!`,
         text:"Polnischer geglückt – keiner hat es gemerkt! Alle anderen trinken den Abschlussschluck. 🍻",
@@ -3141,10 +3415,14 @@ async function resolveField(pi){
       const c = drawCard(f.z);
       await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
-      applySipsFromText(c.txt, pi);
-      if(c.skip){ p.skip = c.skip; }
-      if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
-      else if(c.mv){ await moveSteps(pi, c.mv); }
+      if(c.special){
+        await handleSpecialCard(c.special, pi);
+      } else {
+        applySipsFromText(c.txt, pi);
+        if(c.skip){ p.skip = c.skip; }
+        if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
+        else if(c.mv){ await moveSteps(pi, c.mv); }
+      }
       break;
     }
     case T.FIXED: {
@@ -3306,11 +3584,12 @@ async function resolveField(pi){
   }
   }
   updateHud();
+  await syncState();
 }
 
 /* ---------- Zug ---------- */
 rollBtn.onclick = async ()=>{
-  if(busy || gameOver) return;
+  if(busy || gameOver || !isMyTurn()) return;
   busy = true; rollBtn.disabled = true;
   $("#wishBtn").style.display = "none";
 
@@ -3330,12 +3609,12 @@ rollBtn.onclick = async ()=>{
   if(isScooter){
     const r = Math.random();
     if(r < 0.10){
-      const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird kassiert und zurück zur öden Party gebracht. Trinke 2 Schlücke zum Trost.`;
+      const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird von der Polizei angehalten und zur Polizeistation gebracht. Trinke 2 Schlücke zum Trost.`;
       await showModal({emoji:"🚔", tag:"BUSTED", tagCol:"linear-gradient(140deg,#f0564a,#a8241a)", title:"Polizei!",
         text:bustedText,
         buttons:[{label:"Mist!", value:1}]});
       applySipsFromText(bustedText, current);
-      await teleport(current, 0);
+      await teleport(current, fieldIndexByKey("polizeistation"));
       await endTurn(); return;
     } else if(r < 0.35){
       const unfallText = `${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trinke 1 Schluck zum Trost.`;
@@ -3382,6 +3661,7 @@ async function endTurn(){
   updateHud();
   focusOn(p.pos, true);
   setLog(`${p.icon} ${p.name} ist dran – GO drücken!`);
+  await syncState();
 }
 </script>
 </body>
