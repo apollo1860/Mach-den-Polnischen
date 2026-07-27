@@ -234,6 +234,14 @@
     animation:popIn .35s cubic-bezier(.2,1.45,.4,1);
   }
   .sipedit-name{font-size:17px;font-weight:900;color:#fdf7ea;text-shadow:0 2px 6px #0009;}
+  .sipedit-nav-row{display:flex;align-items:center;gap:14px;}
+  .sipedit-navbtn{
+    width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:16px;color:#fdf7ea;
+    background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px #ffffff30, 0 4px 10px #0005;
+    transition:transform .08s, background .15s;
+  }
+  .sipedit-navbtn:active{transform:scale(.9);background:rgba(255,255,255,.22);}
   .sipedit-bar{
     position:relative;width:56px;height:220px;border-radius:20px;
     background:rgba(255,255,255,.1);
@@ -349,13 +357,13 @@
   .f2{transform:rotateX(-90deg) translateZ(46px);}
 
   /* ---------- Modal ---------- */
-  #modalWrap{
+  #modalWrap, .modal-overlay{
     position:fixed;inset:0;z-index:50;
     background:rgba(10,14,30,.62);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
     display:none;align-items:center;justify-content:center;padding:18px;
   }
-  #modal{
+  #modal, .modal-card{
     position:relative;
     background:linear-gradient(178deg,#fffdf6 0%, var(--paper2) 100%);
     border-radius:26px;
@@ -364,20 +372,21 @@
     animation:popIn .42s cubic-bezier(.2,1.45,.4,1);
   }
   @keyframes popIn{0%{transform:scale(.55) translateY(30px);opacity:0;}100%{transform:scale(1) translateY(0);opacity:1;}}
-  #modal .m-emoji{
+  #modal .m-emoji, .modal-card .m-emoji{
     font-size:56px;line-height:1;filter:drop-shadow(0 4px 4px #0004);
     animation:emojiBob 2.2s ease-in-out infinite;
   }
   @keyframes emojiBob{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-  #modal .m-tag{
+  #modal .m-tag, .modal-card .m-tag{
     display:inline-block;margin-top:12px;
     font-size:10.5px;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;
     color:#fff;padding:5px 15px;border-radius:999px;
     box-shadow:0 3px 8px #0004, inset 0 1px 0 #ffffff60;
   }
-  #modal h2{font-size:23px;font-weight:900;margin-top:10px;letter-spacing:-.3px;color:#332a1d;}
-  #modal p{font-size:15px;font-weight:600;margin-top:9px;line-height:1.5;color:#4f4433;}
-  #modal .m-btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  #modal h2, .modal-card h2{font-size:23px;font-weight:900;margin-top:10px;letter-spacing:-.3px;color:#332a1d;}
+  #modal p, .modal-card p{font-size:15px;font-weight:600;margin-top:9px;line-height:1.5;color:#4f4433;}
+  #modal .m-btns, .modal-card .m-btns{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+  .modal-card .m-waiting{font-size:12px;font-weight:800;color:#8a7a5c;margin-top:16px;letter-spacing:.2px;}
   .btn{
     border:none;cursor:pointer;position:relative;overflow:hidden;
     font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.2px;
@@ -1053,7 +1062,11 @@
 <div id="sipEditOverlay">
   <div class="sipedit-card">
     <div class="sipedit-name" id="sipEditName">🔴 Spieler 1</div>
-    <div class="sipedit-bar"><div class="sipedit-fill" id="sipEditFill"></div></div>
+    <div class="sipedit-nav-row">
+      <button class="sipedit-navbtn" id="sipEditPrevPlayer">◀</button>
+      <div class="sipedit-bar"><div class="sipedit-fill" id="sipEditFill"></div></div>
+      <button class="sipedit-navbtn" id="sipEditNextPlayer">▶</button>
+    </div>
     <div class="sipedit-controls">
       <button class="sipedit-btn minus" id="sipEditMinus">–</button>
       <div class="sipedit-count" id="sipEditCount">0</div>
@@ -1072,6 +1085,7 @@
 <div id="diceLayer"></div>
 <div id="confetti"></div>
 <div id="modalWrap"><div id="modal"></div></div>
+<div id="cardRevealOverlay" class="modal-overlay"><div id="cardRevealCard" class="modal-card"></div></div>
 <div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
 
 <div id="sneakOverlay">
@@ -1347,6 +1361,7 @@ const STREET_CARDS = [
   {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
   {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
   {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"},
+  {e:"⛈️", txt:"Unwetter! Durch strömenden Regen ist die Sicht schlecht – ALLE Spieler gehen 2 Felder zurück und trinken 1 Frust-Schluck.", special:"storm"},
 ];
 
 const TYPE_META = {
@@ -1444,7 +1459,7 @@ addPlayerRow(); addPlayerRow();
 $("#startBtn").onclick = async ()=>{
   players = [...playerList.children].map((r,i)=>({
     name: r.querySelector("input").value.trim() || `Spieler ${i+1}`,
-    icon: TOKEN_ICONS[i],
+    icon: TOKEN_ICONS[i], color: PLAYER_COLORS[i % PLAYER_COLORS.length],
     pos:0, skip:0, scooter:false,
     sips:0, wishUsedThisTurn:false, extraDie:false
   }));
@@ -1720,7 +1735,7 @@ function renderSipsHud(){
   hud.innerHTML = players.map((p,i)=>`
     <div class="sip-bar" id="sipBar-${i}">
       <div class="sip-icon">${p.icon}</div>
-      <div class="sip-fill" id="sipFill-${i}" style="--player-color:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"></div>
+      <div class="sip-fill" id="sipFill-${i}" style="--player-color:${p.color}"></div>
     </div>`).join("");
   players.forEach((p,i)=>{
     document.getElementById("sipBar-"+i).addEventListener("click", ()=>openSipEditor(i));
@@ -1753,7 +1768,7 @@ function refreshSipEditor(){
   const p = players[sipEditIdx];
   if(!p) return;
   $("#sipEditName").textContent = `${p.icon} ${p.name}`;
-  $("#sipEditFill").style.setProperty("--player-color", PLAYER_COLORS[sipEditIdx % PLAYER_COLORS.length]);
+  $("#sipEditFill").style.setProperty("--player-color", players[sipEditIdx].color);
   $("#sipEditFill").style.height = Math.min(100, (p.sips/25)*100)+"%";
   $("#sipEditCount").textContent = p.sips;
 }
@@ -1779,6 +1794,16 @@ $("#sipEditMinus").addEventListener("click", ()=>{
   refreshSipEditor();
 });
 $("#sipEditClose").addEventListener("click", closeSipEditor);
+$("#sipEditPrevPlayer").addEventListener("click", ()=>{
+  if(sipEditIdx===null || !players.length) return;
+  sipEditIdx = (sipEditIdx - 1 + players.length) % players.length;
+  refreshSipEditor();
+});
+$("#sipEditNextPlayer").addEventListener("click", ()=>{
+  if(sipEditIdx===null || !players.length) return;
+  sipEditIdx = (sipEditIdx + 1) % players.length;
+  refreshSipEditor();
+});
 function addSips(idx, amount){
   if(!players[idx] || !amount) return;
   players[idx].sips = Math.max(0, players[idx].sips + amount);
@@ -2987,18 +3012,30 @@ function showMiniGameIntro(emoji, title, text){
 }
 
 /* ---------- Storyline-Intro nach Spielstart ---------- */
+/* Leichtgewichtiger Merge-Write für kurzlebige Zuschauer-Signale
+   (Ereigniskarte gerade offen, Minispiel läuft, Aussetzer-Animation).
+   Lebt außerhalb des Multiplayer-Blocks, damit resolveField/endTurn
+   diese Funktion in JEDER Version (auch im 1-Gerät-Modus ohne
+   Firebase) gefahrlos aufrufen können – "typeof mp" wirft dort nie,
+   sondern liefert einfach "undefined". */
+function syncTransient(patch){
+  if(typeof mp === "undefined" || !mp.enabled) return Promise.resolve();
+  mp.suppressEcho = true;
+  return fbDb.ref(`rooms/${mp.code}/state`).update(patch);
+}
+
 function showIntroStory(){
   return showModal({emoji:"🥱➡️🎉", title:"Nichts wie weg!",
     text:"Diese Party ist eine Katastrophe: Die Playlist besteht gefühlt nur aus Fahrstuhlmusik 🎷, der Gastgeber erzählt zum dritten Mal dieselbe Geschichte und selbst die Chips sind weich. Nichts wie weg!<br><br>📱 Gerade hat dich die Nachricht erreicht: Auf der angesagtesten Party der Stadt ist genau noch ein Platz frei.<br><br>😬 Blöd nur: Deine Freunde, mit denen du auf dieser Party bist, haben dieselbe Nachricht bekommen und sprinten ebenfalls los, um sich den letzten freien Platz zu schnappen.<br><br>🏃 Renn, spring und weiche Hindernissen aus. Erreiche die Party vor deinen Freunden – denn nur der Schnellste kommt noch rein!",
     buttons:[{label:"Auf geht's! 🏃", cls:"green", value:1}]});
 }
 
-/* ---------- Auswürfeln der kompletten Reihenfolge ----------
-   Alle Spieler würfeln mit 2 Würfeln. Wer bei einer Augenzahl
-   gleichauf liegt, sticht NUR mit den anderen Gleichauf-Spielern um
-   genau diesen Platz (bzw. den Platz-Block) erneut – so lange, bis
-   jeder Platz eindeutig vergeben ist. Danach wird "players" in die
-   ausgewürfelte Reihenfolge gebracht (current = 0 = Startspieler). */
+/* ---------- Auswürfeln, wer beginnt ----------
+   Alle Spieler würfeln mit 2 Würfeln; die höchste Augenzahl beginnt.
+   Bei Gleichstand (auch bei mehr als 2 Gleichauf-Spielern) würfelt
+   NUR diese Gruppe erneut, bis einer eindeutig vorne liegt. Die
+   restliche Zugreihenfolge bleibt danach genau wie eingetragen –
+   es wird nur "current" gesetzt, "players" nicht umsortiert. */
 async function diceRollGroup(indices, isTiebreak){
   const totals = {};
   const groupNames = indices.map(idx=>`${players[idx].icon} ${players[idx].name}`).join(", ");
@@ -3007,7 +3044,7 @@ async function diceRollGroup(indices, isTiebreak){
     const opponents = indices.filter(i=>i!==idx).map(i=>players[i].name).join(", ");
     await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
       title: isTiebreak ? `Stechen: ${p.name}` : `${p.name} ist dran`,
-      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Platz – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
+      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Start – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
       buttons:[{label:"Würfeln", cls:"green", value:1}]});
     const vals = [rand(6), rand(6)];
     await showDice(vals);
@@ -3018,48 +3055,34 @@ async function diceRollGroup(indices, isTiebreak){
   }
   return totals;
 }
-async function diceRankOrder(indices, isTiebreak=false){
-  if(indices.length<=1) return indices.slice();
-  const totals = await diceRollGroup(indices, isTiebreak);
-  const byValue = {};
-  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
-  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
-  let order = [];
-  for(const val of sortedValues){
-    const group = byValue[val];
-    if(group.length===1) order.push(group[0]);
-    else order.push(...await diceRankOrder(group, true));
-  }
-  return order;
-}
 async function rollOffForStart(){
-  const order = await diceRankOrder(players.map((p,i)=>i));
-  players = order.map(idx=>players[idx]);
-  current = 0;
-  const winner = players[0];
-  const rankText = players.map((pl,rank)=> `${rank+1}. ${pl.icon} ${pl.name}`).join("<br>");
+  let candidates = players.map((p,i)=>i);
+  let round = 1;
+  while(true){
+    const totals = await diceRollGroup(candidates, round>1);
+    const maxVal = Math.max(...candidates.map(i=>totals[i]));
+    const tied = candidates.filter(i=>totals[i]===maxVal);
+    if(tied.length===1){ current = tied[0]; break; }
+    candidates = tied;
+    round++;
+  }
+  const winner = players[current];
   await showModal({emoji:"🏆", tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
-    title:"Reihenfolge steht fest!",
-    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!<br><br>${rankText}`,
+    title:"Start steht fest!",
+    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt! Danach geht's der Reihe nach weiter, wie eingetragen.`,
     buttons:[{label:"Los geht's!", cls:"green", value:1}]});
 }
 /* Reine Berechnung ohne Animation, für den Host im Mehrgeräte-Modus
    (jeder Client würfelt sonst unterschiedliche Zufallswerte). Gleiche
-   Stechen-Logik wie diceRankOrder, nur ohne UI. */
-function simulateDiceRankOrder(indices){
-  if(indices.length<=1) return indices.slice();
-  const totals = {};
-  indices.forEach(idx=>{ totals[idx] = rand(6)+rand(6); });
-  const byValue = {};
-  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
-  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
-  let order = [];
-  sortedValues.forEach(val=>{
-    const group = byValue[val];
-    if(group.length===1) order.push(group[0]);
-    else order.push(...simulateDiceRankOrder(group));
-  });
-  return order;
+   Stechen-Logik, nur ohne UI – liefert den Index des Gewinners. */
+function simulateStartWinner(count){
+  let candidates = Array.from({length:count}, (_,i)=>i);
+  while(candidates.length>1){
+    const totals = candidates.map(()=> rand(6)+rand(6));
+    const maxVal = Math.max(...totals);
+    candidates = candidates.filter((_,k)=>totals[k]===maxVal);
+  }
+  return candidates[0];
 }
 
 /* ---------- Aussetzer-Anzeige ---------- */
@@ -3149,6 +3172,13 @@ async function handleSpecialCard(special, pi){
     players[targetIdx].skip = 2;
     await teleport(targetIdx, fieldIndexByKey("polizeistation"));
     setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
+  } else if(special==="storm"){
+    setLog("⛈️ Unwetter zieht auf – alle müssen 2 Felder zurück …");
+    for(let i=0;i<players.length;i++){
+      await moveSteps(i, -2);
+      addSips(i, 1);
+    }
+    setLog("⛈️ Unwetter! Alle Spieler sind 2 Felder zurückgegangen und trinken 1 Frust-Schluck.");
   }
 }
 
@@ -3201,8 +3231,10 @@ async function resolveField(pi){
     }
     case T.EVENT: {
       const c = drawCard(f.z);
+      await syncTransient({cardReveal:{emoji:c.e, tag:meta.tag, tagCol:meta.col, title:f.n, text:c.txt}});
       await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
+      await syncTransient({cardReveal:null});
       if(c.special){
         await handleSpecialCard(c.special, pi);
       } else {
@@ -3214,8 +3246,10 @@ async function resolveField(pi){
       break;
     }
     case T.FIXED: {
+      await syncTransient({cardReveal:{emoji:f.e, tag:meta.tag, tagCol:meta.col, title:f.n, text:f.d}});
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.d, buttons:[{label:"OK", value:1}]});
+      await syncTransient({cardReveal:null});
       applySipsFromText(f.d, pi);
       if(f.skip) p.skip = f.skip;
       break;
@@ -3341,7 +3375,9 @@ async function resolveField(pi){
       }
       setLog(`${chosen.emoji} ${p.icon} ${p.name} spielt: ${chosen.name}`);
       await showMiniGameIntro(chosen.emoji, chosen.name, chosen.rules);
+      await syncTransient({miniGameBanner:{emoji:chosen.emoji, name:chosen.name}});
       const won = await chosen.run(p, val);
+      await syncTransient({miniGameBanner:null});
       await moveSteps(pi, won ? val : -val);
       break;
     }
@@ -3351,7 +3387,9 @@ async function resolveField(pi){
       setLog(`🎯 ${p.icon} ${p.name} tritt in der Boazn zum Darts an …`);
       await showMiniGameIntro("🎯", "Boazn-Darts",
         "Pro Dart schwingt erst eine senkrechte Linie hin und her – tippe STOPP, um die horizontale Position zu fixieren. Danach schwingt eine waagrechte Linie – nochmal STOPP für die vertikale Position. 3 Aufnahmen à 3 Darts, 30 Sekunden pro Aufnahme. Mehr Punkte als der Fremde gewinnt.");
+      await syncTransient({miniGameBanner:{emoji:"🎯", name:"Boazn-Darts"}});
       const won = await playDartsGame(p, val);
+      await syncTransient({miniGameBanner:null});
       await moveSteps(pi, won ? val : -val);
       break;
     }
@@ -3359,14 +3397,18 @@ async function resolveField(pi){
       setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} hat spontan neue Freunde kennengelernt …`);
       await showMiniGameIntro("🧑‍🤝‍🧑", "Namen merken",
         "Du hast spontan neue Freunde kennengelernt. In der Lernphase stellt sich nacheinander jede der 10 Personen 3 Sekunden lang vor – merke dir die Namen. Danach fragt jede Person in zufälliger Reihenfolge „Wie heiße ich?“: Namen ins Feld tippen und mit OK oder Enter bestätigen.");
+      await syncTransient({miniGameBanner:{emoji:"🧑‍🤝‍🧑", name:"Namen merken"}});
       await playNamenGame(p, pi);
+      await syncTransient({miniGameBanner:null});
       break;
     }
     case T.WETTE: {
       setLog(`🎰 ${p.icon} ${p.name} tippt bei Tipico …`);
       await showMiniGameIntro("🎰", "Tipico-Wette",
         "Tippe 1, X oder 2 an, um deinen Tipp zu setzen. Stelle danach mit +/- deinen Einsatz ein und tippe auf „Wette bestätigen“. Bei richtigem Tipp verteilst du Einsatz × Quote (gerundet), bei falschem trinkst du deinen Einsatz selbst.");
+      await syncTransient({miniGameBanner:{emoji:"🎰", name:"Tipico-Wette"}});
       await playWetteGame(p, pi);
+      await syncTransient({miniGameBanner:null});
       break;
     }
   }
@@ -3435,7 +3477,9 @@ async function endTurn(){
       updateHud();
       focusOn(q.pos, true);
       setLog(`${q.icon} ${q.name} wäre dran …`);
+      await syncTransient({skipAnnounce:{icon:q.icon, name:q.name, nonce: Date.now()+Math.random()}});
       await showSkipX(q);
+      await syncTransient({skipAnnounce:null});
       q.skip--;
       continue;
     }
