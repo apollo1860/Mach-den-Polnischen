@@ -237,6 +237,14 @@
     animation:popIn .35s cubic-bezier(.2,1.45,.4,1);
   }
   .sipedit-name{font-size:17px;font-weight:900;color:#fdf7ea;text-shadow:0 2px 6px #0009;}
+  .sipedit-nav-row{display:flex;align-items:center;gap:14px;}
+  .sipedit-navbtn{
+    width:38px;height:38px;border-radius:50%;border:none;cursor:pointer;
+    font-family:inherit;font-weight:900;font-size:16px;color:#fdf7ea;
+    background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1.5px #ffffff30, 0 4px 10px #0005;
+    transition:transform .08s, background .15s;
+  }
+  .sipedit-navbtn:active{transform:scale(.9);background:rgba(255,255,255,.22);}
   .sipedit-bar{
     position:relative;width:56px;height:220px;border-radius:20px;
     background:rgba(255,255,255,.1);
@@ -1090,7 +1098,11 @@
 <div id="sipEditOverlay">
   <div class="sipedit-card">
     <div class="sipedit-name" id="sipEditName">🔴 Spieler 1</div>
-    <div class="sipedit-bar"><div class="sipedit-fill" id="sipEditFill"></div></div>
+    <div class="sipedit-nav-row">
+      <button class="sipedit-navbtn" id="sipEditPrevPlayer">◀</button>
+      <div class="sipedit-bar"><div class="sipedit-fill" id="sipEditFill"></div></div>
+      <button class="sipedit-navbtn" id="sipEditNextPlayer">▶</button>
+    </div>
     <div class="sipedit-controls">
       <button class="sipedit-btn minus" id="sipEditMinus">–</button>
       <div class="sipedit-count" id="sipEditCount">0</div>
@@ -1385,6 +1397,7 @@ const STREET_CARDS = [
   {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
   {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
   {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"},
+  {e:"⛈️", txt:"Unwetter! Durch strömenden Regen ist die Sicht schlecht – ALLE Spieler gehen 2 Felder zurück und trinken 1 Frust-Schluck.", special:"storm"},
 ];
 
 const TYPE_META = {
@@ -1565,14 +1578,13 @@ function enterLobby(){
 $("#lobbyStartBtn").onclick = async ()=>{
   const uids = mp.lobbyUids, val = mp.lobbyVal;
   const initPlayers = uids.map((uid,i)=>({
-    uid, name: val[uid].name, icon: TOKEN_ICONS[i],
+    uid, name: val[uid].name, icon: TOKEN_ICONS[i], color: PLAYER_COLORS[i % PLAYER_COLORS.length],
     pos:0, skip:0, scooter:false, sips:0, wishUsedThisTurn:false, extraDie:false
   }));
-  const rankOrder = simulateDiceRankOrder(initPlayers.map((_,i)=>i));
-  const orderedPlayers = rankOrder.map(idx=>initPlayers[idx]);
+  const startIdx = simulateStartWinner(initPlayers.length);
   await fbDb.ref(`rooms/${mp.code}/state`).set({
-    players: orderedPlayers, current: 0, gameOver:false,
-    log: `${orderedPlayers[0].icon} ${orderedPlayers[0].name} hat die Wer-beginnt-Auslosung gewonnen – GO drücken!`
+    players: initPlayers, current: startIdx, gameOver:false,
+    log: `${initPlayers[startIdx].icon} ${initPlayers[startIdx].name} hat die Wer-beginnt-Auslosung gewonnen – GO drücken!`
   });
   await fbDb.ref(`rooms/${mp.code}/meta/started`).set(true);
 };
@@ -1675,7 +1687,7 @@ addPlayerRow(); addPlayerRow();
 $("#startBtn").onclick = async ()=>{
   players = [...playerList.children].map((r,i)=>({
     name: r.querySelector("input").value.trim() || `Spieler ${i+1}`,
-    icon: TOKEN_ICONS[i],
+    icon: TOKEN_ICONS[i], color: PLAYER_COLORS[i % PLAYER_COLORS.length],
     pos:0, skip:0, scooter:false,
     sips:0, wishUsedThisTurn:false, extraDie:false
   }));
@@ -1951,7 +1963,7 @@ function renderSipsHud(){
   hud.innerHTML = players.map((p,i)=>`
     <div class="sip-bar" id="sipBar-${i}">
       <div class="sip-icon">${p.icon}</div>
-      <div class="sip-fill" id="sipFill-${i}" style="--player-color:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"></div>
+      <div class="sip-fill" id="sipFill-${i}" style="--player-color:${p.color}"></div>
     </div>`).join("");
   players.forEach((p,i)=>{
     document.getElementById("sipBar-"+i).addEventListener("click", ()=>openSipEditor(i));
@@ -1984,7 +1996,7 @@ function refreshSipEditor(){
   const p = players[sipEditIdx];
   if(!p) return;
   $("#sipEditName").textContent = `${p.icon} ${p.name}`;
-  $("#sipEditFill").style.setProperty("--player-color", PLAYER_COLORS[sipEditIdx % PLAYER_COLORS.length]);
+  $("#sipEditFill").style.setProperty("--player-color", players[sipEditIdx].color);
   $("#sipEditFill").style.height = Math.min(100, (p.sips/25)*100)+"%";
   $("#sipEditCount").textContent = p.sips;
 }
@@ -2013,6 +2025,16 @@ $("#sipEditMinus").addEventListener("click", ()=>{
   syncState();
 });
 $("#sipEditClose").addEventListener("click", closeSipEditor);
+$("#sipEditPrevPlayer").addEventListener("click", ()=>{
+  if(sipEditIdx===null || !players.length) return;
+  sipEditIdx = (sipEditIdx - 1 + players.length) % players.length;
+  refreshSipEditor();
+});
+$("#sipEditNextPlayer").addEventListener("click", ()=>{
+  if(sipEditIdx===null || !players.length) return;
+  sipEditIdx = (sipEditIdx + 1) % players.length;
+  refreshSipEditor();
+});
 function addSips(idx, amount){
   if(!players[idx] || !amount) return;
   players[idx].sips = Math.max(0, players[idx].sips + amount);
@@ -3240,12 +3262,12 @@ function showIntroStory(){
     buttons:[{label:"Auf geht's! 🏃", cls:"green", value:1}]});
 }
 
-/* ---------- Auswürfeln der kompletten Reihenfolge ----------
-   Alle Spieler würfeln mit 2 Würfeln. Wer bei einer Augenzahl
-   gleichauf liegt, sticht NUR mit den anderen Gleichauf-Spielern um
-   genau diesen Platz (bzw. den Platz-Block) erneut – so lange, bis
-   jeder Platz eindeutig vergeben ist. Danach wird "players" in die
-   ausgewürfelte Reihenfolge gebracht (current = 0 = Startspieler). */
+/* ---------- Auswürfeln, wer beginnt ----------
+   Alle Spieler würfeln mit 2 Würfeln; die höchste Augenzahl beginnt.
+   Bei Gleichstand (auch bei mehr als 2 Gleichauf-Spielern) würfelt
+   NUR diese Gruppe erneut, bis einer eindeutig vorne liegt. Die
+   restliche Zugreihenfolge bleibt danach genau wie eingetragen –
+   es wird nur "current" gesetzt, "players" nicht umsortiert. */
 async function diceRollGroup(indices, isTiebreak){
   const totals = {};
   const groupNames = indices.map(idx=>`${players[idx].icon} ${players[idx].name}`).join(", ");
@@ -3254,7 +3276,7 @@ async function diceRollGroup(indices, isTiebreak){
     const opponents = indices.filter(i=>i!==idx).map(i=>players[i].name).join(", ");
     await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
       title: isTiebreak ? `Stechen: ${p.name}` : `${p.name} ist dran`,
-      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Platz – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
+      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Start – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
       buttons:[{label:"Würfeln", cls:"green", value:1}]});
     const vals = [rand(6), rand(6)];
     await showDice(vals);
@@ -3265,48 +3287,34 @@ async function diceRollGroup(indices, isTiebreak){
   }
   return totals;
 }
-async function diceRankOrder(indices, isTiebreak=false){
-  if(indices.length<=1) return indices.slice();
-  const totals = await diceRollGroup(indices, isTiebreak);
-  const byValue = {};
-  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
-  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
-  let order = [];
-  for(const val of sortedValues){
-    const group = byValue[val];
-    if(group.length===1) order.push(group[0]);
-    else order.push(...await diceRankOrder(group, true));
-  }
-  return order;
-}
 async function rollOffForStart(){
-  const order = await diceRankOrder(players.map((p,i)=>i));
-  players = order.map(idx=>players[idx]);
-  current = 0;
-  const winner = players[0];
-  const rankText = players.map((pl,rank)=> `${rank+1}. ${pl.icon} ${pl.name}`).join("<br>");
+  let candidates = players.map((p,i)=>i);
+  let round = 1;
+  while(true){
+    const totals = await diceRollGroup(candidates, round>1);
+    const maxVal = Math.max(...candidates.map(i=>totals[i]));
+    const tied = candidates.filter(i=>totals[i]===maxVal);
+    if(tied.length===1){ current = tied[0]; break; }
+    candidates = tied;
+    round++;
+  }
+  const winner = players[current];
   await showModal({emoji:"🏆", tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#ffcf4d,#c9971a)",
-    title:"Reihenfolge steht fest!",
-    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt!<br><br>${rankText}`,
+    title:"Start steht fest!",
+    text:`${winner.icon} ${winner.name} hat die höchste Zahl gewürfelt und beginnt! Danach geht's der Reihe nach weiter, wie eingetragen.`,
     buttons:[{label:"Los geht's!", cls:"green", value:1}]});
 }
 /* Reine Berechnung ohne Animation, für den Host im Mehrgeräte-Modus
    (jeder Client würfelt sonst unterschiedliche Zufallswerte). Gleiche
-   Stechen-Logik wie diceRankOrder, nur ohne UI. */
-function simulateDiceRankOrder(indices){
-  if(indices.length<=1) return indices.slice();
-  const totals = {};
-  indices.forEach(idx=>{ totals[idx] = rand(6)+rand(6); });
-  const byValue = {};
-  indices.forEach(idx=>{ (byValue[totals[idx]] = byValue[totals[idx]]||[]).push(idx); });
-  const sortedValues = Object.keys(byValue).map(Number).sort((a,b)=>b-a);
-  let order = [];
-  sortedValues.forEach(val=>{
-    const group = byValue[val];
-    if(group.length===1) order.push(group[0]);
-    else order.push(...simulateDiceRankOrder(group));
-  });
-  return order;
+   Stechen-Logik, nur ohne UI – liefert den Index des Gewinners. */
+function simulateStartWinner(count){
+  let candidates = Array.from({length:count}, (_,i)=>i);
+  while(candidates.length>1){
+    const totals = candidates.map(()=> rand(6)+rand(6));
+    const maxVal = Math.max(...totals);
+    candidates = candidates.filter((_,k)=>totals[k]===maxVal);
+  }
+  return candidates[0];
 }
 
 /* ---------- Aussetzer-Anzeige ---------- */
@@ -3398,6 +3406,13 @@ async function handleSpecialCard(special, pi){
     players[targetIdx].skip = 2;
     await teleport(targetIdx, fieldIndexByKey("polizeistation"));
     setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
+  } else if(special==="storm"){
+    setLog("⛈️ Unwetter zieht auf – alle müssen 2 Felder zurück …");
+    for(let i=0;i<players.length;i++){
+      await moveSteps(i, -2);
+      addSips(i, 1);
+    }
+    setLog("⛈️ Unwetter! Alle Spieler sind 2 Felder zurückgegangen und trinken 1 Frust-Schluck.");
   }
 }
 
