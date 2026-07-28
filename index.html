@@ -1055,6 +1055,16 @@
     <div class="kicker">Das Münchner Trinkspiel</div>
     <h1>Der <span>Polnische</span></h1>
     <div class="sub">Schleich dich unbemerkt von der öden Party. Einmal quer durch München – wer zuerst auf der geilen Party ankommt, gewinnt. 🥱→🎉</div>
+
+    <div id="resumeBanner" style="display:none;margin-top:16px;background:#fff3cf;border-radius:16px;padding:14px;box-shadow:0 3px 10px #00000014, inset 0 0 0 1.5px #e7ddc6;">
+      <div style="font-weight:800;font-size:14px;color:#4a3413;">Unterbrochene Partie gefunden</div>
+      <div id="resumeInfo" style="font-size:12.5px;color:#6b5f4c;margin-top:4px;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn green" id="resumeBtn" style="flex:1;padding:10px;font-size:14px;">Fortsetzen</button>
+        <button class="btn gray" id="discardSaveBtn" style="flex:1;padding:10px;font-size:14px;">Neues Spiel</button>
+      </div>
+    </div>
+
     <div id="playerList"></div>
     <button id="addPlayer">+ Spieler hinzufügen</button>
     <div style="margin-top:20px">
@@ -1766,6 +1776,7 @@ function updateHud(){
   if(activeTileEl && activeTileEl!==at) activeTileEl.classList.remove("active-tile");
   if(at){ at.classList.add("active-tile"); activeTileEl = at; }
   updateSipsUI();
+  saveGame();
 }
 function setLog(t){ log.textContent = t; }
 
@@ -1852,6 +1863,7 @@ function addSips(idx, amount){
   if(!players[idx] || !amount) return;
   players[idx].sips = Math.max(0, players[idx].sips + amount);
   updateSipsUI();
+  saveGame();
 }
 function distributeSips(amount, excludeIdx){
   const others = players.map((_,i)=>i).filter(i=>i!==excludeIdx);
@@ -3062,6 +3074,67 @@ function showMiniGameIntro(emoji, title, text){
    diese Funktion in JEDER Version (auch im 1-Gerät-Modus ohne
    Firebase) gefahrlos aufrufen können – "typeof mp" wirft dort nie,
    sondern liefert einfach "undefined". */
+/* ---------- Auto-Save / Fortsetzen (nur 1-Gerät-Modus) ----------
+   Persistiert players/current/gameOver in localStorage, damit ein
+   versehentlicher Reload oder Verbindungsabbruch die Partie nicht
+   komplett zunichtemacht. Im Mehrgeräte-Modus überflüssig (State
+   liegt eh in Firebase), daher dort bewusst deaktiviert. */
+const SAVE_KEY = "der-polnische-save-v1";
+function saveGame(){
+  if(typeof mp !== "undefined" && mp.enabled) return;
+  if(!players.length) return;
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ players, current, gameOver, savedAt: Date.now() }));
+  }catch(e){ /* localStorage evtl. nicht verfügbar – dann halt kein Auto-Save */ }
+}
+function loadSavedGame(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.players) || data.players.length<2 || data.gameOver) return null;
+    return data;
+  }catch(e){ return null; }
+}
+function clearSavedGame(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+function initResumeBanner(){
+  const banner = document.getElementById("resumeBanner");
+  if(!banner) return;
+  const data = loadSavedGame();
+  if(!data){ banner.style.display = "none"; return; }
+  const mins = Math.max(0, Math.round((Date.now()-data.savedAt)/60000));
+  const cur = data.players[data.current];
+  document.getElementById("resumeInfo").textContent =
+    `${data.players.length} Spieler – ${cur.icon} ${cur.name} war dran (vor ${mins} Min.)`;
+  banner.style.display = "block";
+}
+function resumeSavedGame(){
+  const data = loadSavedGame();
+  if(!data) return;
+  players = data.players;
+  current = data.current;
+  gameOver = false;
+  decks.party = shuffled(PARTY_CARDS);
+  decks.city = shuffled(STREET_CARDS.concat(FORGOT_CARDS));
+  decks.street = shuffled(STREET_CARDS);
+  $("#setup").style.display = "none";
+  buildBoard();
+  renderTokens();
+  renderSipsHud();
+  updateHud();
+  focusOn(players[current].pos, true);
+  setLog(`Willkommen zurück! ${players[current].icon} ${players[current].name} ist dran – GO drücken!`);
+}
+document.getElementById("resumeBtn") && document.getElementById("resumeBtn").addEventListener("click", resumeSavedGame);
+document.getElementById("discardSaveBtn") && document.getElementById("discardSaveBtn").addEventListener("click", ()=>{
+  clearSavedGame();
+  const banner = document.getElementById("resumeBanner");
+  if(banner) banner.style.display = "none";
+});
+initResumeBanner();
+
 function syncTransient(patch){
   if(typeof mp === "undefined" || !mp.enabled) return Promise.resolve();
   mp.suppressEcho = true;
@@ -3289,6 +3362,7 @@ async function resolveField(pi){
     case T.GOAL: {
       gameOver = true;
       throwConfetti();
+      clearSavedGame();
       await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:meta.col,
         title:`${p.name} ist auf der geilen Party!`,
         text:"Polnischer geglückt – keiner hat es gemerkt! Alle anderen trinken den Abschlussschluck. 🍻",
