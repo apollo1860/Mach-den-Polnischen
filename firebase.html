@@ -733,7 +733,7 @@
   }
   .namen-errors{font-size:10.5px;font-weight:700;color:#ff9a90;min-height:13px;}
   .namen-grid{
-    display:grid;grid-template-columns:repeat(5,1fr);gap:7px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
   }
   .namen-pcard{
     position:relative;border-radius:14px;background:rgba(255,255,255,.07);
@@ -965,6 +965,29 @@
     to{transform:translateY(110vh) rotate(720deg);}
   }
 
+  /* ---------- Unwetter-Regen ---------- */
+  #rainOverlay{
+    position:fixed;inset:0;z-index:46;pointer-events:none;overflow:hidden;display:none;
+    background:linear-gradient(180deg, #1a2440cc 0%, #10162899 100%);
+  }
+  #rainOverlay i{
+    position:absolute;top:-12vh;width:2px;height:9vh;
+    background:linear-gradient(180deg, transparent, #bcd8ffcc);
+    animation:rainFall linear forwards;
+  }
+  #rainOverlay .flash{
+    position:absolute;inset:0;background:#fff;opacity:0;
+    animation:rainFlash 2.2s ease-in-out infinite;
+  }
+  @keyframes rainFall{
+    to{transform:translateY(122vh);}
+  }
+  @keyframes rainFlash{
+    0%,92%,100%{opacity:0;}
+    93%{opacity:.35;}
+    95%{opacity:0;}
+  }
+
   /* ---------- Setup ---------- */
   #setup{
     position:fixed;inset:0;z-index:60;
@@ -1120,6 +1143,7 @@
 
 <div id="diceLayer"></div>
 <div id="confetti"></div>
+<div id="rainOverlay"></div>
 <div id="modalWrap"><div id="modal"></div></div>
 <div id="cardRevealOverlay" class="modal-overlay"><div id="cardRevealCard" class="modal-card"></div></div>
 <div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
@@ -1398,6 +1422,26 @@ const STREET_CARDS = [
   {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
   {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"},
   {e:"⛈️", txt:"Unwetter! Durch strömenden Regen ist die Sicht schlecht – ALLE Spieler gehen 2 Felder zurück und trinken 1 Frust-Schluck.", special:"storm"},
+  {e:"🍺", txt:"Dein Bier wird langsam warm – trinke 2 Schlücke."},
+  {e:"😋", txt:"Dein Bier schmeckt gerade herrlich – trinke 2 Schlücke."},
+  {e:"😄", txt:"Dein Bier lacht dich gerade an – trinke 1 Schluck."},
+  {e:"🪙", txt:"Du findest etwas Kleingeld in deiner Hosentasche und kannst dir noch ein warmes Bier aus dem Automaten leisten – trinke 3 Schlücke."},
+  {e:"🏪", txt:"Du holst dir Nachschub in einem 24h-Kiosk – trinke 3 Schlücke."},
+  {e:"🤫", txt:"Du klaust einem Wildpinkler sein Bier – trinke 2 Schlücke."},
+  {e:"🏠", txt:"Eine Studenten-WG schenkt dir aus dem Fenster heraus ein Bier – trinke 3 Schlücke."},
+  {e:"💧", txt:"Dein Durst meldet sich – trinke 1 Schluck."},
+  {e:"🚽", txt:"Das Mittagessen drückt bereits, suche ein Dixi-Klo auf – setze eine Runde aus.", skip:1},
+  {e:"🙄", txt:"Guck nicht so blöd und trinke 1 Schluck."},
+  {e:"🚶", txt:"Du gehst zum Pinkeln in eine Seitenstraße – gehe 1 Feld zurück.", mv:-1},
+  {e:"🌄", txt:"Du gehst wegen dem Panorama einen Umweg – gehe 1 Feld zurück.", mv:-1},
+  {e:"🚧", txt:"Du gehst eine Abkürzung über eine Baustelle – gehe 1 Feld vor.", mv:1},
+  {e:"🌪️", txt:"Du zündest den Tornado – trinke 2 Schlücke."},
+  {e:"💣", txt:"Du öffnest deine mitgenommene Pennergranate – trinke 3 Schlücke."},
+  {e:"📱", txt:"Mama ruft an, geh' ran – setze eine Runde aus.", skip:1},
+  {e:"🤕", txt:"Du stolperst über eine Stufe – setz dich hin und setze eine Runde aus.", skip:1},
+  {e:"🥴", txt:"Du fühlst dich noch zu nüchtern – trinke 2 Schlücke."},
+  {e:"😵", txt:"Du fühlst dich noch viel zu nüchtern – trinke 3 Schlücke."},
+  {e:"🙂", txt:"Du fühlst dich ein wenig zu nüchtern – trinke 1 Schluck."},
 ];
 
 const TYPE_META = {
@@ -2725,8 +2769,8 @@ function playNamenGame(p, pi){
     const answerInput = $("#namenAnswerInput");
     const answerBtn = $("#namenAnswerBtn");
 
-    const men = shuffled(NAMEN_MALE_POOL).slice(0,5).map(([name,likes],i)=>({name, likes, emoji: NAMEN_MALE_EMOJIS[i]}));
-    const women = shuffled(NAMEN_FEMALE_POOL).slice(0,5).map(([name,likes],i)=>({name, likes, emoji: NAMEN_FEMALE_EMOJIS[i]}));
+    const men = shuffled(NAMEN_MALE_POOL).slice(0,3).map(([name,likes],i)=>({name, likes, emoji: NAMEN_MALE_EMOJIS[i]}));
+    const women = shuffled(NAMEN_FEMALE_POOL).slice(0,3).map(([name,likes],i)=>({name, likes, emoji: NAMEN_FEMALE_EMOJIS[i]}));
     const people = shuffled(men.concat(women));
     let errorCount = 0;
 
@@ -2746,8 +2790,8 @@ function playNamenGame(p, pi){
       if(old) old.remove();
       const b = document.createElement("div");
       let classes = "namen-bubble";
-      if(idx % 5 === 0) classes += " edge-left";
-      else if(idx % 5 === 4) classes += " edge-right";
+      if(idx % 3 === 0) classes += " edge-left";
+      else if(idx % 3 === 2) classes += " edge-right";
       if(cls) classes += " "+cls;
       b.className = classes;
       b.textContent = text;
@@ -2783,7 +2827,7 @@ function playNamenGame(p, pi){
       for(let k=0;k<order.length;k++){
         const idx = order[k];
         const person = people[idx];
-        statusEl.textContent = `Quiz – Frage ${k+1}/10: Wer ist das?`;
+        statusEl.textContent = `Quiz – Frage ${k+1}/6: Wer ist das?`;
         setActive(idx,true);
         showBubble(idx, "Wie heiße ich?", "ask");
         answerInput.value = "";
@@ -2837,7 +2881,7 @@ function playNamenGame(p, pi){
         distributeSips(5, pi);
         await showModal({emoji:"🏆", tag:"NAMEN MERKEN", tagCol:"linear-gradient(140deg,#5ec9e8,#2472ad)",
           title:"Perfekt gemerkt!",
-          text:`${p.name} hat alle 10 Namen richtig! Verteile 5 Schlücke.`,
+          text:`${p.name} hat alle 6 Namen richtig! Verteile 5 Schlücke.`,
           buttons:[{label:"Nice!", cls:"green", value:1}]});
       } else {
         addSips(pi, errorCount);
@@ -3125,7 +3169,7 @@ function playWetteGame(p, pi){
     }
 
     async function runMatch(pick, odds, stakeAmount){
-      await wait(300);
+      await wait(150);
       scorebarEl.classList.add("show");
       tickerEl.classList.add("show");
 
@@ -3150,7 +3194,7 @@ function playWetteGame(p, pi){
       minuteEl.textContent = "1'";
 
       for(let minute=1; minute<=45; minute++){
-        await wait(500);
+        await wait(250);
         minuteEl.textContent = minute+"'";
         while(gi < goalEvents.length && goalEvents[gi].minute === minute){
           const ev = goalEvents[gi];
@@ -3160,14 +3204,14 @@ function playWetteGame(p, pi){
           gi++;
         }
       }
-      if(stoppage1>0) await wait(stoppage1*500);
+      if(stoppage1>0) await wait(stoppage1*250);
       addTicker(stoppage1>0 ? `45+${stoppage1}' Abpfiff 1. Halbzeit` : "45' Abpfiff 1. Halbzeit");
-      await wait(700);
+      await wait(350);
       addTicker("46' Anpfiff 2. Halbzeit");
       minuteEl.textContent = "46'";
 
       for(let minute=46; minute<=90; minute++){
-        await wait(500);
+        await wait(250);
         minuteEl.textContent = minute+"'";
         while(gi < goalEvents.length && goalEvents[gi].minute === minute){
           const ev = goalEvents[gi];
@@ -3177,13 +3221,13 @@ function playWetteGame(p, pi){
           gi++;
         }
       }
-      await wait(stoppage2*500);
+      await wait(stoppage2*250);
       addTicker(`90+${stoppage2}' Abpfiff 2. Halbzeit`);
       minuteEl.textContent = "Spielende";
 
       const actual = scoreA>scoreB ? "1" : (scoreA<scoreB ? "2" : "X");
       const correct = actual===pick;
-      await wait(600);
+      await wait(300);
       if(correct){
         const payout = roundHalfUp(stakeAmount*odds);
         distributeSips(payout, pi);
@@ -3350,6 +3394,28 @@ function throwConfetti(){
   }
   confetti.style.display="block";
 }
+function throwRain(){
+  return new Promise(res=>{
+    const overlay = document.getElementById("rainOverlay");
+    overlay.innerHTML = "";
+    const flash = document.createElement("div");
+    flash.className = "flash";
+    overlay.appendChild(flash);
+    for(let i=0;i<70;i++){
+      const d = document.createElement("i");
+      d.style.left = (Math.random()*100)+"vw";
+      d.style.animationDuration = (0.5+Math.random()*0.4)+"s";
+      d.style.animationDelay = (Math.random()*1.2)+"s";
+      overlay.appendChild(d);
+    }
+    overlay.style.display = "block";
+    setTimeout(()=>{
+      overlay.style.display = "none";
+      overlay.innerHTML = "";
+      res();
+    }, 2400);
+  });
+}
 
 /* ---------- Bewegung ---------- */
 async function moveSteps(pi, steps){
@@ -3408,6 +3474,7 @@ async function handleSpecialCard(special, pi){
     setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
   } else if(special==="storm"){
     setLog("⛈️ Unwetter zieht auf – alle müssen 2 Felder zurück …");
+    await throwRain();
     for(let i=0;i<players.length;i++){
       await moveSteps(i, -2);
       addSips(i, 1);
@@ -3631,7 +3698,7 @@ async function resolveField(pi){
     case T.NAMEN: {
       setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} hat spontan neue Freunde kennengelernt …`);
       await showMiniGameIntro("🧑‍🤝‍🧑", "Namen merken",
-        "Du hast spontan neue Freunde kennengelernt. In der Lernphase stellt sich nacheinander jede der 10 Personen 3 Sekunden lang vor – merke dir die Namen. Danach fragt jede Person in zufälliger Reihenfolge „Wie heiße ich?“: Namen ins Feld tippen und mit OK oder Enter bestätigen.");
+        "Du hast spontan neue Freunde kennengelernt. In der Lernphase stellt sich nacheinander jede der 6 Personen 3 Sekunden lang vor – merke dir die Namen. Danach fragt jede Person in zufälliger Reihenfolge „Wie heiße ich?“: Namen ins Feld tippen und mit OK oder Enter bestätigen.");
       await syncTransient({miniGameBanner:{emoji:"🧑‍🤝‍🧑", name:"Namen merken"}});
       await playNamenGame(p, pi);
       await syncTransient({miniGameBanner:null});
