@@ -123,6 +123,22 @@
     --tf1:#ffe0c2;--tf2:#f0a868;--td:#8a4a1f;
     box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #ff9a3c66;
   }
+  .tile.type-baustelle{
+    --tf1:#fff9d6;--tf2:#ffe066;--td:#b8860b;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #ffe06666;
+  }
+  .tile.type-cafe{
+    --tf1:#f5e3d0;--tf2:#e0b88a;--td:#8a5a2f;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #e0b88a66;
+  }
+  .tile.type-kiosk24{
+    --tf1:#d6f0f5;--tf2:#8ad0e0;--td:#2f6a8a;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #8ad0e066;
+  }
+  .tile.type-bavaria{
+    --tf1:#e3f2d8;--tf2:#a8d98a;--td:#4a7a2f;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #a8d98a66;
+  }
   .tile.type-start{
     --tf1:#fff3cf;--tf2:#ffdf8e;--td:#c29a2e;
     box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 26px #ffd76e55;
@@ -1262,7 +1278,7 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria" };
 
 const FIELDS = [
   {n:"Start",               e:"🏁", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
@@ -1273,6 +1289,22 @@ const FIELDS = [
   {n:"Garderobe",           e:"🧥", t:T.EVENT,   z:1},
   {n:"Flur",                e:"🚪", t:T.EVENT,   z:1, key:"flur"},
   {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:"sendlinger-tor", key:"hauptbahnhof", d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
+  {n:"Baustelle",           e:"🚧", t:T.BAUSTELLE, z:2,
+    prompt:"Du triffst auf eine Gruppe Jugendlicher.",
+    choices:[
+      {label:"Ansprechen", type:"fifty",
+        positive:[
+          {text:"Die Jugendlichen geben dir ein Bier aus und verraten dir eine Abkürzung – trinke 3 Schlücke und gehe 3 Felder vor.", sips:3, mv:3},
+          {text:"Die Jugendlichen verraten dir eine Abkürzung über die Baustelle – gehe 2 Felder vor.", mv:2},
+          {text:"Die Jugendlichen zeigen dir den nächsten E-Scooter.", scooter:true},
+        ],
+        negative:[
+          {text:"Den Jugendlichen gefällt deine Fresse nicht und sie verscheuchen dich – gehe 2 Felder zurück.", mv:-2},
+          {text:"Die Jugendlichen stellen dich zur Rede und fragen, was du hier suchst – setze eine Runde aus.", skip:1},
+          {text:"Die Jugendlichen fordern dich zu einem Saufduell heraus – trinke 4 Schlücke.", sips:4},
+        ]},
+      {label:"Unauffällig weitergehen", type:"none"},
+    ]},
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
   {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
   {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
@@ -1283,6 +1315,25 @@ const FIELDS = [
   {n:"Marienplatz",         e:"⭐", t:T.EVENT,   z:2},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:2},
   {n:"Viktualienmarkt",     e:"🥨", t:T.EVENT,   z:2},
+  {n:"Café Frischhut",      e:"🍩", t:T.CAFE,    z:2,
+    prompt:"Ein Kumpel ruft dich an und fragt, ob du kurz bei ihm vorbeischauen willst. Willst du?",
+    choices:[
+      {label:"Ja", type:"fifty",
+        positive:[
+          {text:"Dein Kumpel leiht dir sein Fahrrad – würfel den nächsten Zug mit zwei Würfeln.", extraDie:true},
+          {text:"Dein Kumpel verrät dir eine Abkürzung – gehe 2 Felder vor.", mv:2},
+          {text:"Du freust dich, deinen Kumpel mal wieder zu sehen, und ihr stoßt zur Feier des Tages gemeinsam an – trinke 1 Schluck.", sips:1},
+          {text:"Dein Kumpel nimmt dich für einen kurzen Zwischenstopp in seinem Auto mit – würfel den nächsten Zug mit zwei Würfeln.", extraDie:true},
+          {text:"Du stärkst dich mit Schmalznudeln und einem frischen Bier und kommst schneller voran – gehe 1 Feld vor.", mv:1},
+        ],
+        negative:[
+          {text:"Dein Kumpel ist schon wieder weg, bis du angekommen bist, und der Umweg war umsonst – gehe 1 Feld zurück und trinke 2 Frustschlücke.", mv:-1, sips:2},
+          {text:"Auf dem Weg zu deinem Kumpel verläufst du dich in verschiedenen Seitenstraßen – gehe 1 Feld zurück.", mv:-1},
+          {text:"Du verquatschst dich mit deinem Kumpel – setze eine Runde aus und trinke 2 Schlücke.", skip:1, sips:2},
+          {text:"Weil viel los ist, findest du deinen Kumpel erst nicht und verlierst viel Zeit – setze eine Runde aus.", skip:1},
+        ]},
+      {label:"Nein", type:"none"},
+    ]},
   {n:"Alter Peter",         e:"⛪", t:T.EVENT,   z:2},
   {n:"Hofbräuhaus",         e:"🍺", t:T.EVENT,   z:2},
   {n:"ATM",                 e:"🏧", t:T.FIXED,   z:2, d:"Der Geldautomat zieht deine Karte ein – sperre schnell deine Karte und setze eine Runde aus.", skip:1},
@@ -1301,6 +1352,25 @@ const FIELDS = [
   {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
   {n:"Spielplatz",          e:"🛝", t:T.EVENT,   z:4},
   {n:"Hopfendolde",         e:"🌿", t:T.MINIGAME, z:4, games:["zeche-prellen"], d:"Ein Fremder fordert dich zu einem Minispiel heraus."},
+  {n:"24h Kiosk",           e:"🏪", t:T.KIOSK24, z:4,
+    prompt:"Willst du dir im 24h-Kiosk etwas zu trinken kaufen?",
+    choices:[
+      {label:"Ja", type:"fifty",
+        positive:[
+          {text:"Du holst dir ein neues, kühles Bierchen – trinke 2 Schlücke.", sips:2},
+          {text:"Es steckt noch Geld im Automaten und du bekommst das nächste Bierchen umsonst – trinke 2 Schlücke.", sips:2},
+          {text:"Du triffst zwei andere Partygänger, die dir eine Abkürzung verraten – gehe 2 Felder vor.", mv:2},
+          {text:"Du triffst zwei andere Partygänger, mit denen du anstößt – trinke 1 Schluck.", sips:1},
+          {text:"Du entdeckst einen offenen Notausgang, mit dem du abkürzen kannst – gehe 1 Feld vor.", mv:1},
+        ],
+        negative:[
+          {text:"Du weckst beim Betreten des 24h-Kiosks einen Obdachlosen, der dich wütend verscheucht – gehe 2 Felder zurück.", mv:-2},
+          {text:"Es geht ein Sicherheitsalarm los und du bist eingesperrt – setze eine Runde aus.", skip:1},
+          {text:"Der Getränkeautomat braucht extrem lange – setze eine Runde aus.", skip:1},
+          {text:"Du stolperst über ein Kabel des Getränkeautomats – setze eine Runde aus und trinke 2 Schlücke zur Schmerzlinderung.", skip:1, sips:2},
+        ]},
+      {label:"Nein", type:"none"},
+    ]},
   {n:"Taxistand",           e:"🚕", t:T.TAXI,    z:4},
   {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
   {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
@@ -1314,6 +1384,32 @@ const FIELDS = [
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
   {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
   {n:"Boazn",               e:"🎯", t:T.DARTS,   z:6, d:"Ein Fremder fordert dich zu einer Partie Darts heraus – 3 Aufnahmen à 3 Darts, wer mehr Punkte wirft gewinnt."},
+  {n:"Bavariapark",         e:"🏞️", t:T.BAVARIA, z:6,
+    prompt:"Willst du durch den Bavariapark gehen oder lieber außen vorbei?",
+    choices:[
+      {label:"Durchgehen", type:"fifty",
+        positive:[
+          {text:"Du findest ein herrenloses Skateboard, mit dem du etwas schneller unterwegs bist – gehe 1 Feld vor.", mv:1},
+          {text:"Du findest eine Abkürzung durch ein großes Gebüsch – gehe 1 Feld vor.", mv:1},
+          {text:"Du findest ein ungeöffnetes Bier auf einer Parkbank – trinke 3 Schlücke.", sips:3},
+          {text:"Du findest am Ausgang des Parks einen freien E-Scooter.", scooter:true},
+          {text:"Der Weg über den Park geht schneller als gedacht – gehe 1 Feld vor.", mv:1},
+        ],
+        negative:[
+          {text:"Du verläufst dich im dunklen Park – setze eine Runde aus.", skip:1},
+          {text:"Du verlierst auf dem Weg in den Park deine Kopfhörer und musst sie suchen – setze eine Runde aus.", skip:1},
+          {text:"Du verläufst dich so sehr im dunklen Park, dass du beim Eingang wieder rauskommst – gehe 1 Feld zurück.", mv:-1},
+          {text:"Der Weg durch den Park ist länger als gedacht – gehe 1 Feld zurück.", mv:-1},
+          {text:"Du versteckst dich vor einem unheimlichen Eichhörnchen, das es auf dich abgesehen hat – setze eine Runde aus.", skip:1},
+        ]},
+      {label:"Außen vorbei", type:"fifty",
+        positive:[
+          {text:"Du findest am Straßenrand einen E-Scooter.", scooter:true},
+        ],
+        negative:[
+          {text:"Durch eine Straßensperrung musst du einen ordentlichen Umweg gehen – gehe 2 Felder zurück.", mv:-2},
+        ]},
+    ]},
   {n:"Theresienwiese",      e:"🎡", t:T.MINIGAME, z:6, games:["flaschenpuzzle"], d:"Ein Fremder fordert dich zu einem Minispiel heraus."},
   {n:"Schwanthaler Höhe",   e:"🏘️", t:T.EVENT,   z:6},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:6},
@@ -1431,6 +1527,10 @@ const TYPE_META = {
   namen:   {tag:"NAMEN MERKEN",  col:"linear-gradient(140deg,#5ec9e8,#2472ad)"},
   mcdonalds:{tag:"MCDONALD'S",   col:"linear-gradient(140deg,#ffcf4d,#da291c)"},
   tajmahal:{tag:"TAJ MAHAL",     col:"linear-gradient(140deg,#ff9a3c,#8a1f1f)"},
+  baustelle:{tag:"BAUSTELLE",    col:"linear-gradient(140deg,#ffe066,#b8860b)"},
+  cafe:{tag:"CAFÉ FRISCHHUT",    col:"linear-gradient(140deg,#e0b88a,#8a5a2f)"},
+  kiosk24:{tag:"24H KIOSK",      col:"linear-gradient(140deg,#8ad0e0,#2f6a8a)"},
+  bavaria:{tag:"BAVARIAPARK",    col:"linear-gradient(140deg,#a8d98a,#4a7a2f)"},
   wette:   {tag:"TIPICO-WETTE",  col:"linear-gradient(140deg,#0f7a41,#0a4d29)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
@@ -3322,6 +3422,21 @@ async function handleSpecialCard(special, pi){
   }
 }
 
+/* ---------- Generische Entscheidungsfelder (Baustelle, Café Frischhut,
+   24h Kiosk, Bavariapark) ----------
+   Jedes Feld zeigt 1-2 Wahlmöglichkeiten. Eine Wahl kann "nichts passiert"
+   sein oder eine 50/50-Chance auf einen von mehreren zufälligen positiven
+   bzw. negativen Ausgängen (Text + Effekte: Schlücke, Aussetzen, Felder vor/
+   zurück, E-Scooter-Dynamik, sauberer Extra-Würfel). */
+async function applyOutcome(outcome, pi){
+  const p = players[pi];
+  if(outcome.sips) addSips(pi, outcome.sips);
+  if(outcome.skip) p.skip = outcome.skip;
+  if(outcome.scooter) p.scooter = true;
+  if(outcome.extraDie) p.extraDie = true;
+  if(outcome.mv) await moveSteps(pi, outcome.mv);
+}
+
 async function resolveField(pi){
   const p = players[pi];
   const f = FIELDS[p.pos];
@@ -3479,6 +3594,28 @@ async function resolveField(pi){
         }
       } else {
         setLog(`${p.icon} ${p.name} lässt das Taj Mahal links liegen.`);
+      }
+      break;
+    }
+    case T.BAUSTELLE:
+    case T.CAFE:
+    case T.KIOSK24:
+    case T.BAVARIA: {
+      const choiceIdx = await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
+        title:f.n, text:f.prompt,
+        buttons: f.choices.map((c,idx)=>({label:c.label, cls: idx===0?"green":"gray", value:idx}))});
+      const choice = f.choices[choiceIdx];
+      if(choice.type==="none"){
+        setLog(`${p.icon} ${p.name} lässt es bleiben.`);
+      } else {
+        const positive = Math.random() < 0.5;
+        const pool = positive ? choice.positive : choice.negative;
+        const outcome = pool[Math.floor(Math.random()*pool.length)];
+        await showModal({emoji: positive?"😄":"😬", tag:meta.tag, tagCol:meta.col,
+          title: positive?"Nice!":"Autsch!", text:outcome.text,
+          buttons:[{label:"OK", cls: positive?"green":"gray", value:1}]});
+        setLog(`${p.icon} ${p.name}: ${outcome.text}`);
+        await applyOutcome(outcome, pi);
       }
       break;
     }
