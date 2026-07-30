@@ -1288,6 +1288,7 @@ const FIELDS = [
   {n:"Wohnzimmer",          e:"🛋️", t:T.EVENT,   z:1},
   {n:"Garderobe",           e:"🧥", t:T.EVENT,   z:1},
   {n:"Flur",                e:"🚪", t:T.EVENT,   z:1, key:"flur"},
+  {n:"Mathäser",            e:"🎬", t:T.EVENT,   z:2},
   {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:"sendlinger-tor", key:"hauptbahnhof", d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
   {n:"Baustelle",           e:"🚧", t:T.BAUSTELLE, z:2,
     prompt:"Du triffst auf eine Gruppe Jugendlicher.",
@@ -1345,7 +1346,7 @@ const FIELDS = [
   {n:"P1",                  e:"🪩", t:T.FIXED,   z:3, d:"Ein Kumpel holt dich für einen Drink in den Club – trinke 3 Schlücke."},
   {n:"Siegestor",           e:"🏆", t:T.EVENT,   z:3},
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
-  {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
+  {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", negative:true, d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
   {n:"McDonald's",          e:"🍟", t:T.MCDONALDS, z:4},
   {n:"Tanke",               e:"⛽", t:T.FIXED,   z:4, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
   {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
@@ -1382,7 +1383,7 @@ const FIELDS = [
   {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5},
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
-  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
+  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", negative:true, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
   {n:"Boazn",               e:"🎯", t:T.DARTS,   z:6, d:"Ein Fremder fordert dich zu einer Partie Darts heraus – 3 Aufnahmen à 3 Darts, wer mehr Punkte wirft gewinnt."},
   {n:"Bavariapark",         e:"🏞️", t:T.BAVARIA, z:6,
     prompt:"Willst du durch den Bavariapark gehen oder lieber außen vorbei?",
@@ -1539,12 +1540,15 @@ const TOKEN_ICONS = ["🔴","🔵","🟢","🟡","🟣","🟠","⚫","⚪"];
 const PLAYER_COLORS = ["#ff5a3c","#4aa8e8","#3ddc97","#ffcf4d","#b57fd0","#ff9a3c","#9a9a9a","#f0ede4"];
 
 /* ---------- Ring-Geometrie im Uhrzeigersinn ---------- */
-const TILE = 100, COLS = 12;
-// ROWS wird aus der aktuellen Feldanzahl berechnet, damit der Ring immer
-// genau so viele Zellen hat wie FIELDS Einträge – sonst würde tilePos()
-// bei neu hinzugefügten Feldern auf undefined COORDS-Einträge treffen
-// und das ganze Board bliebe unsichtbar.
-const ROWS = Math.ceil((FIELDS.length + 5) / 2 - COLS);
+const TILE = 100;
+// COLS und ROWS werden beide aus der aktuellen Feldanzahl berechnet und
+// möglichst gleich groß gewählt (ein Viereck statt eines schmalen, hohen
+// Rechtecks) – eine Seite ist dabei höchstens 1 Feld länger als die andere.
+// So bleibt der Ring immer exakt so groß wie FIELDS Einträge, ohne dass
+// tilePos() bei neu hinzugefügten Feldern ins Leere greift.
+const __ringSum = Math.ceil((FIELDS.length + 5) / 2);
+const COLS = Math.floor(__ringSum / 2);
+const ROWS = __ringSum - COLS;
 function buildCoords(){
   const c=[];
   for(let x=0;x<=COLS-1;x++) c.push([x,0]);
@@ -1672,10 +1676,10 @@ function buildBoard(){
 
   // Deko im Innenraum (gedimmt, wie bemalter Boden)
   const deco = [
-    ["🍺",7.2,1.7],["🥨",5.0,1.8],["🏰",9.6,2.6],
-    ["⛪",8.7,5.4],["🏢",9.3,8.2],["🌳",8.6,11.0],["🌲",7.4,12.8],
-    ["🎠",4.2,13.0],["🛝",2.6,12.6],["🚏",2.2,9.6],["🌉",2.5,6.4],
-    ["🍻",2.6,3.6],["🎡",4.6,5.2],["🌙",6.2,8.4],
+    ["🍺",9.6,1.38],["🥨",6.67,1.46],["🏰",12.8,2.1],
+    ["⛪",11.6,4.37],["🏢",12.4,6.64],["🌳",11.47,8.9],["🌲",9.87,10.36],
+    ["🎠",5.6,10.52],["🛝",3.47,10.2],["🚏",2.93,7.77],["🌉",3.33,5.18],
+    ["🍻",3.47,2.91],["🎡",6.13,4.21],["🌙",8.27,6.8],
   ];
   deco.forEach(([em,x,y])=>{
     const el = document.createElement("div");
@@ -1705,12 +1709,12 @@ function buildBoard(){
 
   // Bezirks-Namen
   const zones = [
-    {txt:"Öde Party",         z:1, x:2.4*TILE, y:1.62*TILE},
-    {txt:"Innenstadt",        z:2, x:9.35*TILE, y:3.7*TILE,  rot:-90},
-    {txt:"Englischer Garten", z:3, x:8.5*TILE, y:10.6*TILE, rot:-90},
-    {txt:"Münchner Freiheit", z:4, x:5.6*TILE, y:13.55*TILE},
-    {txt:"Neuhausen",         z:5, x:1.75*TILE, y:12.5*TILE, rot:90},
-    {txt:"Sendling",          z:6, x:1.75*TILE, y:6.2*TILE,  rot:90},
+    {txt:"Öde Party",         z:1, x:3.2*TILE, y:2.3*TILE},
+    {txt:"Innenstadt",        z:2, x:12.47*TILE, y:3.0*TILE,  rot:-90},
+    {txt:"Englischer Garten", z:3, x:11.33*TILE, y:8.58*TILE, rot:-90},
+    {txt:"Münchner Freiheit", z:4, x:7.47*TILE, y:10.97*TILE},
+    {txt:"Neuhausen",         z:5, x:2.33*TILE, y:10.12*TILE, rot:90},
+    {txt:"Sendling",          z:6, x:2.33*TILE, y:5.02*TILE,  rot:90},
   ];
   zones.forEach(z=>{
     const el = document.createElement("div");
@@ -3415,10 +3419,11 @@ async function handleSpecialCard(special, pi){
     setLog("⛈️ Unwetter zieht auf – alle müssen 2 Felder zurück …");
     await throwRain();
     for(let i=0;i<players.length;i++){
+      if(FIELDS[players[i].pos].z===1) continue; // auf der öden Party bekommt man vom Unwetter draußen nichts mit
       await moveSteps(i, -2);
       addSips(i, 1);
     }
-    setLog("⛈️ Unwetter! Alle Spieler sind 2 Felder zurückgegangen und trinken 1 Frust-Schluck.");
+    setLog("⛈️ Unwetter! Alle Spieler unterwegs sind 2 Felder zurückgegangen und trinken 1 Frust-Schluck.");
   }
 }
 
@@ -3435,6 +3440,29 @@ async function applyOutcome(outcome, pi){
   if(outcome.scooter) p.scooter = true;
   if(outcome.extraDie) p.extraDie = true;
   if(outcome.mv) await moveSteps(pi, outcome.mv);
+}
+
+/* ---------- Wiederverwendbare Ereigniskarten-Auflösung ----------
+   Zieht eine Karte aus dem Zonen-Stapel, zeigt sie (inkl. Zuschauer-
+   Sichtbarkeit im Mehrgeräte-Modus) und wendet ihre Effekte an. Wird
+   sowohl von normalen Ereignisfeldern als auch vom "U-Bahn verpasst,
+   stattdessen Ereignis"-Fall bei negativen Teleport-Feldern genutzt. */
+async function resolveEventCard(zone, pi, title){
+  const p = players[pi];
+  const c = drawCard(zone);
+  const meta = TYPE_META.event;
+  await syncTransient({cardReveal:{emoji:c.e, tag:meta.tag, tagCol:meta.col, title, text:c.txt}});
+  await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
+    title, text:c.txt, buttons:[{label:"OK", value:1}]});
+  await syncTransient({cardReveal:null});
+  if(c.special){
+    await handleSpecialCard(c.special, pi);
+  } else {
+    applySipsFromText(c.txt, pi);
+    if(c.skip){ p.skip = c.skip; }
+    if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
+    else if(c.mv){ await moveSteps(pi, c.mv); }
+  }
 }
 
 async function resolveField(pi){
@@ -3486,19 +3514,7 @@ async function resolveField(pi){
       return;
     }
     case T.EVENT: {
-      const c = drawCard(f.z);
-      await syncTransient({cardReveal:{emoji:c.e, tag:meta.tag, tagCol:meta.col, title:f.n, text:c.txt}});
-      await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
-        title:f.n, text:c.txt, buttons:[{label:"OK", value:1}]});
-      await syncTransient({cardReveal:null});
-      if(c.special){
-        await handleSpecialCard(c.special, pi);
-      } else {
-        applySipsFromText(c.txt, pi);
-        if(c.skip){ p.skip = c.skip; }
-        if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
-        else if(c.mv){ await moveSteps(pi, c.mv); }
-      }
+      await resolveEventCard(f.z, pi, f.n);
       break;
     }
     case T.FIXED: {
@@ -3513,7 +3529,24 @@ async function resolveField(pi){
     case T.TELEPORT: {
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.d, buttons:[{label:"Einsteigen", value:1}]});
-      await teleport(pi, fieldIndexByKey(f.tp));
+      if(f.negative){
+        if(Math.random() < 0.5){
+          await teleport(pi, fieldIndexByKey(f.tp));
+        } else {
+          setLog(`${p.icon} ${p.name} verpasst die falsche U-Bahn – Glück gehabt! Stattdessen passiert etwas anderes …`);
+          await resolveEventCard(f.z, pi, f.n);
+        }
+      } else {
+        if(Math.random() < 0.5){
+          await teleport(pi, fieldIndexByKey(f.tp));
+        } else {
+          const missedText = "Zu langsam! Die U-Bahn fährt ohne dich los – trinke 2 Frustschlücke und setze deine Reise zu Fuß fort.";
+          await showModal({emoji:"😤", tag:meta.tag, tagCol:meta.col,
+            title:"Verpasst!", text:missedText, buttons:[{label:"Mist!", value:1}]});
+          addSips(pi, 2);
+          setLog(`${p.icon} ${p.name} verpasst die U-Bahn – trinkt 2 Frustschlücke und geht zu Fuß weiter.`);
+        }
+      }
       break;
     }
     case T.SCOOTER: {
