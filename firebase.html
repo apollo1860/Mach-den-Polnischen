@@ -142,6 +142,10 @@
     --tf1:#e3f2d8;--tf2:#a8d98a;--td:#4a7a2f;
     box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #a8d98a66;
   }
+  .tile.type-tanke{
+    --tf1:#ffe9b3;--tf2:#ffc85c;--td:#b8720a;
+    box-shadow:0 7px 0 var(--td),0 12px 24px #0007, inset 0 2px 0 #fff, 0 0 16px #ffc85c66;
+  }
   .tile.type-start{
     --tf1:#fff3cf;--tf2:#ffdf8e;--td:#c29a2e;
     box-shadow:0 7px 0 var(--td),0 12px 26px #0007, inset 0 2px 0 #fff, 0 0 26px #ffd76e55;
@@ -1455,7 +1459,21 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria", TANKE:"tanke" };
+
+/* Geteilte 50/50-Daten fürs Tanke-Feld (zwei Instanzen in Zone 4 und 5,
+   beide identisch). Automatisches Ereignis ohne Ja/Nein-Auswahl. */
+const TANKE_PROMPT = "Jugendliche, die definitiv noch keine 16 sind, fragen dich, ob du ihnen Zigaretten und Bier kaufst. Sie versprechen dir dafür, eine Abkürzung zu verraten.";
+const TANKE_POSITIVE = [
+  {text:"Die Jugendlichen verraten dir eine kleine Abkürzung – gehe 1 Feld vor.", mv:1},
+  {text:"Die Jugendlichen verraten dir eine Abkürzung – gehe 2 Felder vor.", mv:2},
+  {text:"Die Jugendlichen verraten dir eine große Abkürzung – gehe 3 Felder vor.", mv:3},
+];
+const TANKE_NEGATIVE = [
+  {text:"Der Tankstellenbesitzer hat es gecheckt und hält dir eine Standpauke – setze 1 Runde aus.", skip:1},
+  {text:"Ein Zivilpolizist hat alles beobachtet und nimmt dich mit aufs Polizeirevier.", goto:"polizeistation"},
+  {text:"Die Jugendlichen haben dich verarscht und kennen keine Abkürzung – trinke 2 Frustschlücke.", sips:2},
+];
 
 const FIELDS = [
   {n:"Start",               e:"🏁", t:T.START,   z:1, key:"start", d:"Startfeld. Schleich dich unerkannt zur nächsten Party!"},
@@ -1525,7 +1543,7 @@ const FIELDS = [
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
   {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", negative:true, d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
   {n:"McDonald's",          e:"🍟", t:T.MCDONALDS, z:4},
-  {n:"Tanke",               e:"⛽", t:T.FIXED,   z:4, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
+  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:4, prompt:TANKE_PROMPT, positive:TANKE_POSITIVE, negative:TANKE_NEGATIVE},
   {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
   {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
   {n:"Spielplatz",          e:"🛝", t:T.EVENT,   z:4},
@@ -1553,7 +1571,7 @@ const FIELDS = [
   {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
   {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:5},
-  {n:"Tanke",               e:"⛽", t:T.FIXED,   z:5, d:"Du holst Nachschub an der Tanke – trinke 3 Schlücke."},
+  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:5, prompt:TANKE_PROMPT, positive:TANKE_POSITIVE, negative:TANKE_NEGATIVE},
   {n:"Seniorenheim",        e:"🎱", t:T.MINIGAME, z:5, games:["bingo"], d:"Die Damen und Herren laden dich zu einer Runde Bingo ein."},
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, ox:18, oy:38, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
@@ -1614,6 +1632,17 @@ const PARTY_CARDS = [
   {e:"😶", txt:"Es herrscht peinliche Stille – trinke 1 Schluck."},
   {e:"🍹", txt:"Du bringst einem Gast etwas zu trinken mit – verteile 3 Schlücke."},
   {e:"🥃", txt:"Ein Gast will dein Bier probieren – verteile 1 Schluck."},
+  {e:"🥃", txt:"Du findest auf einem Regal einen undefinierbaren, ausländischen Schnaps – trinke 1 Shot oder 5 Schlücke."},
+  {e:"👵", txt:"Die Oma des Gastgebers bietet dir etwas von ihrem selbst gemachten Eierlikör an – trinke 1 Schluck."},
+  {e:"🍷", txt:"Man bietet dir ein Glas nordkasachischen Rotwein, den man noch im Keller gefunden hat, an – trinke 1 Schluck."},
+  {e:"🍾", txt:"Du findest eine herrenlose, halbvolle Bierflasche auf dem Parkettboden – trinke 2 Schlücke."},
+  {e:"📖", txt:"Dir wird ein Familienalbum zum Durchblättern gereicht – trinke dir 2 Geduldsschlücke an."},
+  {e:"🎤", txt:"Du möchtest die Stimmung durch einen Witz auflockern – überlege dir ein Themenbereich, erzähle einen passenden Witz und trinke 2 Schlücke, wenn niemand lacht."},
+  {e:"😢", txt:"Ein dir unbekannter Partygast hängt an deiner Schulter, um sich über ihren Ex-Freund auszuheulen – setze 1 Runde aus und trinke 2 Schlücke.", skip:1},
+  {e:"💔", txt:"Ein Pärchen streitet sich direkt vor deiner Nase – trinke 1 Schluck gegen die folgende peinliche Stille."},
+  {e:"🥏", txt:"Ein Partygast versucht, dich zu überreden, seiner Ultimate-Frisbee-Mannschaft beizutreten. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
+  {e:"📦", txt:"Ein Partygast versucht, dich zu überreden, ihm nächste Woche bei seinem Umzug zu helfen. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
+  {e:"💘", txt:"Die Oma des Gastgebers möchte dich mit ihrer Schwester verkuppeln. Du erfindest einen Vorwand, um ihr zu entkommen – gehe 1 Feld zurück.", mv:-1},
 ];
 
 const FORGOT_CARDS = [
@@ -1696,6 +1725,17 @@ const STREET_CARDS = [
   {e:"🌳", txt:"Du verirrst dich aus Versehen in einen privaten Garten – gehe 1 Feld zurück.", mv:-1},
   {e:"📵", txt:"Du musst deinen Weg improvisieren, da deine Google Maps App abgestürzt ist, und verläufst dich prompt – gehe 2 Felder zurück.", mv:-2},
   {e:"🐻", txt:"Fremde an einer Bushaltestelle fragen dich, wie der Bär macht – trinke 3 Schlücke."},
+  {e:"💔", txt:"Du siehst deine Ex-Freundin an einer Ampel warten. Du musst einen Umweg gehen – gehe 2 Felder zurück.", mv:-2},
+  {e:"🍔", txt:"Du willst wissen, ob dein Lieblings-Fast-Food-Restaurant noch offen hat und gehst dafür einen Umweg – gehe 3 Felder zurück.", mv:-3},
+  {e:"🎵", txt:"Du hörst dein Lieblingslied und wirst dadurch direkt schneller – gehe 1 Feld vor und wünsche dir einen Song (wenn möglich).", mv:1},
+  {e:"📞", txt:"Ein Kumpel ruft dich an, um dir von seinem Tag zu erzählen – setze 1 Runde aus und trinke 1 Schluck.", skip:1},
+  {e:"🍺", txt:"Dein Wegbier hat gerade die perfekte Temperatur – trinke 2 Schlücke."},
+  {e:"🌳", txt:"Du schüttest dein Norgerl auf einer Grünfläche aus – verteile 1 Schluck."},
+  {e:"🏪", txt:"Du bringst dem Obdachlosen vor einer Tankstelle noch ein Bier mit – verteile 3 Schlücke."},
+  {e:"🚌", txt:"Du teilst dein Bier beim Warten auf den Bus mit einem Fremden – verteile 2 Schlücke."},
+  {e:"🚋", txt:"Du teilst dein Bier beim Warten auf die Tram mit einem Fremden – verteile 2 Schlücke."},
+  {e:"🍻", txt:"Du probierst ein dir unbekanntes Bier eines Passanten – trinke 1 Schluck."},
+  {e:"🎧", txt:"Deine frisch angemachte Playlist kurbelt deinen Durst an – trinke 2 Schlücke und mache 3 Lieder deiner Wahl in die Warteschlange (wenn möglich)."},
 ];
 
 const TYPE_META = {
@@ -1716,6 +1756,7 @@ const TYPE_META = {
   kiosk24:{tag:"24H KIOSK",      col:"linear-gradient(140deg,#8ad0e0,#2f6a8a)"},
   bavaria:{tag:"BAVARIAPARK",    col:"linear-gradient(140deg,#a8d98a,#4a7a2f)"},
   wette:   {tag:"TIPICO-WETTE",  col:"linear-gradient(140deg,#0f7a41,#0a4d29)"},
+  tanke:   {tag:"TANKE",         col:"linear-gradient(140deg,#ffb020,#b8720a)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
 const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
@@ -4085,7 +4126,8 @@ async function applyOutcome(outcome, pi){
   if(outcome.skip) p.skip = outcome.skip;
   if(outcome.scooter) p.scooter = true;
   if(outcome.extraDie) p.extraDie = true;
-  if(outcome.mv) await moveSteps(pi, outcome.mv);
+  if(outcome.goto!==undefined) await teleport(pi, fieldIndexByKey(outcome.goto));
+  else if(outcome.mv) await moveSteps(pi, outcome.mv);
 }
 
 /* ---------- Wiederverwendbare Ereigniskarten-Auflösung ----------
@@ -4367,6 +4409,19 @@ async function resolveField(pi){
         setLog(`${p.icon} ${p.name}: ${outcome.text}`);
         await applyOutcome(outcome, pi);
       }
+      break;
+    }
+    case T.TANKE: {
+      await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
+        title:f.n, text:f.prompt, buttons:[{label:"Und jetzt?", value:1}]});
+      const positive = Math.random() < 0.5;
+      const pool = positive ? f.positive : f.negative;
+      const outcome = pool[Math.floor(Math.random()*pool.length)];
+      await showModal({emoji: positive?"😄":"😬", tag:meta.tag, tagCol:meta.col,
+        title: positive?"Nice!":"Autsch!", text:outcome.text,
+        buttons:[{label:"OK", cls: positive?"green":"gray", value:1}]});
+      setLog(`${p.icon} ${p.name}: ${outcome.text}`);
+      await applyOutcome(outcome, pi);
       break;
     }
     case T.TAXI: {
