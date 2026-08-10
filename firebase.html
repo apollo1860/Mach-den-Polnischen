@@ -1462,7 +1462,8 @@
 const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria", TANKE:"tanke" };
 
 /* Geteilte 50/50-Daten fürs Tanke-Feld (zwei Instanzen in Zone 4 und 5,
-   beide identisch). Automatisches Ereignis ohne Ja/Nein-Auswahl. */
+   beide identisch). Erst Ja/Nein-Wahl (wie Baustelle/Café Frischhut),
+   nur bei "Bier besorgen" entscheidet sich 50/50 positiv/negativ. */
 const TANKE_PROMPT = "Jugendliche, die definitiv noch keine 16 sind, fragen dich, ob du ihnen Zigaretten und Bier kaufst. Sie versprechen dir dafür, eine Abkürzung zu verraten.";
 const TANKE_POSITIVE = [
   {text:"Die Jugendlichen verraten dir eine kleine Abkürzung – gehe 1 Feld vor.", mv:1},
@@ -1473,6 +1474,10 @@ const TANKE_NEGATIVE = [
   {text:"Der Tankstellenbesitzer hat es gecheckt und hält dir eine Standpauke – setze 1 Runde aus.", skip:1},
   {text:"Ein Zivilpolizist hat alles beobachtet und nimmt dich mit aufs Polizeirevier.", goto:"polizeistation"},
   {text:"Die Jugendlichen haben dich verarscht und kennen keine Abkürzung – trinke 2 Frustschlücke.", sips:2},
+];
+const TANKE_CHOICES = [
+  {label:"Bier besorgen", type:"fifty", positive:TANKE_POSITIVE, negative:TANKE_NEGATIVE},
+  {label:"Ablehnen", type:"none"},
 ];
 
 const FIELDS = [
@@ -1543,7 +1548,7 @@ const FIELDS = [
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
   {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", negative:true, d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
   {n:"McDonald's",          e:"🍟", t:T.MCDONALDS, z:4},
-  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:4, prompt:TANKE_PROMPT, positive:TANKE_POSITIVE, negative:TANKE_NEGATIVE},
+  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:4, prompt:TANKE_PROMPT, choices:TANKE_CHOICES},
   {n:"Barschwein",          e:"🐷", t:T.EVENT,   z:4},
   {n:"Bankautomat",         e:"🏧", t:T.FIXED,   z:4, d:"Der Geldautomat braucht ewig – setze eine Runde aus.", skip:1},
   {n:"Spielplatz",          e:"🛝", t:T.EVENT,   z:4},
@@ -1571,7 +1576,7 @@ const FIELDS = [
   {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
   {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:5},
-  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:5, prompt:TANKE_PROMPT, positive:TANKE_POSITIVE, negative:TANKE_NEGATIVE},
+  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:5, prompt:TANKE_PROMPT, choices:TANKE_CHOICES},
   {n:"Seniorenheim",        e:"🎱", t:T.MINIGAME, z:5, games:["bingo"], d:"Die Damen und Herren laden dich zu einer Runde Bingo ein."},
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, ox:18, oy:38, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
@@ -4392,7 +4397,8 @@ async function resolveField(pi){
     case T.BAUSTELLE:
     case T.CAFE:
     case T.KIOSK24:
-    case T.BAVARIA: {
+    case T.BAVARIA:
+    case T.TANKE: {
       const choiceIdx = await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.prompt,
         buttons: f.choices.map((c,idx)=>({label:c.label, cls: idx===0?"green":"gray", value:idx}))});
@@ -4409,19 +4415,6 @@ async function resolveField(pi){
         setLog(`${p.icon} ${p.name}: ${outcome.text}`);
         await applyOutcome(outcome, pi);
       }
-      break;
-    }
-    case T.TANKE: {
-      await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
-        title:f.n, text:f.prompt, buttons:[{label:"Und jetzt?", value:1}]});
-      const positive = Math.random() < 0.5;
-      const pool = positive ? f.positive : f.negative;
-      const outcome = pool[Math.floor(Math.random()*pool.length)];
-      await showModal({emoji: positive?"😄":"😬", tag:meta.tag, tagCol:meta.col,
-        title: positive?"Nice!":"Autsch!", text:outcome.text,
-        buttons:[{label:"OK", cls: positive?"green":"gray", value:1}]});
-      setLog(`${p.icon} ${p.name}: ${outcome.text}`);
-      await applyOutcome(outcome, pi);
       break;
     }
     case T.TAXI: {
