@@ -1155,7 +1155,8 @@
     background:#fff;border-radius:16px;padding:8px 12px;
     box-shadow:0 3px 10px #00000014, inset 0 0 0 1.5px #e7ddc6;
   }
-  .p-row .ico{font-size:21px;width:30px;}
+  .p-row .ico{font-size:21px;width:30px;cursor:pointer;user-select:none;transition:transform .1s;}
+  .p-row .ico:active{transform:scale(.85);}
   .p-row input{
     flex:1;border:none;outline:none;font-family:inherit;
     font-size:15px;font-weight:700;background:transparent;color:var(--ink);min-width:0;
@@ -1667,7 +1668,6 @@ const STREET_CARDS = [
   {e:"📲", txt:"Du spielst ein Trinkspiel auf deinem Handy mit dir selber und verlierst – trinke 3 Schlücke."},
   {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
   {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
-  {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"},
   {e:"⛈️", txt:"Unwetter! Durch strömenden Regen ist die Sicht schlecht – ALLE Spieler gehen 2 Felder zurück und trinken 1 Frust-Schluck.", special:"storm"},
   {e:"🍺", txt:"Dein Bier wird langsam warm – trinke 2 Schlücke."},
   {e:"😋", txt:"Dein Bier schmeckt gerade herrlich – trinke 2 Schlücke."},
@@ -1706,6 +1706,14 @@ const STREET_CARDS = [
   {e:"🍻", txt:"Du probierst ein dir unbekanntes Bier eines Passanten – trinke 1 Schluck."},
   {e:"🎧", txt:"Deine frisch angemachte Playlist kurbelt deinen Durst an – trinke 2 Schlücke und mache 3 Lieder deiner Wahl in die Warteschlange (wenn möglich)."},
 ];
+
+/* Eigene, seltene Sonderkarte – bewusst NICHT Teil von STREET_CARDS, damit
+   sie nicht wie jede andere Karte garantiert einmal pro Stapel-Zyklus
+   drankommt. Wird stattdessen in drawCard() über eine unabhängige, sehr
+   niedrige Wahrscheinlichkeit pro Zug ausgelöst (deutlich seltener als
+   der Rest der Karten). */
+const RARE_FALSE_TIP_CARD = {e:"🚨", txt:"Du rufst die Polizei an und behauptest, dass du einen Spieler deiner Wahl gerade beim Überfall auf einen Juwelier gesehen hast.", special:"false-tip"};
+const RARE_FALSE_TIP_CHANCE = 0.003;
 
 const TYPE_META = {
   start:   {tag:"START",         col:"linear-gradient(140deg,#e6b93a,#b98a12)"},
@@ -1767,7 +1775,15 @@ function fieldIndexByKey(key){
   const idx = FIELDS.findIndex(f=>f.key===key);
   return idx>=0 ? idx : 0;
 }
+/* Zieht eine Karte aus dem passenden Zonen-Stapel. Vor jedem normalen
+   Stapelzug wird unabhängig davon geprüft, ob stattdessen die seltene
+   Sonderkarte (RARE_FALSE_TIP_CARD) drankommt – nur in Zonen 2-6, wo sie
+   inhaltlich vorkäme. Eine Karte einfach nur "seltener" im Stapel selbst
+   zu machen funktioniert bei diesem Ohne-Zurücklegen-System NICHT (sie
+   käme trotzdem garantiert einmal pro Zyklus dran) – daher lebt sie
+   komplett außerhalb von STREET_CARDS und wird eigenständig ausgelöst. */
 function drawCard(zone){
+  if(zone>=2 && Math.random() < RARE_FALSE_TIP_CHANCE) return RARE_FALSE_TIP_CARD;
   if(zone===1){
     if(decks.party.length===0) decks.party = shuffled(PARTY_CARDS);
     return decks.party.pop();
@@ -1795,11 +1811,18 @@ function addPlayerRow(name=""){
   const i = playerList.children.length;
   const row = document.createElement("div");
   row.className="p-row";
-  row.innerHTML = `<span class="ico">${TOKEN_ICONS[i]}</span>
+  row.dataset.colorIdx = String(i % TOKEN_ICONS.length);
+  row.innerHTML = `<span class="ico" title="Antippen, um die Farbe zu ändern">${TOKEN_ICONS[i]}</span>
     <input placeholder="Spieler ${i+1}" value="${name}" maxlength="12">
     <button class="bot-toggle" type="button" title="Als Bot markieren">🤖</button>
     <button class="rm">✕</button>`;
-  row.querySelector(".rm").onclick = ()=>{ if(playerList.children.length>2) row.remove(); refreshIcons(); };
+  row.querySelector(".rm").onclick = ()=>{ if(playerList.children.length>2) row.remove(); };
+  const icoEl = row.querySelector(".ico");
+  icoEl.onclick = ()=>{
+    const next = (parseInt(row.dataset.colorIdx,10)+1) % TOKEN_ICONS.length;
+    row.dataset.colorIdx = String(next);
+    icoEl.textContent = TOKEN_ICONS[next];
+  };
   const botBtn = row.querySelector(".bot-toggle");
   row.dataset.bot = "0";
   botBtn.onclick = ()=>{
@@ -1809,16 +1832,13 @@ function addPlayerRow(name=""){
   };
   playerList.appendChild(row);
 }
-function refreshIcons(){
-  [...playerList.children].forEach((r,i)=> r.querySelector(".ico").textContent = TOKEN_ICONS[i]);
-}
 $("#addPlayer").onclick = ()=> addPlayerRow();
 addPlayerRow(); addPlayerRow();
 
 $("#startBtn").onclick = async ()=>{
   players = [...playerList.children].map((r,i)=>({
     name: r.querySelector("input").value.trim() || `Spieler ${i+1}`,
-    icon: TOKEN_ICONS[i], color: PLAYER_COLORS[i % PLAYER_COLORS.length],
+    icon: TOKEN_ICONS[parseInt(r.dataset.colorIdx,10)||0], color: PLAYER_COLORS[(parseInt(r.dataset.colorIdx,10)||0) % PLAYER_COLORS.length],
     pos:0, skip:0, scooter:false,
     sips:0, wishUsedThisTurn:false, extraDie:false,
     isBot: r.dataset.bot === "1",
@@ -2346,13 +2366,24 @@ function showModal({emoji, tag, tagCol, title, text, buttons, botActor}){
     const activePlayer = botActor !== undefined ? botActor : players[current];
     if(activePlayer && activePlayer.isBot && buttons.length>1){
       const pick = buttons[Math.floor(Math.random()*buttons.length)];
-      setTimeout(()=>{
+      setTimeout(async ()=>{
         if(done) return; done=true;
         modalWrap.style.display="none";
+        await announceBotChoice(activePlayer, pick.label);
         res(pick.value);
       }, 650 + Math.random()*550);
     }
   });
+}
+/* Zeigt nach einer automatischen Bot-Entscheidung (2+ Options-Modal) ein
+   zusätzliches, wegklickbares Popup, das in einem Satz nennt, wofür sich
+   der Bot entschieden hat – sonst sieht am Tisch niemand, was er gewählt
+   hat, weil das Options-Modal sofort wieder verschwindet. */
+function announceBotChoice(p, label){
+  return showModal({emoji:"🤖", tag:"BOT-ENTSCHEIDUNG", tagCol:"linear-gradient(140deg,#3ddc97,#1d9e66)",
+    title:`${p.name} entscheidet sich`,
+    text:`${p.icon} ${p.name} entscheidet sich für: „${label}“.`,
+    buttons:[{label:"OK", cls:"green", value:1}]});
 }
 
 /* ---------- Minispiel „Zeche prellen" ----------
@@ -3324,13 +3355,13 @@ function playBingoGame(p, val){
 
     // Setup
     done = false;
-    const pool = shuffle(Array.from({length:75},(_,i)=>i+1));
+    const pool = shuffle(Array.from({length:60},(_,i)=>i+1));
     const nums = pool.slice(0,BINGO_SIZE*BINGO_SIZE);
     card = [];
     for(let r=0;r<BINGO_SIZE;r++) card.push(nums.slice(r*BINGO_SIZE,r*BINGO_SIZE+BINGO_SIZE));
     stamped = Array.from({length:BINGO_SIZE},()=>Array(BINGO_SIZE).fill(false));
     calledNumbers = new Set();
-    callSequence = shuffle(Array.from({length:76},(_,i)=>i));
+    callSequence = shuffle(Array.from({length:61},(_,i)=>i));
     callIndex = 0;
     botBingoAt = 20 + Math.floor(Math.random()*29); // 20..48
     statusEl.textContent = "";
@@ -4062,8 +4093,11 @@ async function resolveField(pi){
         if(Math.random() < 0.5){
           await teleport(pi, fieldIndexByKey(f.tp));
         } else {
-          setLog(`${p.icon} ${p.name} verpasst die falsche U-Bahn – Glück gehabt! Stattdessen passiert etwas anderes …`);
-          await resolveEventCard(f.z, pi, f.n);
+          const luckyText = "Eine ältere Dame blockiert die Rolltreppe und du verpasst deine U-Bahn. Zum Glück wäre sie ohnehin in die falsche Richtung gefahren – trinke 2 freudige Schlücke.";
+          await showModal({emoji:"👵", tag:meta.tag, tagCol:meta.col,
+            title:"Glück gehabt!", text:luckyText, buttons:[{label:"Puh!", cls:"green", value:1}]});
+          addSips(pi, 2);
+          setLog(`${p.icon} ${p.name} verpasst die falsche U-Bahn – Glück gehabt! Trinkt 2 freudige Schlücke.`);
         }
       } else {
         if(Math.random() < 0.5){
@@ -4284,47 +4318,55 @@ async function performRoll(){
   if(busy || gameOver) return;
   busy = true; rollBtn.disabled = true;
   $("#wishBtn").style.display = "none";
+  try{
+    const p = players[current];
+    focusOn(p.pos, true);
 
-  const p = players[current];
-  focusOn(p.pos, true);
+    const isScooter = p.scooter;
+    p.scooter = false;
+    const isExtra = p.extraDie;
+    p.extraDie = false;
+    const vals = isScooter ? [rand(6), rand(6)] : [rand(6)];
+    if(isExtra) vals.push(rand(6));
+    const sum = vals.reduce((a,b)=>a+b,0);
+    setLog(isScooter ? `${p.icon} ${p.name} würfelt mit 2 Würfeln…` : `${p.icon} ${p.name} würfelt…`);
+    await showDice(vals);
 
-  const isScooter = p.scooter;
-  p.scooter = false;
-  const isExtra = p.extraDie;
-  p.extraDie = false;
-  const vals = isScooter ? [rand(6), rand(6)] : [rand(6)];
-  if(isExtra) vals.push(rand(6));
-  const sum = vals.reduce((a,b)=>a+b,0);
-  setLog(isScooter ? `${p.icon} ${p.name} würfelt mit 2 Würfeln…` : `${p.icon} ${p.name} würfelt…`);
-  await showDice(vals);
-
-  if(isScooter){
-    const r = Math.random();
-    if(r < 0.10){
-      const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird von der Polizei angehalten und zur Polizeistation gebracht. Trinke 2 Schlücke zum Trost.`;
-      await showModal({emoji:"🚔", tag:"BUSTED", tagCol:"linear-gradient(140deg,#f0564a,#a8241a)", title:"Polizei!",
-        text:bustedText,
-        buttons:[{label:"Mist!", value:1}]});
-      applySipsFromText(bustedText, current);
-      await teleport(current, fieldIndexByKey("polizeistation"));
-      await endTurn(); return;
-    } else if(r < 0.35){
-      const unfallText = `${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trinke 1 Schluck zum Trost.`;
-      await showModal({emoji:"🤕", tag:"UNFALL", tagCol:"linear-gradient(140deg,#f09044,#c9641a)", title:"Bordsteinkante!",
-        text:unfallText,
-        buttons:[{label:"Autsch", value:1}]});
-      applySipsFromText(unfallText, current);
-      p.skip = 1;
-      await endTurn(); return;
-    } else {
-      setLog(`🛴 Freie Fahrt! ${p.name} zieht ${sum} Felder.`);
-      await wait(600);
+    if(isScooter){
+      const r = Math.random();
+      if(r < 0.10){
+        const bustedText = `Ohne Licht durch die Stadt… ${p.name} wird von der Polizei angehalten und zur Polizeistation gebracht. Trinke 2 Schlücke zum Trost.`;
+        await showModal({emoji:"🚔", tag:"BUSTED", tagCol:"linear-gradient(140deg,#f0564a,#a8241a)", title:"Polizei!",
+          text:bustedText,
+          buttons:[{label:"Mist!", value:1}]});
+        applySipsFromText(bustedText, current);
+        await teleport(current, fieldIndexByKey("polizeistation"));
+        await endTurn(); return;
+      } else if(r < 0.35){
+        const unfallText = `${p.name} legt sich hin und braucht eine Pause. 1 Runde aussetzen. Trinke 1 Schluck zum Trost.`;
+        await showModal({emoji:"🤕", tag:"UNFALL", tagCol:"linear-gradient(140deg,#f09044,#c9641a)", title:"Bordsteinkante!",
+          text:unfallText,
+          buttons:[{label:"Autsch", value:1}]});
+        applySipsFromText(unfallText, current);
+        p.skip = 1;
+        await endTurn(); return;
+      } else {
+        setLog(`🛴 Freie Fahrt! ${p.name} zieht ${sum} Felder.`);
+        await wait(600);
+      }
     }
-  }
 
-  await moveSteps(current, sum);
-  await resolveField(current);
-  if(!gameOver) await endTurn();
+    await moveSteps(current, sum);
+    await resolveField(current);
+    if(!gameOver) await endTurn();
+  } catch(err){
+    // Sicherheitsnetz: verhindert, dass ein unerwarteter Fehler mitten im
+    // Zug das Spiel dauerhaft blockiert (busy bliebe sonst für immer true,
+    // wodurch auch das automatische Bot-Würfeln nie wieder anspringt).
+    console.error("Fehler im Spielzug:", err);
+    setLog("⚠️ Es gab einen Fehler beim Zug – bitte nochmal versuchen.");
+    busy = false; rollBtn.disabled = false;
+  }
 }
 rollBtn.onclick = performRoll;
 
