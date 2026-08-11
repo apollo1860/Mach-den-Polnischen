@@ -1577,7 +1577,6 @@ const FIELDS = [
   {n:"Nordbad",             e:"🏊", t:T.EVENT,   z:4},
   {n:"Treffpunkt",          e:"📍", t:T.EVENT,   z:5},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:5},
-  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:5, prompt:TANKE_PROMPT, choices:TANKE_CHOICES},
   {n:"Seniorenheim",        e:"🎱", t:T.MINIGAME, z:5, games:["bingo"], d:"Die Damen und Herren laden dich zu einer Runde Bingo ein."},
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, ox:18, oy:38, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
@@ -1586,6 +1585,7 @@ const FIELDS = [
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
   {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", negative:true, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
+  {n:"Tanke",               e:"⛽", t:T.TANKE,   z:6, prompt:TANKE_PROMPT, choices:TANKE_CHOICES},
   {n:"Boazn",               e:"🎯", t:T.DARTS,   z:6, d:"Ein Fremder fordert dich zu einer Partie Darts heraus – 3 Aufnahmen à 3 Darts, wer mehr Punkte wirft gewinnt."},
   {n:"Bavariapark",         e:"🏞️", t:T.BAVARIA, z:6,
     prompt:"Willst du durch den Bavariapark gehen oder lieber außen vorbei?",
@@ -4336,7 +4336,7 @@ async function botPlayWette(p, pi){
   const correct = Math.random() < 0.5;
   let resultText, distributeMsg = null;
   if(correct){
-    const payout = stake*2; // vereinfachte Quote für den Bot
+    const payout = 4 + Math.floor(Math.random()*5); // Bot verteilt bei Gewinn immer 4-8 Schlücke
     distributeMsg = distributeSips(payout, pi);
     resultText = `${p.name} tippt richtig! (Einsatz war ${stake})`;
   } else {
@@ -4386,8 +4386,8 @@ async function resolveField(pi){
         addSips(oIdx, 3);
       }
       const msg = single
-        ? `${namesList} geht aus Frust 2 Felder zurück und trinkt 3 Schlücke.`
-        : `${namesList} gehen aus Frust 2 Felder zurück und trinken je 3 Schlücke.`;
+        ? `${namesList} verläuft sich – geht 2 Felder zurück und trinkt 3 Frustschlücke.`
+        : `${namesList} verlaufen sich – gehen 2 Felder zurück und trinken je 3 Frustschlücke.`;
       setLog(msg);
       await showModal({emoji:"🧭", tag:"BEGEGNUNG", tagCol:"linear-gradient(140deg,#ffb347,#c96f18)",
         title:"Reingelegt!", text:msg, buttons:[{label:"OK", cls:"gray", value:1}]});
