@@ -1606,7 +1606,7 @@ const PARTY_CARDS = [
   {e:"🍷", txt:"Man bietet dir ein Glas nordkasachischen Rotwein, den man noch im Keller gefunden hat, an – trinke 1 Schluck."},
   {e:"🍾", txt:"Du findest eine herrenlose, halbvolle Bierflasche auf dem Parkettboden – trinke 2 Schlücke."},
   {e:"📖", txt:"Dir wird ein Familienalbum zum Durchblättern gereicht – trinke dir 2 Geduldsschlücke an."},
-  {e:"🎤", txt:"Du möchtest die Stimmung durch einen Witz auflockern – überlege dir ein Themenbereich, erzähle einen passenden Witz und trinke 2 Schlücke, wenn niemand lacht."},
+  {e:"🎤", txt:"Du möchtest die Stimmung durch einen Witz auflockern – überlege dir ein Themenbereich, erzähle einen passenden Witz und trinke 2 Schlücke, wenn niemand lacht.", manual:true},
   {e:"😢", txt:"Ein dir unbekannter Partygast hängt an deiner Schulter, um sich über ihren Ex-Freund auszuheulen – setze 1 Runde aus und trinke 2 Schlücke.", skip:1},
   {e:"💔", txt:"Ein Pärchen streitet sich direkt vor deiner Nase – trinke 1 Schluck gegen die folgende peinliche Stille."},
   {e:"🥏", txt:"Ein Partygast versucht, dich zu überreden, seiner Ultimate-Frisbee-Mannschaft beizutreten. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
@@ -2948,7 +2948,7 @@ function playNamenGame(p, pi){
       for(let k=0;k<order.length;k++){
         const idx = order[k];
         const person = people[idx];
-        statusEl.textContent = `Lernphase – ${k+1}/10 stellt sich vor…`;
+        statusEl.textContent = `Lernphase – ${k+1}/${order.length} stellt sich vor…`;
         setActive(idx,true);
         showBubble(idx, `Ich bin ${person.name} und mag ${person.likes}!`);
         await wait(3000);
@@ -3044,7 +3044,7 @@ function playWhacAMole(p, val){
     const timerFillEl = $("#wamTimerFill");
     const timerLabelEl = $("#wamTimerLabel");
     const statusEl = $("#wamStatus");
-    const NEEDED_HITS = 8, TIME_LIMIT = 30, HOLE_COUNT = 9, MOLE_EMOJI = "🐭";
+    const NEEDED_HITS = 8, TIME_LIMIT = 20, HOLE_COUNT = 9, MOLE_EMOJI = "🐭";
 
     let holes = [], hits = 0, finished = false;
     let startTs = null, rafId = null, spawnTimer = null;
@@ -3084,7 +3084,7 @@ function playWhacAMole(p, val){
       const holeObj = pick.h, idx = pick.i;
       holeObj.up = true;
       holeObj.el.classList.add("up");
-      const upDuration = 650 + Math.random()*350;
+      const upDuration = 380 + Math.random()*220;
       const t = setTimeout(()=>{
         if(holeObj.up){ holeObj.up = false; holeObj.el.classList.remove("up"); }
         activeMoleTimers.delete(idx);
@@ -3572,7 +3572,7 @@ const MINIGAMES = [
   {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame,
     rules:"Tippe verdeckte Teile an, um sie aufzudecken, und ziehe per Drag die 6 richtigen Bierflaschen-Teile in die passenden Slots. Wein- und Wasserflaschen-Teile sind Ablenkung. Alle 6 richtigen in 20 Sekunden platzieren."},
   {key:"wuehlmaus", name:"Wühlmaus-Alarm", emoji:"🔨", run: playWhacAMole,
-    rules:"Tippe auf ein Loch, sobald eine Maus daraus hochkommt. Du brauchst 8 Treffer in 30 Sekunden."},
+    rules:"Tippe auf ein Loch, sobald eine Maus daraus hochkommt. Du brauchst 8 Treffer in 20 Sekunden."},
   {key:"bingo", name:"Senioren-Bingo", emoji:"🎱", run: playBingoGame, lossSips:3,
     rules:"Du bekommst eine Bingokarte mit 16 Zahlen. Der Spielleiter ruft alle 4 Sekunden eine Zahl auf – tippe deine aufgerufenen Zahlen an, um sie zu stempeln. Hast du 4 in einer Reihe, Spalte oder Diagonale, drücke BINGO. Ruft aber jemand anderes vor dir Bingo, hast du verloren und trinkst 3 Frustschlücke."},
 ];
@@ -3804,6 +3804,24 @@ function throwRain(){
 }
 
 /* ---------- Bewegung ---------- */
+/* ---------- Zielfeld-Sieg ----------
+   Zentrale Sieg-Auslösung, die von JEDER Bewegung aus erreicht werden
+   kann – nicht nur vom direkten Würfelzug im eigenen Zug, sondern auch
+   von Vorrücken durch Ereigniskarten, Minispiel-Gewinnen oder Belohnungs-
+   Teleports. moveSteps() und teleport() rufen sie automatisch auf,
+   sobald ein Spieler auf dem Zielfeld landet. */
+async function triggerWin(pi){
+  if(gameOver) return;
+  gameOver = true;
+  const p = players[pi];
+  throwConfetti();
+  clearSavedGame();
+  await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
+    title:`${p.name} ist auf der geilen Party!`,
+    text:"Polnischer geglückt – keiner hat es gemerkt! Alle anderen trinken den Abschlussschluck. 🍻",
+    buttons:[{label:"Nochmal spielen", cls:"green", value:1}]});
+  location.reload();
+}
 async function moveSteps(pi, steps){
   const p = players[pi];
   const dir = steps>0 ? 1 : -1;
@@ -3816,12 +3834,18 @@ async function moveSteps(pi, steps){
     renderTokens(pi); focusOn(p.pos); updateHud();
     await wait(400);
   }
+  if(!gameOver && FIELDS[p.pos].t===T.GOAL){
+    await triggerWin(pi);
+  }
 }
 async function teleport(pi, target){
   const p = players[pi];
   p.pos = target;
   renderTokens(pi); focusOn(p.pos, true); updateHud();
   await wait(650);
+  if(!gameOver && FIELDS[p.pos].t===T.GOAL){
+    await triggerWin(pi);
+  }
 }
 
 /* ---------- Feld-Auflösung (nur nach Würfelzug) ---------- */
@@ -3906,7 +3930,7 @@ async function resolveEventCard(zone, pi, title){
   if(c.special){
     await handleSpecialCard(c.special, pi);
   } else {
-    applySipsFromText(c.txt, pi);
+    if(!c.manual) applySipsFromText(c.txt, pi);
     if(c.skip){ p.skip = c.skip; }
     if(c.goto!==undefined){ await teleport(pi, fieldIndexByKey(c.goto)); }
     else if(c.mv){ await moveSteps(pi, c.mv); }
@@ -4009,14 +4033,7 @@ async function resolveField(pi){
   } else {
   switch(f.t){
     case T.GOAL: {
-      gameOver = true;
-      throwConfetti();
-      clearSavedGame();
-      await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:meta.col,
-        title:`${p.name} ist auf der geilen Party!`,
-        text:"Polnischer geglückt – keiner hat es gemerkt! Alle anderen trinken den Abschlussschluck. 🍻",
-        buttons:[{label:"Nochmal spielen", cls:"green", value:1}]});
-      location.reload();
+      await triggerWin(pi);
       return;
     }
     case T.EVENT: {
