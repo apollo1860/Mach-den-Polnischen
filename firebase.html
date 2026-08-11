@@ -2455,6 +2455,7 @@ function updateWishButton(){
 
 /* ---------- Schlücke-Editor (Tippen auf Leiste → vergrößert mit +/-) ---------- */
 let sipEditIdx = null;
+let sipEditorResolve = null; // gesetzt, wenn eine Ereignis-Verteilung auf das Schließen wartet
 function refreshSipEditor(){
   if(sipEditIdx===null) return;
   const p = players[sipEditIdx];
@@ -2473,6 +2474,18 @@ function openSipEditor(idx){
 function closeSipEditor(){
   $("#sipEditOverlay").style.display = "none";
   sipEditIdx = null;
+  if(sipEditorResolve){ const r = sipEditorResolve; sipEditorResolve = null; r(); }
+}
+/* Öffnet den großen Schlücke-Editor und wartet, bis er per X geschlossen
+   wird – genutzt nach "verteile X Schlücke"-Ereignissen, damit das
+   Verteilen nicht im Log untergeht: der nächste Spieler ist erst dran,
+   wenn die Ansicht wieder geschlossen wurde. */
+function openSipEditorBlocking(startIdx){
+  return new Promise(resolve=>{
+    if(mp.enabled && !isMyTurn()){ resolve(); return; }
+    sipEditorResolve = resolve;
+    openSipEditor(startIdx);
+  });
 }
 $("#sipEditPlus").addEventListener("click", ()=>{
   if(sipEditIdx===null) return;
@@ -4265,6 +4278,9 @@ async function resolveEventCard(zone, pi, title){
   await showModal({emoji:c.e, tag:meta.tag, tagCol:meta.col,
     title, text:displayText, buttons:[{label:"OK", value:1}]});
   await syncTransient({cardReveal:null});
+  if(distAmount && !c.special && !p.isBot){
+    await openSipEditorBlocking((pi+1) % players.length);
+  }
   if(c.special){
     await handleSpecialCard(c.special, pi);
   } else {
@@ -4397,6 +4413,9 @@ async function resolveField(pi){
       await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:displayText, buttons:[{label:"OK", value:1}]});
       await syncTransient({cardReveal:null});
+      if(distAmount && !p.isBot){
+        await openSipEditorBlocking((pi+1) % players.length);
+      }
       applySipsFromText(f.d, pi);
       if(f.skip) p.skip = f.skip;
       break;
