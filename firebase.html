@@ -2056,7 +2056,7 @@ function beginMultiplayerGame(){
     if(gameOver && !wasOver){
       throwConfetti();
       await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
-        title:"Angekommen!", text:"Ein Spieler ist auf der geilen Party – Polnischer geglückt! 🍻",
+        title:"Angekommen!", text:"Ein Spieler ist auf der geilen Party – Polnischer geglückt! Alle anderen gehen traurig nach Hause und trinken aus Frust 5 Schlücke!",
         buttons:[{label:"Neu starten", cls:"green", value:1}]});
       location.reload();
     }
@@ -4154,7 +4154,7 @@ async function triggerWin(pi){
   await syncState();
   await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
     title:`${p.name} ist auf der geilen Party!`,
-    text:"Polnischer geglückt – keiner hat es gemerkt! Alle anderen trinken den Abschlussschluck. 🍻",
+    text:"Polnischer geglückt – Alle anderen gehen traurig nach Hause und trinken aus Frust 5 Schlücke!",
     buttons:[{label:"Nochmal spielen", cls:"green", value:1}]});
   location.reload();
 }
@@ -4358,7 +4358,10 @@ async function resolveField(pi){
     if(choice==="greet"){
       addSips(pi, 1);
       occupants.forEach(o=> addSips(players.indexOf(o), 1));
-      setLog(`${p.icon} ${p.name} stößt mit ${namesList} an – alle trinken 1 Schluck.`);
+      const msg = `${p.icon} ${p.name} stößt mit ${namesList} an – alle trinken 1 Schluck.`;
+      setLog(msg);
+      await showModal({emoji:"🥂", tag:"BEGEGNUNG", tagCol:"linear-gradient(140deg,#ffb347,#c96f18)",
+        title:"Prost!", text:msg, buttons:[{label:"OK", cls:"green", value:1}]});
     } else {
       setLog(`${p.icon} ${p.name} gibt ${namesList} eine falsche Wegbeschreibung …`);
       for(const o of occupants){
@@ -4366,7 +4369,12 @@ async function resolveField(pi){
         await moveSteps(oIdx, -2);
         addSips(oIdx, 3);
       }
-      setLog(`${namesList} gehen aus Frust 2 Felder zurück und trinken je 3 Schlücke.`);
+      const msg = single
+        ? `${namesList} geht aus Frust 2 Felder zurück und trinkt 3 Schlücke.`
+        : `${namesList} gehen aus Frust 2 Felder zurück und trinken je 3 Schlücke.`;
+      setLog(msg);
+      await showModal({emoji:"🧭", tag:"BEGEGNUNG", tagCol:"linear-gradient(140deg,#ffb347,#c96f18)",
+        title:"Reingelegt!", text:msg, buttons:[{label:"OK", cls:"gray", value:1}]});
     }
   } else {
   switch(f.t){
