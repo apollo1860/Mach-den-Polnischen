@@ -1037,7 +1037,12 @@
   .wette-team{font-size:17px;font-weight:800;line-height:1.5;}
   .wette-vs{font-size:11px;font-weight:900;letter-spacing:2px;color:#8fd8a8;margin:4px 0;}
 
-  .wette-picks{display:flex;gap:10px;justify-content:center;margin-top:18px;}
+  .wette-picks-label{
+    margin-top:18px;font-size:10.5px;font-weight:900;letter-spacing:1.5px;
+    text-transform:uppercase;color:#8fd8a8;text-align:left;
+  }
+  .wette-picks{display:flex;gap:10px;justify-content:center;margin-top:8px;}
+  #wettePicks{margin-top:18px;}
   .wette-pickbtn{
     flex:1;border:none;cursor:pointer;font-family:inherit;
     display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -1052,6 +1057,11 @@
   .wette-pickbtn.selected{background:linear-gradient(160deg,#3ddc97,#1d9e66);box-shadow:0 6px 0 #10704a, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;}
   .wette-pickbtn.selected .pk-label, .wette-pickbtn.selected .pk-quote{color:#fff;}
   .wette-pickbtn:disabled{opacity:.4;cursor:default;}
+  .wette-picks.doublechance .wette-pickbtn{ background:rgba(255,255,255,.045); }
+  .wette-picks.doublechance .wette-pickbtn.selected{
+    background:linear-gradient(160deg,#3ddc97,#1d9e66);
+    box-shadow:0 6px 0 #10704a, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff70;
+  }
 
   .wette-stake{display:none;margin-top:18px;}
   .wette-stake.show{display:block;}
@@ -1179,6 +1189,40 @@
     0%,92%,100%{opacity:0;}
     93%{opacity:.35;}
     95%{opacity:0;}
+  }
+
+  /* ---------- Gewitter (Blitz statt Regen) ---------- */
+  #thunderOverlay{
+    position:fixed;inset:0;z-index:47;pointer-events:none;overflow:hidden;display:none;
+  }
+  #thunderOverlay .tflash{
+    position:absolute;inset:0;background:#f4f0ff;opacity:0;
+    animation:thunderFlash 1.9s ease-in-out;
+  }
+  @keyframes thunderFlash{
+    0%{opacity:0;}
+    5%{opacity:.95;}
+    9%{opacity:.15;}
+    13%{opacity:.8;}
+    20%{opacity:0;}
+    58%{opacity:0;}
+    63%{opacity:.55;}
+    68%{opacity:0;}
+    100%{opacity:0;}
+  }
+  #thunderOverlay .bolt{
+    position:absolute;left:calc(50% - 40px);top:0;width:80px;height:72vh;
+    background:linear-gradient(180deg, #fffef0, #ffe066 40%, #ffcf4d 75%, transparent);
+    clip-path:polygon(45% 0%, 60% 0%, 40% 32%, 56% 32%, 22% 72%, 46% 40%, 30% 40%, 55% 0%);
+    filter:drop-shadow(0 0 16px #fff9d6ee);
+    opacity:0;
+    animation:boltStrike .55s ease-out .1s forwards;
+  }
+  @keyframes boltStrike{
+    0%{opacity:0;transform:scaleY(.4);}
+    15%{opacity:1;transform:scaleY(1);}
+    70%{opacity:1;}
+    100%{opacity:0;}
   }
 
   /* ---------- Setup ---------- */
@@ -1369,6 +1413,7 @@
 <div id="diceLayer"></div>
 <div id="confetti"></div>
 <div id="rainOverlay"></div>
+<div id="thunderOverlay"></div>
 <div id="modalWrap"><div id="modal"></div></div>
 <div id="cardRevealOverlay" class="modal-overlay"><div id="cardRevealCard" class="modal-card"></div></div>
 <div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
@@ -1509,10 +1554,18 @@
       <div class="wette-team" id="wetteTeamB">Team B</div>
     </div>
 
+    <div class="wette-picks-label">Klassisch</div>
     <div class="wette-picks" id="wettePicks">
       <button class="wette-pickbtn" data-pick="1"><span class="pk-label">1</span><span class="pk-quote" id="quote1">–</span></button>
       <button class="wette-pickbtn" data-pick="X"><span class="pk-label">X</span><span class="pk-quote" id="quoteX">–</span></button>
       <button class="wette-pickbtn" data-pick="2"><span class="pk-label">2</span><span class="pk-quote" id="quote2">–</span></button>
+    </div>
+
+    <div class="wette-picks-label">Doppelte Chance</div>
+    <div class="wette-picks doublechance" id="wettePicksDC">
+      <button class="wette-pickbtn" data-pick="1X"><span class="pk-label">1X</span><span class="pk-quote" id="quote1X">–</span></button>
+      <button class="wette-pickbtn" data-pick="12"><span class="pk-label">12</span><span class="pk-quote" id="quote12">–</span></button>
+      <button class="wette-pickbtn" data-pick="2X"><span class="pk-label">2X</span><span class="pk-quote" id="quote2X">–</span></button>
     </div>
 
     <div class="wette-stake" id="wetteStake">
@@ -1575,8 +1628,8 @@ const FIELDS = [
   {n:"Wohnzimmer",          e:"🛋️", t:T.EVENT,   z:1},
   {n:"Garderobe",           e:"🧥", t:T.EVENT,   z:1},
   {n:"Flur",                e:"🚪", t:T.EVENT,   z:1, key:"flur"},
-  {n:"Mathäser",            e:"🎬", t:T.EVENT,   z:2},
-  {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:"sendlinger-tor", key:"hauptbahnhof", d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
+  {n:"Mathäser",            e:"🎬", t:T.EVENT,   z:2, noBackward:true},
+  {n:"Hauptbahnhof",        e:"🚉", t:T.TELEPORT,z:2, tp:"sendlinger-tor", key:"hauptbahnhof", noBackward:true, d:"Die U-Bahn steht schon da! Sie bringt dich zum Sendlinger Tor."},
   {n:"Baustelle",           e:"🚧", t:T.BAUSTELLE, z:2,
     prompt:"Du triffst auf eine Gruppe Jugendlicher.",
     choices:[
@@ -1791,6 +1844,7 @@ const STREET_CARDS = [
   {e:"😴", txt:"Dir ist langweilig – trinke 1 Schluck."},
   {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
   {e:"⛈️", txt:"Unwetter! Durch strömenden Regen ist die Sicht schlecht – ALLE Spieler gehen 2 Felder zurück und trinken 1 Frust-Schluck.", special:"storm"},
+  {e:"⚡", txt:"Gewitter zieht auf! Ein greller Blitz lässt alle zusammenzucken – ALLE Spieler gehen 1 Feld zurück und trinken 2 Schreck-Schlücke.", special:"thunderstorm"},
   {e:"🍺", txt:"Dein Bier wird langsam warm – trinke 2 Schlücke."},
   {e:"😋", txt:"Dein Bier schmeckt gerade herrlich – trinke 2 Schlücke."},
   {e:"😄", txt:"Dein Bier lacht dich gerade an – trinke 1 Schluck."},
@@ -1916,6 +1970,35 @@ function drawCard(zone){
   }
   if(decks.street.length===0) decks.street = shuffled(STREET_CARDS);
   return decks.street.pop();
+}
+/* Prüft, ob eine gezogene Karte den ziehenden Spieler (oder bei "storm"
+   alle) rückwärts schicken würde – für Felder wie Mathäser/Hauptbahnhof,
+   auf denen explizit keine rückwärts schickenden Ereignisse vorkommen sollen. */
+function isCardBackward(card, fromPos){
+  if(card.mv && card.mv<0) return true;
+  if(card.goto!==undefined && fieldIndexByKey(card.goto) < fromPos) return true;
+  if(card.special==="storm" || card.special==="thunderstorm") return true;
+  return false;
+}
+/* Zieht wie drawCard(), verwirft aber rückwärts schickende Karten (legt sie
+   an zufälliger Stelle im Stapel zurück und zieht neu) – für Felder mit
+   f.noBackward. Falls der verbliebene Stapel rein zufällig eine Weile nur
+   noch Rückwärts-Karten liefert (unabhängig von seiner Restgröße), wird er
+   nach ein paar erfolglosen Versuchen komplett neu gemischt statt am Ende
+   doch eine Rückwärts-Karte zu erzwingen – das garantiert wirklich 0%. */
+function drawCardNoBackward(zone, fromPos){
+  const key = zone===1 ? "party" : (zone===2 ? "city" : "street");
+  const buildFn = zone===1 ? (()=>shuffled(PARTY_CARDS))
+    : (zone===2 ? (()=>shuffled(STREET_CARDS.concat(FORGOT_CARDS))) : (()=>shuffled(STREET_CARDS)));
+  let card = drawCard(zone);
+  let guard = 0;
+  while(isCardBackward(card, fromPos) && guard<200){
+    if(decks[key]) decks[key].splice(Math.floor(Math.random()*(decks[key].length+1)), 0, card);
+    guard++;
+    if(guard % 8 === 0 && decks[key]) decks[key] = buildFn();
+    card = drawCard(zone);
+  }
+  return card;
 }
 
 /* ---------- DOM ---------- */
@@ -2134,6 +2217,10 @@ function beginMultiplayerGame(){
     if(!mine && s.skipAnnounce && s.skipAnnounce.nonce !== mp.lastSkipNonce){
       mp.lastSkipNonce = s.skipAnnounce.nonce;
       showSkipX(s.skipAnnounce);
+    }
+    if(!mine && s.thunderAnnounce && s.thunderAnnounce.nonce !== mp.lastThunderNonce){
+      mp.lastThunderNonce = s.thunderAnnounce.nonce;
+      throwLightning();
     }
     if(!mp.isHost && s.rollOffStep && s.rollOffStep.nonce !== mp.lastRollOffNonce){
       mp.lastRollOffNonce = s.rollOffStep.nonce;
@@ -3937,12 +4024,34 @@ function calcWetteOdds(teamA, teamB){
   const toOdds = p => Math.max(1.01, Math.round((1/(p*margin))*100)/100);
   return { odds1: toOdds(pA), oddsX: toOdds(pDraw), odds2: toOdds(pB), lambdaA, lambdaB };
 }
+/* ---------- Doppelte Chance (1X/2X/12) ----------
+   1/Quote(1X) = 1/Quote(1) + 1/Quote(X)  (analog 2X, 12) – nutzt die
+   bereits berechneten (inkl. Marge gerundeten) 1/X/2-Quoten als Basis. */
+function calcDoubleChanceOdds(odds1, oddsX, odds2){
+  const harmonic = (a,b) => Math.round((1/(1/a + 1/b))*100)/100;
+  return {
+    odds1X: harmonic(odds1, oddsX),
+    odds2X: harmonic(odds2, oddsX),
+    odds12: harmonic(odds1, odds2),
+  };
+}
+/* Welche Picks bei welchem tatsächlichen Ergebnis ("1"/"X"/"2") treffen */
+const PICK_HITS = {
+  "1":  ["1"],
+  "X":  ["X"],
+  "2":  ["2"],
+  "1X": ["1","X"],
+  "2X": ["2","X"],
+  "12": ["1","2"],
+};
+const MIN_TRADABLE_ODDS = 1.01;
 
 function playWetteGame(p, pi){
   return new Promise(res=>{
     const overlay = $("#wetteOverlay");
     const teamAEl = $("#wetteTeamA"), teamBEl = $("#wetteTeamB");
     const picksEl = $("#wettePicks");
+    const picksDCEl = $("#wettePicksDC");
     const stakeEl = $("#wetteStake");
     const stakeValEl = $("#stakeVal");
     const payoutPreviewEl = $("#payoutPreview");
@@ -3956,14 +4065,21 @@ function playWetteGame(p, pi){
 
     const [teamA, teamB] = drawWetteMatchup();
     const { odds1, oddsX, odds2, lambdaA, lambdaB } = calcWetteOdds(teamA, teamB);
+    const { odds1X, odds2X, odds12 } = calcDoubleChanceOdds(odds1, oddsX, odds2);
+    const oddsByPick = { "1":odds1, "X":oddsX, "2":odds2, "1X":odds1X, "2X":odds2X, "12":odds12 };
 
     teamAEl.textContent = teamA.name;
     teamBEl.textContent = teamB.name;
-    $("#quote1").textContent = odds1.toFixed(2).replace(".",",");
-    $("#quoteX").textContent = oddsX.toFixed(2).replace(".",",");
-    $("#quote2").textContent = odds2.toFixed(2).replace(".",",");
     picksEl.style.display = "flex";
-    picksEl.querySelectorAll(".wette-pickbtn").forEach(b=>{ b.disabled=false; b.classList.remove("selected"); });
+    const allPickBtns = [...picksEl.querySelectorAll(".wette-pickbtn"), ...picksDCEl.querySelectorAll(".wette-pickbtn")];
+    allPickBtns.forEach(b=>{
+      const odds = oddsByPick[b.dataset.pick];
+      const quoteEl = b.querySelector(".pk-quote");
+      const tradable = odds >= MIN_TRADABLE_ODDS;
+      quoteEl.textContent = tradable ? odds.toFixed(2).replace(".",",") : "–";
+      b.disabled = !tradable;
+      b.classList.remove("selected");
+    });
     stakeEl.classList.remove("show");
     confirmBtn.classList.remove("show");
     confirmBtn.disabled = false;
@@ -3988,13 +4104,13 @@ function playWetteGame(p, pi){
     }
     function onPick(e){
       selectedPick = e.currentTarget.dataset.pick;
-      selectedOdds = selectedPick==="1" ? odds1 : (selectedPick==="X" ? oddsX : odds2);
-      picksEl.querySelectorAll(".wette-pickbtn").forEach(b=> b.classList.toggle("selected", b.dataset.pick===selectedPick));
+      selectedOdds = oddsByPick[selectedPick];
+      allPickBtns.forEach(b=> b.classList.toggle("selected", b.dataset.pick===selectedPick));
       stakeEl.classList.add("show");
       confirmBtn.classList.add("show");
       updatePayoutPreview();
     }
-    picksEl.querySelectorAll(".wette-pickbtn").forEach(b=> b.addEventListener("click", onPick));
+    allPickBtns.forEach(b=> b.addEventListener("click", onPick));
 
     const stakeMinusBtn = $("#stakeMinus"), stakePlusBtn = $("#stakePlus");
     stakeMinusBtn.onclick = ()=>{ if(stake>1){ stake--; stakeValEl.textContent = stake; updatePayoutPreview(); } };
@@ -4002,7 +4118,7 @@ function playWetteGame(p, pi){
 
     confirmBtn.onclick = ()=>{
       if(!selectedPick) return;
-      picksEl.querySelectorAll(".wette-pickbtn").forEach(b=>b.disabled=true);
+      allPickBtns.forEach(b=>b.disabled=true);
       stakeMinusBtn.disabled = true; stakePlusBtn.disabled = true;
       confirmBtn.disabled = true; confirmBtn.classList.remove("show");
       runMatch(selectedPick, selectedOdds, stake);
@@ -4074,15 +4190,15 @@ function playWetteGame(p, pi){
       minuteEl.textContent = "Spielende";
 
       const actual = scoreA>scoreB ? "1" : (scoreA<scoreB ? "2" : "X");
-      const correct = actual===pick;
+      const correct = PICK_HITS[pick].includes(actual);
       await wait(300);
       if(correct){
         const payout = roundHalfUp(stakeAmount*odds);
         distributeSips(payout, pi);
-        resultEl.textContent = `Richtig getippt (${scoreA}:${scoreB})! Quote ${odds.toFixed(2).replace(".",",")} × ${stakeAmount} → ${p.name} verteilt ${payout} Schlücke.`;
+        resultEl.textContent = `Richtig getippt (${scoreA}:${scoreB}, Ausgang "${actual}")! Quote ${odds.toFixed(2).replace(".",",")} × ${stakeAmount} → ${p.name} verteilt ${payout} Schlücke.`;
       } else {
         addSips(pi, stakeAmount);
-        resultEl.textContent = `Falsch getippt (${scoreA}:${scoreB}, richtig wäre "${actual}"). ${p.name} trinkt den Einsatz von ${stakeAmount} Schlücken.`;
+        resultEl.textContent = `Falsch getippt (${scoreA}:${scoreB}, Ausgang "${actual}", dein Tipp "${pick}" war nicht dabei). ${p.name} trinkt den Einsatz von ${stakeAmount} Schlücken.`;
       }
       await wait(2400);
       overlay.style.display = "none";
@@ -4327,6 +4443,21 @@ function throwRain(){
     }, 2400);
   });
 }
+/* Gewitter-Animation: greller Vollbild-Blitz + ein stilisierter Blitzstrahl,
+   der von oben einschlägt – bewusst ohne Regenlinien, damit sich die
+   Gewitter-Karte optisch von der bestehenden Unwetter/Regen-Karte abhebt. */
+function throwLightning(){
+  return new Promise(res=>{
+    const overlay = document.getElementById("thunderOverlay");
+    overlay.innerHTML = `<div class="tflash"></div><div class="bolt"></div>`;
+    overlay.style.display = "block";
+    setTimeout(()=>{
+      overlay.style.display = "none";
+      overlay.innerHTML = "";
+      res();
+    }, 1900);
+  });
+}
 
 /* ---------- Bewegung ---------- */
 /* ---------- Zielfeld-Sieg ----------
@@ -4474,6 +4605,16 @@ async function handleSpecialCard(special, pi){
       addSips(i, 1);
     }
     setLog("⛈️ Unwetter! Alle Spieler unterwegs sind 2 Felder zurückgegangen und trinken 1 Frust-Schluck.");
+  } else if(special==="thunderstorm"){
+    setLog("⚡ Ein Gewitter zieht auf – gleich schlägt ein Blitz ein …");
+    await syncTransient({thunderAnnounce:{nonce: Date.now()+Math.random()}});
+    await throwLightning();
+    for(let i=0;i<players.length;i++){
+      if(FIELDS[players[i].pos].z===1) continue; // auf der öden Party bekommt man vom Gewitter draußen nichts mit
+      await moveSteps(i, -1);
+      addSips(i, 2);
+    }
+    setLog("⚡ Gewitter! Alle Spieler unterwegs sind 1 Feld zurückgegangen und trinken 2 Schreck-Schlücke.");
   }
 }
 
@@ -4498,9 +4639,9 @@ async function applyOutcome(outcome, pi){
    Sichtbarkeit im Mehrgeräte-Modus) und wendet ihre Effekte an. Wird
    sowohl von normalen Ereignisfeldern als auch vom "U-Bahn verpasst,
    stattdessen Ereignis"-Fall bei negativen Teleport-Feldern genutzt. */
-async function resolveEventCard(zone, pi, title){
+async function resolveEventCard(zone, pi, title, noBackward){
   const p = players[pi];
-  const c = drawCard(zone);
+  const c = noBackward ? drawCardNoBackward(zone, p.pos) : drawCard(zone);
   const meta = TYPE_META.event;
   const distAmount = parseDistributeAmount(c.txt);
   let displayText = c.txt, botDistMsg = null;
@@ -4637,7 +4778,7 @@ async function resolveField(pi){
       return;
     }
     case T.EVENT: {
-      await resolveEventCard(f.z, pi, f.n);
+      await resolveEventCard(f.z, pi, f.n, f.noBackward);
       break;
     }
     case T.FIXED: {
@@ -4883,7 +5024,7 @@ async function resolveField(pi){
         wetteCorrect = await botPlayWette(p, pi);
       } else {
         await showMiniGameIntro("🎰", "Tipico-Wette",
-          "Tippe 1, X oder 2 an, um deinen Tipp zu setzen. Stelle danach mit +/- deinen Einsatz ein und tippe auf „Wette bestätigen“. Bei richtigem Tipp verteilst du Einsatz × Quote (gerundet), bei falschem trinkst du deinen Einsatz selbst.");
+          "Tippe 1, X oder 2 an, oder wähle stattdessen eine der drei Doppelte-Chance-Optionen (1X, 12, 2X – trifft bei zwei von drei möglichen Ausgängen). Stelle danach mit +/- deinen Einsatz ein und tippe auf „Wette bestätigen“. Bei richtigem Tipp verteilst du Einsatz × Quote (gerundet), bei falschem trinkst du deinen Einsatz selbst. Quoten unter 1,01 sind nicht wettbar.");
         await syncTransient({miniGameBanner:{emoji:"🎰", name:"Tipico-Wette"}});
         wetteCorrect = await playWetteGame(p, pi);
         await syncTransient({miniGameBanner:null});
