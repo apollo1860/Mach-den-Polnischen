@@ -184,6 +184,17 @@
     80%{transform:translateY(2px) scale(0.96,1.05);}
     100%{transform:translateY(0) scale(1);}
   }
+  /* ---------- Landing-Impact (Ring-Puls beim Ankommen auf einem Feld) ---------- */
+  .landing-impact{
+    position:absolute;width:40px;height:40px;margin:-20px;
+    border-radius:50%;border:3px solid var(--gold);
+    pointer-events:none;z-index:6;
+    animation:landingPulse .5s ease-out forwards;
+  }
+  @keyframes landingPulse{
+    0%{transform:scale(.3);opacity:.9;}
+    100%{transform:scale(2.4);opacity:0;}
+  }
 
   /* ===================== UI-EBENE ===================== */
   #hud{
@@ -224,6 +235,23 @@
     background:var(--player-color,#ff5a3c);
     border-radius:0 0 6px 6px;
     transition:height .3s ease;
+  }
+  .sip-fill.bounce{ animation:sipBounce .45s cubic-bezier(.3,1.4,.4,1); transform-origin:bottom; }
+  @keyframes sipBounce{
+    0%{transform:scaleY(1);}
+    35%{transform:scaleY(1.18);}
+    65%{transform:scaleY(.94);}
+    100%{transform:scaleY(1);}
+  }
+  /* ---------- Goldener Partikel-Burst (Wunsch-Schwelle bei 20/25 Schlücken) ---------- */
+  .sip-burst{
+    position:fixed;width:6px;height:6px;border-radius:50%;
+    background:radial-gradient(circle, #fff9d6, var(--gold));
+    pointer-events:none;z-index:60;
+    animation:sipBurstFly .7s ease-out forwards;
+  }
+  @keyframes sipBurstFly{
+    to{ transform:translate(var(--bx,0px), var(--by,0px)) scale(.2); opacity:0; }
   }
   .sip-bar.light{box-shadow:inset 0 0 0 1.5px #ffffff28, 0 0 10px 2px #ffcf4dcc, 0 4px 10px #0006;}
   .sip-bar.full{box-shadow:inset 0 0 0 1.5px #ffffff28, 0 0 14px 3px #3ddc97cc, 0 4px 10px #0006;}
@@ -392,6 +420,14 @@
     animation:popIn .42s cubic-bezier(.2,1.45,.4,1);
   }
   @keyframes popIn{0%{transform:scale(.55) translateY(30px);opacity:0;}100%{transform:scale(1) translateY(0);opacity:1;}}
+  /* ---------- Minispiel-Einstieg: Zoom aus der auslösenden Kachel heraus ----------
+     Wird per Inline-Style gesetzt (siehe zoomOverlayFromField()), damit es die
+     normale popIn-Animation der jeweiligen Karten-Klasse zuverlässig überschreibt. */
+  @keyframes zoomFromTile{
+    0%{ transform:translate(var(--zoom-ox,0px), var(--zoom-oy,0px)) scale(.15); opacity:0; }
+    55%{ opacity:1; }
+    100%{ transform:translate(0,0) scale(1); opacity:1; }
+  }
   #modal .m-emoji, .modal-card .m-emoji{
     font-size:56px;line-height:1;filter:drop-shadow(0 4px 4px #0004);
     animation:emojiBob 2.2s ease-in-out infinite;
@@ -420,6 +456,13 @@
   .btn.green:active{box-shadow:0 1px 0 #10704a;}
   .btn.gray{background:linear-gradient(160deg,#a8a294,#7c766a 55%,#57524a);box-shadow:0 6px 0 #3c3830, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff50;}
   .btn.gray:active{box-shadow:0 1px 0 #3c3830;}
+  /* ---------- Button-Press-Ripple (auf .btn und #rollBtn, siehe globaler pointerdown-Listener) ---------- */
+  .btn-ripple{
+    position:absolute;border-radius:50%;background:rgba(255,255,255,.55);
+    transform:scale(0);pointer-events:none;opacity:.9;
+    animation:btnRipple .5s ease-out forwards;
+  }
+  @keyframes btnRipple{ to{ transform:scale(2.6); opacity:0; } }
 
   /* ---------- Minispiel „Zeche prellen" ---------- */
 /* ---------- Bingo (Seniorenheim) ---------- */
@@ -1077,6 +1120,31 @@
   #skipOverlay.hide .skip-card{animation:skipOut .28s ease-in forwards;}
   @keyframes skipOut{to{transform:scale(.7);opacity:0;}}
 
+  /* ---------- Abend-Statistik (nach Spielende, optional) ---------- */
+  #statsOverlay{
+    position:fixed;inset:0;z-index:54;display:none;
+    align-items:center;justify-content:center;padding:18px;
+    background:rgba(10,14,30,.78);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .stats-card{
+    position:relative;width:min(440px,94vw);max-height:88vh;overflow-y:auto;
+    background:linear-gradient(178deg,#1c1030 0%,#100a1c 100%);
+    border-radius:26px;padding:22px 20px 24px;
+    color:#f0eaff;border:1.5px solid #ffffff18;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    animation:popIn .4s cubic-bezier(.2,1.45,.4,1);
+  }
+  .stats-title{font-size:20px;font-weight:900;text-align:center;letter-spacing:-.2px;margin-bottom:14px;}
+  .stats-block{margin-bottom:16px;}
+  .stats-block-title{font-size:13px;font-weight:800;color:#d8c8ff;letter-spacing:.2px;margin-bottom:8px;}
+  .stats-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .stats-row-name{flex:0 0 108px;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .stats-bar-track{flex:1;height:14px;border-radius:7px;background:#ffffff12;overflow:hidden;box-shadow:inset 0 0 0 1px #ffffff18;}
+  .stats-bar-fill{height:100%;border-radius:7px;transition:width .5s cubic-bezier(.2,.8,.3,1);}
+  .stats-row-val{flex:0 0 auto;font-size:10.5px;font-weight:800;color:#c9bce8;white-space:nowrap;}
+  #statsCloseBtn{width:100%;margin-top:6px;}
+
   /* ---------- Konfetti ---------- */
   #confetti{position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden;display:none;}
   #confetti i{
@@ -1142,11 +1210,21 @@
     font-size:38px;font-weight:900;letter-spacing:-1px;line-height:1.05;
     margin-top:6px;color:#2e2618;
   }
-  #setup h1 span{
-    display:inline-block;
+  /* Kontur und Flaggen-Farbfüllung liegen bewusst auf zwei getrennten
+     Ebenen übereinander statt beides auf einem Element zu kombinieren –
+     -webkit-text-stroke zusammen mit background-clip:text erzeugt in
+     WebKit bei geschwungenen Buchstaben (P, e) doppelte/zusammengesetzt
+     wirkende Konturen. */
+  #setup h1 .flag-word{ position:relative; display:inline-block; }
+  #setup h1 .flag-stroke{
+    color:transparent;
+    -webkit-text-stroke:1.4px #2e2618;
+    text-stroke:1.4px #2e2618;
+  }
+  #setup h1 .flag-fill{
+    position:absolute; left:0; top:0; width:100%;
     background:linear-gradient(to bottom, #ffffff 56%, #dc143c 56%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-    -webkit-text-stroke:1.4px #2e2618; paint-order:stroke fill;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   #setup .sub{font-size:13.5px;font-weight:600;color:#6b5f4c;margin-top:10px;line-height:1.5;}
   #playerList{margin:20px 0 6px;display:flex;flex-direction:column;gap:9px;}
@@ -1190,7 +1268,7 @@
 <div id="setup">
   <div class="card">
     <div class="kicker">Das Münchner Trinkspiel</div>
-    <h1>Mach den <span>Polnischen</span></h1>
+    <h1>Mach den <span class="flag-word"><span class="flag-stroke" aria-hidden="true">Polnischen</span><span class="flag-fill">Polnischen</span></span></h1>
     <div class="sub">Schleich dich unbemerkt von der öden Party. Einmal quer durch München – wer zuerst auf der geilen Party ankommt, gewinnt. 🥱→🎉</div>
 
     <div id="resumeBanner" style="display:none;margin-top:16px;background:#fff3cf;border-radius:16px;padding:14px;box-shadow:0 3px 10px #00000014, inset 0 0 0 1.5px #e7ddc6;">
@@ -1258,6 +1336,14 @@
 <div id="modalWrap"><div id="modal"></div></div>
 <div id="cardRevealOverlay" class="modal-overlay"><div id="cardRevealCard" class="modal-card"></div></div>
 <div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
+
+<div id="statsOverlay">
+  <div class="stats-card">
+    <div class="stats-title">📊 Abend-Statistik</div>
+    <div class="stats-list" id="statsList"></div>
+    <button id="statsCloseBtn" class="btn green">Nochmal spielen</button>
+  </div>
+</div>
 
 <div id="sneakOverlay">
   <div class="sneak-card">
@@ -1545,7 +1631,7 @@ const FIELDS = [
   {n:"Leonrodplatz",        e:"🚏", t:T.EVENT,   z:5},
   {n:"Brunnen",             e:"⛲", t:T.FIXED,   z:5, ox:18, oy:38, d:"Erfrischung direkt aus dem Brunnen – hol dir ein taktisches Zwischenwasser."},
   {n:"Taj Mahal",           e:"🍛", t:T.TAJMAHAL, z:5, ox:20, oy:30},
-  {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5},
+  {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5, ox:40, oy:52},
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
   {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", negative:true, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
@@ -1841,6 +1927,7 @@ $("#startBtn").onclick = async ()=>{
     icon: TOKEN_ICONS[parseInt(r.dataset.colorIdx,10)||0], color: PLAYER_COLORS[(parseInt(r.dataset.colorIdx,10)||0) % PLAYER_COLORS.length],
     pos:0, skip:0, scooter:false,
     sips:0, wishUsedThisTurn:false, extraDie:false,
+    stats:{totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0},
     isBot: r.dataset.bot === "1",
   }));
   if(players.length<2) return;
@@ -1876,6 +1963,16 @@ function tilePos(i){
   const f = FIELDS[i];
   if(f){ x += f.ox||0; y += f.oy||0; }
   return {x, y};
+}
+/* Kurzer Ring-Puls an der Kachel, auf der ein Spieler soeben zur Ruhe
+   gekommen ist (Ende von moveSteps()/teleport()) – rein optisches Feedback. */
+function showLandingImpact(pos){
+  const {x,y} = tilePos(pos);
+  const el = document.createElement("div");
+  el.className = "landing-impact";
+  el.style.left = (x+48)+"px"; el.style.top = (y+48)+"px";
+  board.appendChild(el);
+  setTimeout(()=>el.remove(), 550);
 }
 function buildBoard(){
   const w = COLS*TILE, h = ROWS*TILE;
@@ -2210,10 +2307,73 @@ $("#sipEditNextPlayer").addEventListener("click", ()=>{
 });
 function addSips(idx, amount){
   if(!players[idx] || !amount) return;
+  if(!players[idx].stats) players[idx].stats = {totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0};
+  const before = players[idx].sips;
   players[idx].sips = Math.max(0, players[idx].sips + amount);
+  const after = players[idx].sips;
+  if(amount>0) players[idx].stats.totalSips += amount;
   updateSipsUI();
+  if(amount>0){
+    const fill = document.getElementById("sipFill-"+idx);
+    if(fill){ fill.classList.remove("bounce"); void fill.offsetWidth; fill.classList.add("bounce"); }
+    if((before<20 && after>=20) || (before<25 && after>=25)) spawnSipBurst(idx);
+  }
   saveGame();
 }
+/* Goldener Partikel-Burst rund um die Schlücke-Leiste eines Spielers,
+   ausgelöst beim Überschreiten der 20er/25er-Wunsch-Schwelle. */
+function spawnSipBurst(idx){
+  const bar = document.getElementById("sipBar-"+idx);
+  if(!bar) return;
+  const rect = bar.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  for(let i=0;i<12;i++){
+    const dot = document.createElement("div");
+    dot.className = "sip-burst";
+    const angle = Math.random()*Math.PI*2;
+    const dist = 26 + Math.random()*38;
+    dot.style.setProperty("--bx", (Math.cos(angle)*dist)+"px");
+    dot.style.setProperty("--by", (Math.sin(angle)*dist)+"px");
+    dot.style.left = cx+"px"; dot.style.top = cy+"px";
+    document.body.appendChild(dot);
+    setTimeout(()=>dot.remove(), 750);
+  }
+}
+/* Lässt eine Minispiel-Overlay-Karte optisch aus der Kachel herauszoomen,
+   auf der das Minispiel ausgelöst wurde, statt generisch in der Bildschirm-
+   mitte aufzuploppen. Wird per Inline-Style gesetzt, damit es die normale
+   popIn-Animation der jeweiligen Karten-Klasse zuverlässig überschreibt. */
+function zoomOverlayFromField(overlay, pos){
+  const card = overlay.firstElementChild;
+  if(!card) return;
+  const tileEl = document.getElementById("tile-"+pos);
+  let ox = 0, oy = 0;
+  if(tileEl){
+    const tr = tileEl.getBoundingClientRect();
+    ox = tr.left + tr.width/2 - window.innerWidth/2;
+    oy = tr.top + tr.height/2 - window.innerHeight/2;
+  }
+  card.style.setProperty("--zoom-ox", ox+"px");
+  card.style.setProperty("--zoom-oy", oy+"px");
+  card.style.animation = "none";
+  void card.offsetWidth;
+  card.style.animation = "zoomFromTile .5s cubic-bezier(.2,1.3,.3,1)";
+}
+/* Button-Press-Ripple: ein Klick/Tap auf .btn oder #rollBtn erzeugt einen
+   kurzen, sich ausbreitenden Kreis an der Tap-Position. */
+document.addEventListener("pointerdown", e=>{
+  const btn = e.target.closest(".btn, #rollBtn");
+  if(!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement("span");
+  ripple.className = "btn-ripple";
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = size+"px";
+  ripple.style.left = (e.clientX - rect.left - size/2)+"px";
+  ripple.style.top = (e.clientY - rect.top - size/2)+"px";
+  btn.appendChild(ripple);
+  setTimeout(()=>ripple.remove(), 500);
+});
 function parseDistributeAmount(text){
   if(!text) return null;
   const m = text.match(/verteile\s+(\d+)\s*Schl(?:uck|ücke)/i);
@@ -2501,6 +2661,7 @@ function playSneakGame(p, val){
     alertEl.classList.remove("show"); card.classList.remove("flash");
     setPhase("weg");
     holdBtn.addEventListener("pointerdown", handleTap);
+    zoomOverlayFromField(overlay, p.pos);
     overlay.style.display = "flex";
     rafId = requestAnimationFrame(tick);
     scheduleNext();
@@ -2667,6 +2828,7 @@ function playBottlePuzzleGame(p, val){
     statusEl.textContent = "Baue die Bierflasche zusammen, bevor die Zeit abläuft!";
     timerFillEl.style.width = "100%"; timerFillEl.classList.remove("critical");
     timerLabelEl.textContent = TIME_LIMIT+"s";
+    zoomOverlayFromField(overlay, p.pos);
     overlay.style.display = "flex";
     rafId = requestAnimationFrame(tick);
   });
@@ -2865,6 +3027,7 @@ function playDartsGame(p, val){
     }
 
     (async ()=>{
+      zoomOverlayFromField(overlay, p.pos);
       overlay.style.display = "flex";
       refreshScores();
       for(let round=1; round<=3; round++){
@@ -3045,6 +3208,7 @@ function playNamenGame(p, pi){
     }
 
     (async ()=>{
+      zoomOverlayFromField(overlay, p.pos);
       overlay.style.display = "flex";
       errorCounterEl.textContent = "";
       statusEl.textContent = "Du lernst gleich eine neue Gruppe kennen…";
@@ -3075,7 +3239,7 @@ function playNamenGame(p, pi){
 }
 
 /* ---------- Minispiel „Wühlmaus-Alarm" (Whac-a-Mole) ----------
-   3x3 Löcher, eine Maus poppt zufällig hoch – 8 Treffer innerhalb
+   3x3 Löcher, eine Maus poppt zufällig hoch – 5 Treffer innerhalb
    von 30 Sekunden nötig, sonst verloren. Sieg/Niederlage bestimmt
    wie üblich vor/zurück um die gewürfelte Zahl. */
 function playWhacAMole(p, val){
@@ -3087,7 +3251,7 @@ function playWhacAMole(p, val){
     const timerFillEl = $("#wamTimerFill");
     const timerLabelEl = $("#wamTimerLabel");
     const statusEl = $("#wamStatus");
-    const NEEDED_HITS = 8, TIME_LIMIT = 20, HOLE_COUNT = 9, MOLE_EMOJI = "🐭";
+    const NEEDED_HITS = 5, TIME_LIMIT = 20, HOLE_COUNT = 9, MOLE_EMOJI = "🐭";
 
     let holes = [], hits = 0, finished = false;
     let startTs = null, rafId = null, spawnTimer = null;
@@ -3127,7 +3291,7 @@ function playWhacAMole(p, val){
       const holeObj = pick.h, idx = pick.i;
       holeObj.up = true;
       holeObj.el.classList.add("up");
-      const upDuration = 380 + Math.random()*220;
+      const upDuration = 450 + Math.random()*350;
       const t = setTimeout(()=>{
         if(holeObj.up){ holeObj.up = false; holeObj.el.classList.remove("up"); }
         activeMoleTimers.delete(idx);
@@ -3192,6 +3356,7 @@ function playWhacAMole(p, val){
     hitLabelEl.textContent = `Treffer: 0/${NEEDED_HITS}`;
     updateTimerUI(TIME_LIMIT*1000);
     statusEl.textContent = "Tippe die Mäuse an, sobald sie hochkommen!";
+    zoomOverlayFromField(overlay, p.pos);
     overlay.style.display = "flex";
     scheduleSpawn();
     rafId = requestAnimationFrame(tick);
@@ -3380,6 +3545,7 @@ function playBingoGame(p, val){
     checkOverlay.classList.remove("show");
     buildGrid();
     updateCallBtn();
+    zoomOverlayFromField(overlay, p.pos);
     overlay.style.display = "flex";
     runIntro();
   });
@@ -3496,6 +3662,7 @@ function playWetteGame(p, pi){
     tickerEl.classList.remove("show");
     tickerEl.innerHTML = "";
     resultEl.textContent = "";
+    zoomOverlayFromField(overlay, p.pos);
     overlay.style.display = "flex";
 
     let selectedPick = null, selectedOdds = null;
@@ -3615,7 +3782,7 @@ const MINIGAMES = [
   {key:"flaschenpuzzle", name:"Flaschenpuzzle", emoji:"🧩", run: playBottlePuzzleGame,
     rules:"Tippe verdeckte Teile an, um sie aufzudecken, und ziehe per Drag die 6 richtigen Bierflaschen-Teile in die passenden Slots. Wein- und Wasserflaschen-Teile sind Ablenkung. Alle 6 richtigen in 20 Sekunden platzieren."},
   {key:"wuehlmaus", name:"Wühlmaus-Alarm", emoji:"🔨", run: playWhacAMole,
-    rules:"Tippe auf ein Loch, sobald eine Maus daraus hochkommt. Du brauchst 8 Treffer in 20 Sekunden."},
+    rules:"Tippe auf ein Loch, sobald eine Maus daraus hochkommt. Du brauchst 5 Treffer in 20 Sekunden."},
   {key:"bingo", name:"Senioren-Bingo", emoji:"🎱", run: playBingoGame, lossSips:3,
     rules:"Du bekommst eine Bingokarte mit 16 Zahlen. Der Spielleiter ruft alle 4 Sekunden eine Zahl auf – tippe deine aufgerufenen Zahlen an, um sie zu stempeln. Hast du 4 in einer Reihe, Spalte oder Diagonale, drücke BINGO. Ruft aber jemand anderes vor dir Bingo, hast du verloren und trinkst 3 Frustschlücke."},
 ];
@@ -3853,30 +4020,84 @@ function throwRain(){
    von Vorrücken durch Ereigniskarten, Minispiel-Gewinnen oder Belohnungs-
    Teleports. moveSteps() und teleport() rufen sie automatisch auf,
    sobald ein Spieler auf dem Zielfeld landet. */
+/* ---------- Abend-Statistik (nach Spielende, optional einsehbar) ----------
+   Zeigt lebenslange (nicht durch Wunsch-Einlösung zurückgesetzte) Werte
+   pro Spieler als kleine Balken-Übersicht, sortiert je Kategorie. */
+const STATS_DEFS = [
+  {key:"minigamesWon", icon:"🏆", label:"Meiste Minispiele gewonnen",
+    format:p => `${(p.stats&&p.stats.minigamesWon)||0} gewonnen`},
+  {key:"timesSentBack", icon:"↩️", label:"Am häufigsten zurückgeschickt",
+    format:p => `${(p.stats&&p.stats.timesSentBack)||0}× · ${(p.stats&&p.stats.fieldsBack)||0} Felder gesamt`},
+  {key:"totalSips", icon:"🍺", label:"Am meisten getrunken",
+    format:p => `${(p.stats&&p.stats.totalSips)||0} Schlücke`},
+  {key:"fieldsForward", icon:"⏩", label:"Meiste Felder übersprungen",
+    format:p => `${(p.stats&&p.stats.fieldsForward)||0} Felder`},
+  {key:"badLuck", icon:"🌧️", label:"Pechvogel des Abends",
+    format:p => `${(p.stats&&p.stats.badLuck)||0}× Pech gehabt`},
+];
+function renderStatsOverlay(){
+  const listEl = document.getElementById("statsList");
+  listEl.innerHTML = STATS_DEFS.map(def=>{
+    const maxVal = Math.max(1, ...players.map(p=> (p.stats && p.stats[def.key]) || 0));
+    const sorted = [...players].sort((a,b)=> ((b.stats&&b.stats[def.key])||0) - ((a.stats&&a.stats[def.key])||0));
+    const rows = sorted.map((p,idx)=>{
+      const val = (p.stats && p.stats[def.key]) || 0;
+      const pct = Math.max(6, Math.round(val/maxVal*100));
+      const crown = idx===0 && val>0 ? "👑 " : "";
+      return `<div class="stats-row">
+        <div class="stats-row-name">${crown}${p.icon} ${p.name}</div>
+        <div class="stats-bar-track"><div class="stats-bar-fill" style="width:${pct}%;background:${p.color}"></div></div>
+        <div class="stats-row-val">${def.format(p)}</div>
+      </div>`;
+    }).join("");
+    return `<div class="stats-block">
+      <div class="stats-block-title">${def.icon} ${def.label}</div>
+      ${rows}
+    </div>`;
+  }).join("");
+  document.getElementById("statsOverlay").style.display = "flex";
+}
 async function triggerWin(pi){
   if(gameOver) return;
   gameOver = true;
   const p = players[pi];
   throwConfetti();
   clearSavedGame();
-  await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
+  const choice = await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
     title:`${p.name} ist auf der geilen Party!`,
     text:"Polnischer geglückt – Alle anderen gehen traurig nach Hause und trinken aus Frust 5 Schlücke!",
-    buttons:[{label:"Nochmal spielen", cls:"green", value:1}]});
+    buttons:[
+      {label:"📊 Statistik", cls:"gray", value:"stats"},
+      {label:"Nochmal spielen", cls:"green", value:"restart"},
+    ]});
+  if(choice==="stats"){
+    renderStatsOverlay();
+    await new Promise(resolve=>{
+      document.getElementById("statsCloseBtn").onclick = resolve;
+    });
+  }
   location.reload();
 }
-async function moveSteps(pi, steps){
+async function moveSteps(pi, steps, trackStats=true){
   const p = players[pi];
+  if(!p.stats) p.stats = {totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0};
   const dir = steps>0 ? 1 : -1;
   let remaining = Math.abs(steps);
+  let moved = 0;
   while(remaining>0){
     if(dir>0 && p.pos===FIELDS.length-1) break;
     if(dir<0 && p.pos===0) break;
     p.pos += dir;
     remaining--;
+    moved++;
     renderTokens(pi); focusOn(p.pos); updateHud();
     await wait(400);
   }
+  if(trackStats && moved>0){
+    if(dir>0) p.stats.fieldsForward += moved;
+    else { p.stats.fieldsBack += moved; p.stats.timesSentBack++; }
+  }
+  showLandingImpact(p.pos);
   if(!gameOver && FIELDS[p.pos].t===T.GOAL){
     await triggerWin(pi);
   }
@@ -3886,6 +4107,7 @@ async function teleport(pi, target){
   p.pos = target;
   renderTokens(pi); focusOn(p.pos, true); updateHud();
   await wait(650);
+  showLandingImpact(p.pos);
   if(!gameOver && FIELDS[p.pos].t===T.GOAL){
     await triggerWin(pi);
   }
@@ -3922,6 +4144,8 @@ async function handleSpecialCard(special, pi){
       buttons: others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i}))});
     players[targetIdx].skip = 2;
     await teleport(targetIdx, fieldIndexByKey("polizeistation"));
+    if(!players[targetIdx].stats) players[targetIdx].stats = {totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0};
+    players[targetIdx].stats.badLuck++;
     setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
   } else if(special==="storm"){
     setLog("⛈️ Unwetter zieht auf – alle müssen 2 Felder zurück …");
@@ -4018,6 +4242,7 @@ async function botPlayNamen(p, pi){
   await showModal({emoji:"🧑‍🤝‍🧑", tag:"ERGEBNIS", tagCol:"linear-gradient(140deg,#5ec9e8,#2472ad)",
     title:"Namen merken", text: distributeMsg || resultText,
     buttons:[{label:"Weiter", cls:"green", value:1}]});
+  return errorCount;
 }
 async function botPlayWette(p, pi){
   await showModal({emoji:"🎰", tag:"BOT", tagCol:"linear-gradient(140deg,#3ddc97,#0f7a41)",
@@ -4039,6 +4264,7 @@ async function botPlayWette(p, pi){
   await showModal({emoji:"🎰", tag:"ERGEBNIS", tagCol:"linear-gradient(140deg,#3ddc97,#0f7a41)",
     title:"Tipico-Wette", text: distributeMsg || resultText,
     buttons:[{label:"Weiter", cls:"green", value:1}]});
+  return correct;
 }
 
 async function resolveField(pi){
@@ -4076,6 +4302,8 @@ async function resolveField(pi){
         const oIdx = players.indexOf(o);
         await moveSteps(oIdx, -2);
         addSips(oIdx, 3);
+        if(!players[oIdx].stats) players[oIdx].stats = {totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0};
+        players[oIdx].stats.badLuck++;
       }
       const msg = single
         ? `${namesList} verläuft sich – geht 2 Felder zurück und trinkt 3 Frustschlücke.`
@@ -4118,6 +4346,7 @@ async function resolveField(pi){
       if(f.negative){
         if(Math.random() < 0.5){
           await teleport(pi, fieldIndexByKey(f.tp));
+          p.stats.badLuck++;
         } else {
           const luckyText = "Eine ältere Dame blockiert die Rolltreppe und du verpasst deine U-Bahn. Zum Glück wäre sie ohnehin in die falsche Richtung gefahren – trinke 2 freudige Schlücke.";
           await showModal({emoji:"👵", tag:meta.tag, tagCol:meta.col,
@@ -4134,6 +4363,7 @@ async function resolveField(pi){
             title:"Verpasst!", text:missedText, buttons:[{label:"Mist!", value:1}]});
           addSips(pi, 2);
           setLog(`${p.icon} ${p.name} verpasst die U-Bahn – trinkt 2 Frustschlücke und geht zu Fuß weiter.`);
+          p.stats.badLuck++;
         }
       }
       break;
@@ -4177,6 +4407,7 @@ async function resolveField(pi){
               text:`Die Spicy Chicken McNuggets waren zu scharf – ${p.name} trinkt 3 Schlücke dagegen.`,
               buttons:[{label:"Puh", value:1}]});
           }
+          p.stats.badLuck++;
         }
       } else {
         setLog(`${p.icon} ${p.name} lässt McDonald's links liegen.`);
@@ -4213,6 +4444,7 @@ async function resolveField(pi){
           neg.apply();
           await showModal({emoji:neg.emoji, tag:meta.tag, tagCol:meta.col, title:neg.title,
             text:neg.text, buttons:[{label:"Autsch", value:1}]});
+          p.stats.badLuck++;
         }
       } else {
         setLog(`${p.icon} ${p.name} lässt das Taj Mahal links liegen.`);
@@ -4239,6 +4471,7 @@ async function resolveField(pi){
           buttons:[{label:"OK", cls: positive?"green":"gray", value:1}]});
         setLog(`${p.icon} ${p.name}: ${outcome.text}`);
         await applyOutcome(outcome, pi);
+        if(!positive) p.stats.badLuck++;
       }
       break;
     }
@@ -4285,6 +4518,7 @@ async function resolveField(pi){
         await syncTransient({miniGameBanner:null});
       }
       await moveSteps(pi, won ? val : -val);
+      if(won) p.stats.minigamesWon++; else p.stats.badLuck++;
       if(!won && chosen.lossSips){
         addSips(pi, chosen.lossSips);
         setLog(`${p.icon} ${p.name} hat verloren und trinkt ${chosen.lossSips} Frustschlücke.`);
@@ -4306,32 +4540,37 @@ async function resolveField(pi){
         await syncTransient({miniGameBanner:null});
       }
       await moveSteps(pi, won ? val : -val);
+      if(won) p.stats.minigamesWon++; else p.stats.badLuck++;
       break;
     }
     case T.NAMEN: {
       setLog(`🧑‍🤝‍🧑 ${p.icon} ${p.name} hat spontan neue Freunde kennengelernt …`);
+      let namenErrCount;
       if(p.isBot){
-        await botPlayNamen(p, pi);
+        namenErrCount = await botPlayNamen(p, pi);
       } else {
         await showMiniGameIntro("🧑‍🤝‍🧑", "Namen merken",
           "Du hast spontan neue Freunde kennengelernt. In der Lernphase stellt sich nacheinander jede der 6 Personen 3 Sekunden lang vor – merke dir die Namen. Danach fragt jede Person in zufälliger Reihenfolge „Wie heiße ich?“: Namen ins Feld tippen und mit OK oder Enter bestätigen.");
         await syncTransient({miniGameBanner:{emoji:"🧑‍🤝‍🧑", name:"Namen merken"}});
-        await playNamenGame(p, pi);
+        namenErrCount = await playNamenGame(p, pi);
         await syncTransient({miniGameBanner:null});
       }
+      if(namenErrCount===0) p.stats.minigamesWon++; else p.stats.badLuck++;
       break;
     }
     case T.WETTE: {
       setLog(`🎰 ${p.icon} ${p.name} tippt bei Tipico …`);
+      let wetteCorrect;
       if(p.isBot){
-        await botPlayWette(p, pi);
+        wetteCorrect = await botPlayWette(p, pi);
       } else {
         await showMiniGameIntro("🎰", "Tipico-Wette",
           "Tippe 1, X oder 2 an, um deinen Tipp zu setzen. Stelle danach mit +/- deinen Einsatz ein und tippe auf „Wette bestätigen“. Bei richtigem Tipp verteilst du Einsatz × Quote (gerundet), bei falschem trinkst du deinen Einsatz selbst.");
         await syncTransient({miniGameBanner:{emoji:"🎰", name:"Tipico-Wette"}});
-        await playWetteGame(p, pi);
+        wetteCorrect = await playWetteGame(p, pi);
         await syncTransient({miniGameBanner:null});
       }
+      if(wetteCorrect) p.stats.minigamesWon++; else p.stats.badLuck++;
       break;
     }
   }
@@ -4366,6 +4605,7 @@ async function performRoll(){
           text:bustedText,
           buttons:[{label:"Mist!", value:1}]});
         applySipsFromText(bustedText, current);
+        p.stats.badLuck++;
         await teleport(current, fieldIndexByKey("polizeistation"));
         await endTurn(); return;
       } else if(r < 0.35){
@@ -4375,6 +4615,7 @@ async function performRoll(){
           buttons:[{label:"Autsch", value:1}]});
         applySipsFromText(unfallText, current);
         p.skip = 1;
+        p.stats.badLuck++;
         await endTurn(); return;
       } else {
         setLog(`🛴 Freie Fahrt! ${p.name} zieht ${sum} Felder.`);
@@ -4382,7 +4623,7 @@ async function performRoll(){
       }
     }
 
-    await moveSteps(current, sum);
+    await moveSteps(current, sum, false);
     await resolveField(current);
     if(!gameOver) await endTurn();
   } catch(err){
