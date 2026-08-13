@@ -216,7 +216,17 @@
     box-shadow:0 3px 8px #0007, 0 0 0 2.5px var(--gold);
   }
   #hud .p-name{font-weight:800;font-size:16px;color:#fdf7ea;letter-spacing:.2px;}
-  #hud .p-sub{font-size:10.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#ffcf4d;}
+  #hud .p-progress{
+    width:130px;height:7px;border-radius:999px;margin-top:5px;
+    background:rgba(255,255,255,.14);
+    box-shadow:inset 0 0 0 1px #ffffff20;
+    overflow:hidden;
+  }
+  #hud .p-progress-fill{
+    height:100%;border-radius:999px;
+    background:linear-gradient(90deg,#ffcf4d,#ff8a3c);
+    transition:width .4s ease;
+  }
 
   /* ---------- Schlücke-Anzeige & Wunsch ---------- */
   #sipsPanel{
@@ -1155,6 +1165,93 @@
   .stats-row-val{flex:0 0 auto;font-size:10.5px;font-weight:800;color:#c9bce8;white-space:nowrap;}
   #statsCloseBtn{width:100%;margin-top:6px;}
 
+  /* ---------- Minispiel „Nachtimbiss" (Der einzige genießbare Döner) ---------- */
+  #doenerOverlay{
+    position:fixed;inset:0;z-index:53;display:none;
+    align-items:center;justify-content:center;padding:18px;
+    background:rgba(10,14,30,.78);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .doener-card{
+    position:relative;width:min(440px,94vw);
+    background:linear-gradient(178deg,#241a10 0%,#140d08 100%);
+    border-radius:26px;padding:22px 18px 24px;text-align:center;
+    color:#fdf7ea;border:1.5px solid #ffffff18;
+    box-shadow:0 24px 60px #000c, inset 0 2px 0 #ffffff12;
+    animation:popIn .4s cubic-bezier(.2,1.45,.4,1);
+  }
+  .doener-title{font-size:20px;font-weight:900;letter-spacing:-.2px;}
+  .doener-status{
+    margin-top:8px;font-size:13.5px;font-weight:800;min-height:38px;
+    display:flex;align-items:center;justify-content:center;line-height:1.35;padding:0 6px;
+  }
+  .doener-status.warn{ color:#ff9a8a; }
+  .doener-status.good{ color:#8affc7; }
+  .doener-timer{
+    margin-top:8px;height:8px;border-radius:999px;background:#00000055;
+    overflow:hidden;box-shadow:inset 0 2px 4px #0008;
+  }
+  .doener-timer-fill{height:100%;width:100%;background:linear-gradient(90deg,#3ddc97,#1d9e66);transition:width .1s linear;}
+  .doener-timer-fill.critical{background:linear-gradient(90deg,#ff6a54,#c22f14);}
+  .doener-timer-label{margin-top:4px;font-size:10.5px;font-weight:800;color:#e0b98a;min-height:14px;}
+  .doener-stage{
+    position:relative;margin-top:18px;height:150px;
+    background:linear-gradient(180deg,#3a2818,#221609);
+    border-radius:18px;
+    box-shadow:inset 0 0 0 2px #ffffff10, inset 0 10px 24px #00000055;
+    overflow:hidden;
+  }
+  .doener-row{
+    position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    width:462px; max-width:100%; height:100px;
+  }
+  .package{
+    position:absolute; top:0; width:66px; height:100px;
+    transition:left .5s cubic-bezier(.4,0,.2,1);
+    cursor:pointer;
+  }
+  .package .wrap{
+    position:relative; width:100%; height:100%;
+    border-radius:14px 14px 20px 20px;
+    background:linear-gradient(165deg,#f4e4c8 0%,#dcc296 100%);
+    box-shadow:0 6px 0 #a8875a, 0 10px 18px #0006, inset 0 2px 0 #fffdf6c0;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    overflow:hidden;
+    transition:background .35s ease, box-shadow .35s ease;
+  }
+  .package .twist{
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:34px; height:18px; border-radius:10px;
+    background:linear-gradient(165deg,#f4e4c8,#c9aa78);
+    box-shadow:0 3px 0 #a8875a;
+  }
+  .package .emoji{ font-size:26px; margin-bottom:10px; filter:drop-shadow(0 3px 3px #0006); }
+  .package.hop{ animation:pkgHop .5s ease-in-out; }
+  @keyframes pkgHop{
+    0%,100%{ transform:translateY(0) scale(1) rotate(0deg); }
+    50%{ transform:translateY(-42px) scale(1.1) rotate(-6deg); }
+  }
+  .package.flip-turn .wrap{ animation:flipTurn .62s ease-in-out; }
+  @keyframes flipTurn{
+    0%{ transform:scaleX(1); }
+    50%{ transform:scaleX(.04); }
+    100%{ transform:scaleX(1); }
+  }
+  .package.bad-reveal .wrap{
+    background:linear-gradient(165deg,#ff9a8a,#ff5a3c);
+    box-shadow:0 6px 0 #c22f14, 0 10px 18px #0006, inset 0 2px 0 #ffffffc0;
+  }
+  .package.correct-reveal .wrap{
+    background:linear-gradient(165deg,#8ff0b0,#3ddc97);
+    box-shadow:0 6px 0 #1d9e66, 0 10px 18px #0006, inset 0 2px 0 #ffffffc0, 0 0 26px #3ddc97cc;
+  }
+  .package.wrong-reveal .wrap{
+    background:linear-gradient(165deg,#ff9a8a,#ff5a3c);
+    box-shadow:0 6px 0 #c22f14, 0 10px 18px #0006, inset 0 2px 0 #ffffffc0;
+  }
+  .package.locked{ cursor:default; pointer-events:none; }
+
   /* ---------- Konfetti ---------- */
   #confetti{position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden;display:none;}
   #confetti i{
@@ -1341,7 +1438,7 @@
     <span class="p-dot" id="hudDot">🔴</span>
     <div>
       <div class="p-name" id="hudName">–</div>
-      <div class="p-sub" id="hudSub">ist am Zug</div>
+      <div class="p-progress"><div class="p-progress-fill" id="hudProgressFill"></div></div>
     </div>
   </div>
 </div>
@@ -1509,6 +1606,18 @@
   </div>
 </div>
 
+<div id="doenerOverlay">
+  <div class="doener-card">
+    <div class="doener-title">🥙 Nachtimbiss</div>
+    <div class="doener-status" id="doenerStatus">Merk dir gut, wo der genießbare liegt …</div>
+    <div class="doener-timer"><div class="doener-timer-fill" id="doenerTimerFill"></div></div>
+    <div class="doener-timer-label" id="doenerTimerLabel"></div>
+    <div class="doener-stage">
+      <div class="doener-row" id="doenerRow"></div>
+    </div>
+  </div>
+</div>
+
 <div id="wetteOverlay">
   <div class="wette-card">
     <div class="wette-title">🎰 Tipico-Wette</div>
@@ -1563,7 +1672,7 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria", TANKE:"tanke" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria", TANKE:"tanke", DOENER:"doener" };
 
 /* Geteilte 50/50-Daten fürs Tanke-Feld (zwei Instanzen in Zone 4 und 5,
    beide identisch). Erst Ja/Nein-Wahl (wie Baustelle/Café Frischhut),
@@ -1612,7 +1721,7 @@ const FIELDS = [
     ]},
   {n:"Stachus",             e:"⛲", t:T.EVENT,   z:2},
   {n:"Giesinger Stehausschank",e:"🍺",t:T.EVENT, z:2},
-  {n:"Dönermann",           e:"🥙", t:T.FIXED,   z:2, d:"Kurze Verschnaufpause beim Dönermann deines Vertrauens – setze eine Runde aus.", skip:1},
+  {n:"Dönermann",           e:"🥙", t:T.DOENER,   z:2, d:"Kurzer Stopp beim Dönermann deines Vertrauens."},
   {n:"Polizeistation",      e:"🚓", t:T.EVENT,   z:2, key:"polizeistation"},
   {n:"Tipico",              e:"🎰", t:T.WETTE,   z:2, d:"Du schaust schnell bei Tipico vorbei und tippst auf ein Bundesliga-Spiel."},
   {n:"Sendlinger Tor",      e:"🏰", t:T.TELEPORT,z:2, tp:"universitaet", key:"sendlinger-tor", d:"Die U-Bahn fährt gerade ein! Sie bringt dich zur Universität."},
@@ -1874,6 +1983,7 @@ const TYPE_META = {
   bavaria:{tag:"BAVARIAPARK",    col:"linear-gradient(140deg,#a8d98a,#4a7a2f)"},
   wette:   {tag:"TIPICO-WETTE",  col:"linear-gradient(140deg,#0f7a41,#0a4d29)"},
   tanke:   {tag:"TANKE",         col:"linear-gradient(140deg,#ffb020,#b8720a)"},
+  doener:  {tag:"NACHTIMBISS",   col:"linear-gradient(140deg,#e0b88a,#8a5a2f)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
 const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
@@ -2280,8 +2390,8 @@ function updateHud(){
   const p = players[current];
   $("#hudDot").textContent = p.icon;
   $("#hudName").textContent = p.name;
-  const f = FIELDS[p.pos];
-  $("#hudSub").textContent = p.scooter ? "E-Scooter 🛴" : (ZONE_NAMES[f.z] || "am Zug");
+  const progressPct = Math.min(100, (p.pos/(FIELDS.length-1))*100);
+  $("#hudProgressFill").style.width = progressPct+"%";
   scooterTag.style.display = p.scooter ? "block" : "none";
   const at = document.getElementById("tile-"+p.pos);
   if(activeTileEl && activeTileEl!==at) activeTileEl.classList.remove("active-tile");
@@ -3374,7 +3484,7 @@ function playWhacAMole(p, val){
       const holeObj = pick.h, idx = pick.i;
       holeObj.up = true;
       holeObj.el.classList.add("up");
-      const upDuration = 450 + Math.random()*350;
+      const upDuration = 300 + Math.random()*200;
       const t = setTimeout(()=>{
         if(holeObj.up){ holeObj.up = false; holeObj.el.classList.remove("up"); }
         activeMoleTimers.delete(idx);
@@ -3443,6 +3553,207 @@ function playWhacAMole(p, val){
     overlay.style.display = "flex";
     scheduleSpawn();
     rafId = requestAnimationFrame(tick);
+  });
+}
+
+/* ---------- Minispiel „Nachtimbiss" (Feld: Dönermann) ----------
+   Hütchenspiel-Prinzip: 5 Döner-Tüten, 4 verdorben + 1 genießbar. Erst
+   werden alle gleichzeitig in ihrem wahren Zustand gezeigt, dann drehen
+   sich nur die verdorbenen zu ununterscheidbaren Tüten um, danach wird
+   wild gemischt (inkl. Fake-Hüpfern als optische Täuschung) und am Ende
+   muss die vermutete Position der genießbaren Tüte angetippt werden. */
+function playDoenerGame(p){
+  return new Promise(res=>{
+    const overlay = $("#doenerOverlay");
+    const statusEl = $("#doenerStatus");
+    const timerFillEl = $("#doenerTimerFill");
+    const timerLabelEl = $("#doenerTimerLabel");
+    const rowEl = $("#doenerRow");
+    const SLOT_WIDTH = 66, SLOT_GAP = 14, SLOT_COUNT = 5;
+    const PICK_TIME_LIMIT = 6;
+
+    let slotContents = [], pkgEls = {}, goodId = 0, locked = true;
+    let pickDeadline = null, pickRafId = null;
+
+    function slotLeft(slotIdx){ return slotIdx * (SLOT_WIDTH + SLOT_GAP); }
+
+    function buildPackages(){
+      rowEl.innerHTML = "";
+      pkgEls = {};
+      slotContents = Array.from({length: SLOT_COUNT}, (_,i)=>i);
+      goodId = Math.floor(Math.random()*SLOT_COUNT);
+      const totalWidth = SLOT_COUNT*SLOT_WIDTH + (SLOT_COUNT-1)*SLOT_GAP;
+      rowEl.style.width = totalWidth+"px";
+      for(let id=0; id<SLOT_COUNT; id++){
+        const el = document.createElement("div");
+        el.className = "package";
+        el.style.left = slotLeft(id)+"px";
+        el.innerHTML = `<div class="wrap"><div class="twist"></div><div class="emoji">🥙</div></div>`;
+        el.addEventListener("click", ()=> onPackageClick(id));
+        rowEl.appendChild(el);
+        pkgEls[id] = el;
+      }
+    }
+
+    async function revealPhase(){
+      locked = true;
+      statusEl.className = "doener-status warn";
+      statusEl.textContent = "🤮 Vier davon sind verdorben – nur einer ist genießbar. Merk dir, welcher!";
+      for(let id=0; id<SLOT_COUNT; id++){
+        const el = pkgEls[id];
+        if(id === goodId){
+          el.querySelector(".emoji").textContent = "🥙";
+        } else {
+          el.classList.add("bad-reveal");
+          el.querySelector(".emoji").textContent = "🤮";
+        }
+      }
+      await wait(2900);
+      for(let id=0; id<SLOT_COUNT; id++){
+        if(id === goodId) continue;
+        const el = pkgEls[id];
+        el.classList.add("flip-turn");
+        setTimeout(()=>{
+          el.querySelector(".emoji").textContent = "🥙";
+          el.classList.remove("bad-reveal");
+        }, 300);
+        setTimeout(()=> el.classList.remove("flip-turn"), 640);
+      }
+      await wait(750);
+      statusEl.className = "doener-status";
+      statusEl.textContent = "Wird eingepackt und durcheinandergemischt …";
+      await wait(400);
+    }
+
+    function swapSlots(a, b, duration){
+      return new Promise(resolve=>{
+        const idA = slotContents[a], idB = slotContents[b];
+        const elA = pkgEls[idA], elB = pkgEls[idB];
+        const dur = duration || (260 + Math.random()*260);
+        elA.style.transitionDuration = dur+"ms";
+        elB.style.transitionDuration = dur+"ms";
+        elA.style.animationDuration = dur+"ms";
+        elB.style.animationDuration = dur+"ms";
+        elA.style.left = slotLeft(b)+"px";
+        elB.style.left = slotLeft(a)+"px";
+        elA.style.zIndex = 5; elB.style.zIndex = 4;
+        elA.classList.add("hop"); elB.classList.add("hop");
+        setTimeout(()=>{
+          elA.classList.remove("hop"); elB.classList.remove("hop");
+          elA.style.transitionDuration = ""; elB.style.transitionDuration = "";
+          elA.style.animationDuration = ""; elB.style.animationDuration = "";
+          slotContents[a] = idB; slotContents[b] = idA;
+          resolve();
+        }, dur);
+      });
+    }
+    async function fakeHop(){
+      const slot = Math.floor(Math.random()*SLOT_COUNT);
+      const el = pkgEls[slotContents[slot]];
+      const dur = 250 + Math.random()*220;
+      el.style.animationDuration = dur+"ms";
+      el.classList.add("hop");
+      await wait(dur);
+      el.classList.remove("hop");
+      el.style.animationDuration = "";
+    }
+    async function shufflePhase(){
+      statusEl.textContent = "🌀 Wo ist er jetzt …?";
+      const steps = 18;
+      for(let i=0;i<steps;i++){
+        const speed = 260 + Math.random()*260;
+        const baseGap = Math.max(40, 150 - i*7);
+        const gapAfter = Math.max(20, baseGap + Math.random()*60 - 20);
+        if(Math.random() < 0.2){
+          await fakeHop();
+        } else {
+          let a = Math.floor(Math.random()*SLOT_COUNT);
+          let b = Math.floor(Math.random()*SLOT_COUNT);
+          while(b===a) b = Math.floor(Math.random()*SLOT_COUNT);
+          if(Math.random() < 0.35){
+            let c = Math.floor(Math.random()*SLOT_COUNT);
+            let d = Math.floor(Math.random()*SLOT_COUNT);
+            while(d===c || c===a || c===b || d===a || d===b) { c = Math.floor(Math.random()*SLOT_COUNT); d = Math.floor(Math.random()*SLOT_COUNT); }
+            await Promise.all([swapSlots(a,b,speed), swapSlots(c,d,speed)]);
+          } else {
+            await swapSlots(a,b,speed);
+          }
+        }
+        await wait(gapAfter);
+      }
+    }
+
+    function startPickTimer(){
+      pickDeadline = performance.now() + PICK_TIME_LIMIT*1000;
+      function tick(ts){
+        if(locked) return;
+        const remaining = Math.max(0, (pickDeadline-ts)/1000);
+        timerFillEl.style.width = (remaining/PICK_TIME_LIMIT*100)+"%";
+        timerFillEl.classList.toggle("critical", remaining<=2);
+        timerLabelEl.textContent = remaining>0 ? Math.ceil(remaining)+"s zum Antippen" : "";
+        if(remaining<=0){ resolveRound(null); return; }
+        pickRafId = requestAnimationFrame(tick);
+      }
+      pickRafId = requestAnimationFrame(tick);
+    }
+    function stopPickTimer(){
+      cancelAnimationFrame(pickRafId);
+      timerFillEl.style.width = "0%";
+      timerLabelEl.textContent = "";
+    }
+
+    async function pickPhase(){
+      statusEl.className = "doener-status good";
+      statusEl.textContent = "👉 Welche Tüte ist jetzt der einzige genießbare?";
+      locked = false;
+      startPickTimer();
+    }
+
+    function onPackageClick(clickedId){
+      if(locked) return;
+      resolveRound(clickedId);
+    }
+
+    async function resolveRound(clickedId){
+      if(locked) return;
+      locked = true;
+      stopPickTimer();
+      Object.values(pkgEls).forEach(el=> el.classList.add("locked"));
+
+      const won = clickedId === goodId;
+      const goodEl = pkgEls[goodId];
+      goodEl.querySelector(".emoji").textContent = "🥙";
+      goodEl.classList.add("correct-reveal");
+      if(clickedId!==null && !won){
+        pkgEls[clickedId].querySelector(".emoji").textContent = "🤮";
+        pkgEls[clickedId].classList.add("wrong-reveal");
+      }
+      await wait(200);
+
+      if(clickedId===null){
+        statusEl.className = "doener-status warn";
+        statusEl.textContent = "⏱️ Zeit abgelaufen! Der genießbare war hier.";
+      } else if(won){
+        statusEl.className = "doener-status good";
+        statusEl.textContent = "🎉 Perfekt verfolgt!";
+      } else {
+        statusEl.className = "doener-status warn";
+        statusEl.textContent = "🤮 Falsch erwischt – das war ein verdorbener!";
+      }
+      await wait(1400);
+      overlay.style.display = "none";
+      res(won);
+    }
+
+    (async ()=>{
+      buildPackages();
+      zoomOverlayFromField(overlay, p.pos);
+      overlay.style.display = "flex";
+      await wait(300);
+      await revealPhase();
+      await shufflePhase();
+      await pickPhase();
+    })();
   });
 }
 
@@ -4707,6 +5018,38 @@ async function resolveField(pi){
         await syncTransient({miniGameBanner:null});
       }
       if(wetteCorrect) p.stats.minigamesWon++; else p.stats.badLuck++;
+      break;
+    }
+    case T.DOENER: {
+      setLog(`🥙 ${p.icon} ${p.name} hat Hunger und steuert den Dönermann an …`);
+      let won;
+      if(p.isBot){
+        await showModal({emoji:"🥙", tag:"BOT", tagCol:"linear-gradient(140deg,#3ddc97,#1d9e66)",
+          title:`${p.name} (Bot) spielt`, text:"Nachtimbiss läuft automatisch …",
+          buttons:[{label:"OK", cls:"green", value:1}]});
+        await wait(500);
+        won = Math.random() < 0.5;
+      } else {
+        await showMiniGameIntro("🥙", "Nachtimbiss",
+          "Dir fällt auf, dass der Dönermann es heute Nacht bei den meisten Dönern mit der Hygiene nicht so genau genommen hat. Nur einer sieht genießbar aus. Bleib aufmerksam und verlier den guten Döner nicht aus den Augen.");
+        await syncTransient({miniGameBanner:{emoji:"🥙", name:"Nachtimbiss"}});
+        won = await playDoenerGame(p);
+        await syncTransient({miniGameBanner:null});
+      }
+      if(won){
+        p.extraDie = true;
+        p.stats.minigamesWon++;
+        await showModal({emoji:"💪", tag:meta.tag, tagCol:meta.col, title:"Gestärkt!",
+          text:`${p.name} hat den einzigen genießbaren Döner erwischt und ist sehr gestärkt – beim nächsten Zug wird mit 2 Würfeln gewürfelt!`,
+          buttons:[{label:"Nice!", cls:"green", value:1}]});
+      } else {
+        p.skip = 1;
+        addSips(pi, 2);
+        p.stats.badLuck++;
+        await showModal({emoji:"🤢", tag:meta.tag, tagCol:meta.col, title:"Bauchkrämpfe!",
+          text:`${p.name} hat einen verdorbenen Döner erwischt – Bauchkrämpfe und Übelkeit! Trinke 2 Schlücke zur Schmerzlinderung und setze eine Runde aus.`,
+          buttons:[{label:"Autsch", value:1}]});
+      }
       break;
     }
   }
