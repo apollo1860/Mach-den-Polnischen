@@ -466,6 +466,9 @@
   .btn.green:active{box-shadow:0 1px 0 #10704a;}
   .btn.gray{background:linear-gradient(160deg,#a8a294,#7c766a 55%,#57524a);box-shadow:0 6px 0 #3c3830, 0 10px 18px #0006, inset 0 1.5px 0 #ffffff50;}
   .btn.gray:active{box-shadow:0 1px 0 #3c3830;}
+  /* ---------- Mehrzeilige Buttons (z.B. Spielerauswahl mit Fortschrittsanzeige) ---------- */
+  .btn.btn-multiline{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15;}
+  .btn-label-sub{font-size:10.5px;font-weight:700;opacity:.8;letter-spacing:.2px;}
   /* ---------- Button-Press-Ripple (auf .btn und #rollBtn, siehe globaler pointerdown-Listener) ---------- */
   .btn-ripple{
     position:absolute;border-radius:50%;background:rgba(255,255,255,.55);
@@ -1672,7 +1675,7 @@
    Neu: Nacht-Design, 3D-Würfel, Figuren-Hüpfer, Konfetti.
 ===================================================== */
 
-const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria", TANKE:"tanke", DOENER:"doener" };
+const T = { START:"start", EVENT:"event", FIXED:"fixed", TELEPORT:"teleport", SCOOTER:"scooter", GOAL:"goal", TAXI:"taxi", MINIGAME:"minigame", DARTS:"darts", NAMEN:"namen", WETTE:"wette", MCDONALDS:"mcdonalds", TAJMAHAL:"tajmahal", BAUSTELLE:"baustelle", CAFE:"cafe", KIOSK24:"kiosk24", BAVARIA:"bavaria", TANKE:"tanke", DOENER:"doener", CLUB:"club" };
 
 /* Geteilte 50/50-Daten fürs Tanke-Feld (zwei Instanzen in Zone 4 und 5,
    beide identisch). Erst Ja/Nein-Wahl (wie Baustelle/Café Frischhut),
@@ -1690,6 +1693,24 @@ const TANKE_NEGATIVE = [
 ];
 const TANKE_CHOICES = [
   {label:"Bier besorgen", type:"fifty", positive:TANKE_POSITIVE, negative:TANKE_NEGATIVE},
+  {label:"Ablehnen", type:"none"},
+];
+
+const P1_PROMPT = "Dein Handy klingelt – ein Kumpel ruft an. Er könnte dich kurz für ein Getränk in den Club reinholen.";
+const P1_POSITIVE = [
+  {text:"Ihr habt riesigen Spaß und quatscht über alte Zeiten – trinke 3 Schlücke.", sips:3},
+  {text:"Ein anderer Gast verrät dir eine Abkürzung – rücke 2 Felder vor.", mv:2},
+  {text:"Ein anderer Gast verrät dir eine unbekanntere Buslinie, die dich weiter voranbringt – rücke 3 Felder vor.", mv:3},
+  {text:"Dein Kumpel verrät dir eine kleine Abkürzung – rücke 1 Feld vor.", mv:1},
+];
+const P1_NEGATIVE = [
+  {text:"Du stehst ewig an der Bar an – setze 1 Runde aus.", skip:1},
+  {text:"Der Türsteher lässt dich doch nicht rein – setze 1 Runde aus und trinke 2 Frustschlücke.", skip:1, sips:2},
+  {text:"Du verquatschst dich und lässt dich auf einen weiteren Drink überreden – setze 1 Runde aus und trinke 3 Schlücke.", skip:1, sips:3},
+  {text:"Du verlässt den Club über einen falschen Ausgang – gehe 1 Feld zurück.", mv:-1},
+];
+const P1_CHOICES = [
+  {label:"Rein da! 🪩", type:"fifty", positive:P1_POSITIVE, negative:P1_NEGATIVE},
   {label:"Ablehnen", type:"none"},
 ];
 
@@ -1756,7 +1777,7 @@ const FIELDS = [
   {n:"Universität",         e:"🎓", t:T.TELEPORT,z:3, tp:"muenchner-freiheit", key:"universitaet", d:"Die U-Bahn an der Uni steht schon da! Sie bringt dich zur Münchner Freiheit."},
   {n:"Mono-Wiese",          e:"🧑‍🤝‍🧑", t:T.NAMEN,   z:3, d:"Du hast spontan neue Freunde kennengelernt, deren Namen du dir jetzt merken musst."},
   {n:"Parkbank",            e:"🪑", t:T.FIXED,   z:3, d:"Kurze Verschnaufpause auf der Parkbank – setze eine Runde aus.", skip:1},
-  {n:"P1",                  e:"🪩", t:T.FIXED,   z:3, d:"Ein Kumpel holt dich für einen Drink in den Club – trinke 3 Schlücke."},
+  {n:"P1",                  e:"🪩", t:T.CLUB,    z:3, prompt:P1_PROMPT, choices:P1_CHOICES},
   {n:"Siegestor",           e:"🏆", t:T.EVENT,   z:3},
   {n:"Kiosk",               e:"🏪", t:T.FIXED,   z:3, d:"Du lernst neue Freunde kennen und gibst allen einen aus – verteile 4 Schlücke."},
   {n:"Münchner Freiheit",   e:"🚇", t:T.TELEPORT,z:4, tp:"universitaet", key:"muenchner-freiheit", negative:true, d:"Falsche Rolltreppe! Die U-Bahn bringt dich zurück zur Universität."},
@@ -1984,6 +2005,7 @@ const TYPE_META = {
   wette:   {tag:"TIPICO-WETTE",  col:"linear-gradient(140deg,#0f7a41,#0a4d29)"},
   tanke:   {tag:"TANKE",         col:"linear-gradient(140deg,#ffb020,#b8720a)"},
   doener:  {tag:"NACHTIMBISS",   col:"linear-gradient(140deg,#e0b88a,#8a5a2f)"},
+  club:    {tag:"CLUB",          col:"linear-gradient(140deg,#e05fd0,#7a1f8a)"},
 };
 const ZONE_NAMES = {1:"Öde Party",2:"Innenstadt",3:"Englischer Garten",4:"Münchner Freiheit",5:"Neuhausen",6:"Sendling"};
 const ZONE_COLORS = {1:"#e88a6d",2:"#7da3d0",3:"#8fbe5f",4:"#b57fd0",5:"#e0a94f",6:"#5fbfa4"};
@@ -2716,7 +2738,12 @@ function showModal({emoji, tag, tagCol, title, text, buttons, botActor}){
     buttons.forEach(b=>{
       const el = document.createElement("button");
       el.className = "btn " + (b.cls||"");
-      el.textContent = b.label;
+      if(b.sub){
+        el.classList.add("btn-multiline");
+        el.innerHTML = `<span>${b.label}</span><span class="btn-label-sub">${b.sub}</span>`;
+      } else {
+        el.textContent = b.label;
+      }
       el.onclick = ()=>{ if(done) return; done=true; modalWrap.style.display="none"; res(b.value); };
       btnWrap.appendChild(el);
     });
@@ -3569,7 +3596,7 @@ function playDoenerGame(p){
     const timerFillEl = $("#doenerTimerFill");
     const timerLabelEl = $("#doenerTimerLabel");
     const rowEl = $("#doenerRow");
-    const SLOT_WIDTH = 66, SLOT_GAP = 14, SLOT_COUNT = 5;
+    const SLOT_WIDTH = 66, SLOT_GAP = 14, SLOT_COUNT = 4;
     const PICK_TIME_LIMIT = 6;
 
     let slotContents = [], pkgEls = {}, goodId = 0, locked = true;
@@ -4579,12 +4606,20 @@ async function handleSpecialCard(special, pi){
     const targetIdx = await showModal({emoji:"🚨", tag:"FALSCHE ANZEIGE", tagCol:"linear-gradient(140deg,#c0272d,#7a1418)",
       title:"Wen zeigst du an?",
       text:"Wähle einen Spieler, den du bei der Polizei fälschlich beim Juwelier-Überfall gemeldet hast.",
-      buttons: others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i}))});
-    players[targetIdx].skip = 2;
-    await teleport(targetIdx, fieldIndexByKey("polizeistation"));
-    if(!players[targetIdx].stats) players[targetIdx].stats = {totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0};
-    players[targetIdx].stats.badLuck++;
-    setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
+      buttons: [
+        ...others.map(i=>({label:`${players[i].icon} ${players[i].name}`,
+          sub:`${Math.round(players[i].pos/(FIELDS.length-1)*100)}% geschafft`, value:i})),
+        {label:"👍 Darauf verzichten", cls:"gray", value:"decline"},
+      ]});
+    if(targetIdx==="decline"){
+      setLog(`${p.icon} ${p.name} verzichtet darauf, jemanden anzuzeigen.`);
+    } else {
+      players[targetIdx].skip = 2;
+      await teleport(targetIdx, fieldIndexByKey("polizeistation"));
+      if(!players[targetIdx].stats) players[targetIdx].stats = {totalSips:0, minigamesWon:0, timesSentBack:0, fieldsBack:0, fieldsForward:0, badLuck:0};
+      players[targetIdx].stats.badLuck++;
+      setLog(`${players[targetIdx].icon} ${players[targetIdx].name} muss zur Polizeistation und setzt 2 Runden aus.`);
+    }
   } else if(special==="storm"){
     setLog("⛈️ Unwetter zieht auf – alle müssen 2 Felder zurück …");
     await throwRain();
@@ -4902,7 +4937,8 @@ async function resolveField(pi){
     case T.CAFE:
     case T.KIOSK24:
     case T.BAVARIA:
-    case T.TANKE: {
+    case T.TANKE:
+    case T.CLUB: {
       const choiceIdx = await showModal({emoji:f.e, tag:meta.tag, tagCol:meta.col,
         title:f.n, text:f.prompt,
         buttons: f.choices.map((c,idx)=>({label:c.label, cls: idx===0?"green":"gray", value:idx}))});
