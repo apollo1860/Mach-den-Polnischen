@@ -2363,6 +2363,7 @@ function beginMultiplayerGame(){
       throwConfetti();
       const choice = await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
         title:"Angekommen!", text:"Ein Spieler ist auf der geilen Party – Polnischer geglückt! Alle anderen gehen traurig nach Hause und trinken aus Frust 5 Schlücke!",
+        noBotAutoPick:true,
         buttons:[
           {label:"📊 Statistik", cls:"gray", value:"stats"},
           {label:"Neu starten", cls:"green", value:"restart"},
@@ -3044,7 +3045,7 @@ const rand = n => Math.floor(Math.random()*n)+1;
 const wait = ms => new Promise(r=>setTimeout(r,ms));
 
 /* ---------- Modal ---------- */
-function showModal({emoji, tag, tagCol, title, text, buttons, botActor}){
+function showModal({emoji, tag, tagCol, title, text, buttons, botActor, noBotAutoPick}){
   return new Promise(res=>{
     modal.innerHTML = `
       <div class="m-emoji">${emoji}</div>
@@ -3073,9 +3074,13 @@ function showModal({emoji, tag, tagCol, title, text, buttons, botActor}){
     // z.B. eine gezogene Ereigniskarte) müssen von einem echten Spieler
     // weggedrückt werden, sonst weiß niemand, was der Bot gezogen hat.
     // botActor erlaubt es, den Bot explizit anzugeben (z.B. bei der
-    // Wer-beginnt-Auslosung, wo noch nicht "current" gilt).
+    // Wer-beginnt-Auslosung, wo noch nicht "current" gilt). noBotAutoPick
+    // unterdrückt die Auto-Auswahl komplett – für reine UI-Entscheidungen
+    // ohne Spielrelevanz (z.B. das Sieg-Popup "Statistik"/"Nochmal
+    // spielen"), die immer eine echte Person treffen soll, auch wenn der
+    // gewinnende Spieler ein Bot war.
     const activePlayer = botActor !== undefined ? botActor : players[current];
-    if(activePlayer && activePlayer.isBot && buttons.length>1){
+    if(!noBotAutoPick && activePlayer && activePlayer.isBot && buttons.length>1){
       const pick = buttons[Math.floor(Math.random()*buttons.length)];
       setTimeout(async ()=>{
         if(done) return; done=true;
@@ -4683,10 +4688,15 @@ async function diceRollGroup(indices, isTiebreak){
   for(const idx of indices){
     const p = players[idx];
     const opponents = indices.filter(i=>i!==idx).map(i=>players[i].name).join(", ");
-    await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
-      title: isTiebreak ? `Stechen: ${p.name}` : `${p.name} ist dran`,
-      text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Start – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
-      buttons:[{label:"Würfeln", cls:"green", value:1}], botActor:p});
+    if(p.isBot){
+      setLog(`🤖 ${p.name} würfelt automatisch …`);
+      await wait(500 + Math.random()*400);
+    } else {
+      await showModal({emoji:p.icon, tag:"WER BEGINNT?", tagCol:"linear-gradient(140deg,#4aa8e8,#2472ad)",
+        title: isTiebreak ? `Stechen: ${p.name}` : `${p.name} ist dran`,
+        text: isTiebreak ? `Gleichstand zwischen ${groupNames}! ${p.name} sticht jetzt gegen ${opponents} um den Start – nochmal mit 2 Würfeln.` : `${p.name}, würfle mit 2 Würfeln, wer beginnen darf!`,
+        buttons:[{label:"Würfeln", cls:"green", value:1}]});
+    }
     const vals = [rand(6), rand(6)];
     await showDice(vals);
     const sum = vals[0]+vals[1];
@@ -4851,6 +4861,7 @@ async function triggerWin(pi){
   const choice = await showModal({emoji:"🎉🍾", tag:"ZIEL", tagCol:TYPE_META.goal.col,
     title:`${p.name} ist auf der geilen Party!`,
     text:"Polnischer geglückt – Alle anderen gehen traurig nach Hause und trinken aus Frust 5 Schlücke!",
+    noBotAutoPick:true,
     buttons:[
       {label:"📊 Statistik", cls:"gray", value:"stats"},
       {label:"Nochmal spielen", cls:"green", value:"restart"},
@@ -4915,7 +4926,8 @@ async function handleSpecialCard(special, pi){
       title:"Wen rufst du an?",
       text:"Wähle einen Spieler, der sofort zu deinem Feld eilen muss – oder verzichte darauf.",
       buttons:[
-        ...others.map(i=>({label:`${players[i].icon} ${players[i].name}`, value:i})),
+        ...others.map(i=>({label:`${players[i].icon} ${players[i].name}`,
+          sub:`${Math.round(players[i].pos/(FIELDS.length-1)*100)}% geschafft`, value:i})),
         {label:"Darauf verzichten", cls:"gray", value:"decline"},
       ]});
     if(targetIdx==="decline"){
@@ -5054,20 +5066,20 @@ async function botPlayWette(p, pi){
     title:`${p.name} (Bot) tippt bei Tipico`, text:"Läuft automatisch …",
     buttons:[{label:"OK", cls:"green", value:1}]});
   await wait(500);
-  const stake = 1 + Math.floor(Math.random()*4); // 1-4
+  const stake = 1 + Math.floor(Math.random()*3); // 1-3
   const correct = Math.random() < 0.5;
+  addSips(pi, stake); // Einsatz wird immer getrunken, ob gewonnen oder nicht
   let resultText, distributeMsg = null;
   if(correct){
     const payout = 4 + Math.floor(Math.random()*5); // Bot verteilt bei Gewinn immer 4-8 Schlücke
     distributeMsg = distributeSips(payout, pi);
-    resultText = `${p.name} tippt richtig! (Einsatz war ${stake})`;
+    resultText = `${p.name} tippt richtig, trinkt aber trotzdem den Einsatz von ${stake} Schlücken – und verteilt zusätzlich ${payout} Schlücke!`;
   } else {
-    addSips(pi, stake);
     setLog(`🤖 ${p.name} tippt falsch – trinkt den Einsatz von ${stake} Schlücken.`);
     resultText = `${p.name} tippt falsch – trinkt den Einsatz von ${stake} Schlücken.`;
   }
   await showModal({emoji:"🎰", tag:"ERGEBNIS", tagCol:"linear-gradient(140deg,#3ddc97,#0f7a41)",
-    title:"Tipico-Wette", text: distributeMsg || resultText,
+    title:"Tipico-Wette", text: distributeMsg ? `${resultText}\n\n${distributeMsg}` : resultText,
     buttons:[{label:"Weiter", cls:"green", value:1}]});
   return correct;
 }
