@@ -55,6 +55,10 @@
   }
   #board{
     position:absolute;
+    background-image:url('assets/board-bg.webp');
+    background-size:cover;
+    background-position:center;
+    border-radius:24px;
   }
 
   /* ---------- Zonen-Bezirke ---------- */
@@ -795,6 +799,10 @@
   .puzzle-slot.filled{border-style:solid;border-color:#ffffff55;}
   .puzzle-slot.filled .pp-emoji{font-size:20px;}
   .puzzle-slot.reject{animation:slotReject .4s;}
+  .puzzle-slot.hover{
+    box-shadow:0 0 0 3px #4aa8e8, 0 0 14px 2px #4aa8e8aa;
+    background:rgba(74,168,232,.28);
+  }
   @keyframes slotReject{
     0%,100%{box-shadow:0 0 0 0 #ff3b2c00;border-color:#ffffff40;}
     30%{box-shadow:0 0 0 5px #ff3b2c99;border-color:#ff3b2c;}
@@ -1322,6 +1330,29 @@
     100%{opacity:0;}
   }
 
+  /* ---------- Nebel ---------- */
+  #fogOverlay{
+    position:fixed;inset:0;z-index:47;pointer-events:none;overflow:hidden;display:none;
+  }
+  #fogOverlay .fog-layer{
+    position:absolute;inset:-20%;
+    background:
+      radial-gradient(60% 40% at 20% 30%, #ffffffdd 0%, transparent 70%),
+      radial-gradient(50% 35% at 72% 58%, #e6e6ecc0 0%, transparent 70%),
+      radial-gradient(55% 40% at 45% 82%, #ffffffcc 0%, transparent 70%),
+      radial-gradient(45% 32% at 88% 20%, #dfe2e6b0 0%, transparent 70%);
+    filter:blur(18px);
+    opacity:0;
+    animation:fogDrift 2.6s ease-in-out;
+  }
+  @keyframes fogDrift{
+    0%{opacity:0; transform:translateX(-3%);}
+    18%{opacity:.9;}
+    55%{opacity:.9; transform:translateX(3%);}
+    85%{opacity:.3;}
+    100%{opacity:0; transform:translateX(0%);}
+  }
+
   /* ---------- Setup ---------- */
   #setup{
     position:fixed;inset:0;z-index:60;
@@ -1478,6 +1509,7 @@
 <div id="confetti"></div>
 <div id="rainOverlay"></div>
 <div id="thunderOverlay"></div>
+<div id="fogOverlay"></div>
 <div id="modalWrap"><div id="modal"></div></div>
 <div id="cardRevealOverlay" class="modal-overlay"><div id="cardRevealCard" class="modal-card"></div></div>
 <div id="skipOverlay"><div class="skip-card"><div class="skip-x">✕</div><div class="skip-label"></div></div></div>
@@ -1876,7 +1908,7 @@ const PARTY_CARDS = [
   {e:"🍷", txt:"Man bietet dir ein Glas nordkasachischen Rotwein, den man noch im Keller gefunden hat, an – trinke 1 Schluck."},
   {e:"🍾", txt:"Du findest eine herrenlose, halbvolle Bierflasche auf dem Parkettboden – trinke 2 Schlücke."},
   {e:"📖", txt:"Dir wird ein Familienalbum zum Durchblättern gereicht – trinke dir 2 Geduldsschlücke an."},
-  {e:"🎤", txt:"Du möchtest die Stimmung durch einen Witz auflockern – überlege dir ein Themenbereich, erzähle einen passenden Witz und trinke 2 Schlücke, wenn niemand lacht.", manual:true},
+  {e:"🎤", txt:"Du möchtest die Stimmung durch einen Witz auflockern – überlege dir einen Themenbereich, erzähle einen passenden Witz und trinke 2 Schlücke, wenn niemand lacht.", manual:true},
   {e:"😢", txt:"Ein dir unbekannter Partygast hängt an deiner Schulter, um sich über ihren Ex-Freund auszuheulen – setze 1 Runde aus und trinke 2 Schlücke.", skip:1},
   {e:"💔", txt:"Ein Pärchen streitet sich direkt vor deiner Nase – trinke 1 Schluck gegen die folgende peinliche Stille."},
   {e:"🥏", txt:"Ein Partygast versucht, dich zu überreden, seiner Ultimate-Frisbee-Mannschaft beizutreten. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
@@ -1918,7 +1950,7 @@ const STREET_CARDS = [
   {e:"🚋", txt:"Du erwischst pünktlich deine Tram – gehe 2 Felder vor.", mv:2},
   {e:"💨", txt:"Du ziehst einen kurzen Sprint an – gehe 1 Feld vor.", mv:1},
   {e:"🏘️", txt:"Du nimmst eine Abkürzung über ein Wohngebiet – gehe 1 Feld vor.", mv:1},
-  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an eine Kirchenfassade – du musst dich direkt auf der Polizeistation melden.", goto:"polizeistation"},
+  {e:"🚓", txt:"Ein Polizist erwischt dich beim Urinieren an einer Kirchenfassade – du musst dich direkt auf der Polizeistation melden.", goto:"polizeistation"},
   {e:"💬", txt:"Ein Fremder verwickelt dich in ein Gespräch – setze eine Runde aus.", skip:1},
   {e:"🍟", txt:"Kurze Chicken-McNuggets-Pause bei McDonald's – setze eine Runde aus.", skip:1},
   {e:"⏳", txt:"Überbrücke die Wartezeit an der Ampel mit Bier – trinke 1 Schluck."},
@@ -1939,6 +1971,11 @@ const STREET_CARDS = [
   {e:"📞", txt:"Du rufst einen Spieler deiner Wahl an und täuschst einen Notfall vor. Der Spieler eilt sofort zu deinem Feld.", special:"fake-emergency"},
   {e:"⛈️", txt:"Unwetter! Durch strömenden Regen ist die Sicht schlecht – ALLE Spieler gehen 2 Felder zurück und trinken 1 Frust-Schluck.", special:"storm"},
   {e:"⚡", txt:"Gewitter zieht auf! Ein greller Blitz lässt alle zusammenzucken – ALLE Spieler gehen 1 Feld zurück und trinken 2 Schreck-Schlücke.", special:"thunderstorm"},
+  {e:"🌫️", txt:"Nebelig! Dichte Nebelschwaden ziehen auf – ALLE Spieler verlieren die Orientierung, gehen 1 Feld zurück und trinken 1 Frust-Schluck.", special:"fog"},
+  {e:"😂", txt:"Eine Gruppe Jugendlicher lacht dich für dein Outfit aus – trinke 2 Frustschlücke."},
+  {e:"🎁", txt:"Du erhältst von einem Fremden eine Pennergranate geschenkt – trinke 3 Schlücke."},
+  {e:"🍾", txt:"Du teilst dir eine Astra Rakete mit einem Fremden am Straßenrand – trinke 2 Schlücke und verteile 2 Schlücke."},
+  {e:"🥤", txt:"Du hast schon lange nichts mehr getrunken – trinke 1 Schluck."},
   {e:"🍺", txt:"Dein Bier wird langsam warm – trinke 2 Schlücke."},
   {e:"😋", txt:"Dein Bier schmeckt gerade herrlich – trinke 2 Schlücke."},
   {e:"😄", txt:"Dein Bier lacht dich gerade an – trinke 1 Schluck."},
@@ -2073,7 +2110,7 @@ function drawCard(zone){
 function isCardBackward(card, fromPos){
   if(card.mv && card.mv<0) return true;
   if(card.goto!==undefined && fieldIndexByKey(card.goto) < fromPos) return true;
-  if(card.special==="storm" || card.special==="thunderstorm") return true;
+  if(card.special==="storm" || card.special==="thunderstorm" || card.special==="fog") return true;
   return false;
 }
 /* Zieht wie drawCard(), verwirft aber rückwärts schickende Karten (legt sie
@@ -2194,39 +2231,6 @@ function buildBoard(){
   board.style.width = w+"px"; board.style.height = h+"px";
   board.style.left = (-w/2)+"px"; board.style.top = (-h/2)+"px";
 
-  // Bezirks-Platten
-  const zoneTiles = {};
-  FIELDS.forEach((f,i)=>{
-    if(f.t===T.GOAL || f.t===T.START) return;
-    (zoneTiles[f.z] = zoneTiles[f.z]||[]).push(tilePos(i));
-  });
-  Object.entries(zoneTiles).forEach(([z,pts])=>{
-    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
-    const pad = 76;
-    const el = document.createElement("div");
-    el.className="zone-panel";
-    el.style.setProperty("--zc", ZONE_COLORS[z]);
-    el.style.left = (Math.min(...xs)-pad)+"px";
-    el.style.top = (Math.min(...ys)-pad)+"px";
-    el.style.width = (Math.max(...xs)-Math.min(...xs)+96+2*pad)+"px";
-    el.style.height = (Math.max(...ys)-Math.min(...ys)+96+2*pad)+"px";
-    board.appendChild(el);
-  });
-
-  // Deko im Innenraum (gedimmt, wie bemalter Boden)
-  const deco = [
-    ["🍺",9.6,1.38],["🥨",6.67,1.46],["🏰",12.8,2.1],
-    ["⛪",11.6,4.37],["🏢",12.4,6.64],["🌳",11.47,8.9],["🌲",9.87,10.36],
-    ["🎠",5.6,10.52],["🛝",3.47,10.2],["🚏",2.93,7.77],["🌉",3.33,5.18],
-    ["🍻",3.47,2.91],["🎡",6.13,4.21],["🌙",8.27,6.8],
-  ];
-  deco.forEach(([em,x,y])=>{
-    const el = document.createElement("div");
-    el.className="deco"; el.textContent = em;
-    el.style.left = (x*TILE)+"px"; el.style.top = (y*TILE)+"px";
-    board.appendChild(el);
-  });
-
   // Kacheln
   FIELDS.forEach((f,i)=>{
     const {x,y} = tilePos(i);
@@ -2245,25 +2249,6 @@ function buildBoard(){
   fence.style.top  = (1*TILE + 36)+"px";
   fence.style.width = (TILE - 12)+"px";
   board.appendChild(fence);
-
-  // Bezirks-Namen
-  const zones = [
-    {txt:"Öde Party",         z:1, x:3.2*TILE, y:2.3*TILE},
-    {txt:"Innenstadt",        z:2, x:12.47*TILE, y:3.0*TILE,  rot:-90},
-    {txt:"Englischer Garten", z:3, x:11.33*TILE, y:8.58*TILE, rot:-90},
-    {txt:"Münchner Freiheit", z:4, x:7.47*TILE, y:10.97*TILE},
-    {txt:"Neuhausen",         z:5, x:2.33*TILE, y:10.12*TILE, rot:90},
-    {txt:"Sendling",          z:6, x:2.33*TILE, y:5.02*TILE,  rot:90},
-  ];
-  zones.forEach(z=>{
-    const el = document.createElement("div");
-    el.className="zone-label";
-    el.style.setProperty("--zc", ZONE_COLORS[z.z]);
-    el.textContent = z.txt;
-    el.style.left = z.x+"px"; el.style.top = z.y+"px";
-    if(z.rot) el.style.transform = `rotate(${z.rot}deg)`;
-    board.appendChild(el);
-  });
 }
 
 /* ---------- Tokens ---------- */
@@ -2618,13 +2603,22 @@ function distributeSips(amount, excludeIdx){
 }
 function parseSips(text){
   if(!text) return null;
-  if(/verteile/i.test(text)) return null; // Verteilen füllt die Zähler bewusst nicht
+  // Für jede "<Zahl> Schlücke"-Fundstelle prüfen, ob sie zu einem
+  // "verteile ... Schlücke"-Ausdruck gehört (dann überspringen) oder zum
+  // eigenen Trinken (dann verwenden) – so füllen reine Verteilen-Karten
+  // den eigenen Zähler weiterhin bewusst nicht, aber Karten mit sowohl
+  // einem Trink- als auch einem Verteile-Teil ("trinke X … verteile Y")
+  // buchen trotzdem korrekt den eigenen Anteil.
   const matches = [...text.matchAll(/(\d+)\s*[A-Za-zÄÖÜäöüß]*schl(?:uck|ücke)/gi)];
-  if(matches.length===0) return null;
-  const amount = parseInt(matches[0][1], 10);
-  if(!amount) return null;
-  const target = /alle trinken/i.test(text) ? "all" : "self";
-  return {amount, target};
+  for(const m of matches){
+    const before = text.slice(Math.max(0, m.index-16), m.index);
+    if(/verteile[a-zäöüß]*\s*$/i.test(before)) continue;
+    const amount = parseInt(m[1], 10);
+    if(!amount) continue;
+    const target = /alle trinken/i.test(text) ? "all" : "self";
+    return {amount, target};
+  }
+  return null;
 }
 function applySipsFromText(text, pi){
   const parsed = parseSips(text);
@@ -2920,9 +2914,9 @@ function playBottlePuzzleGame(p, val){
 
     let finished = false, filledCount = 0, rafId = null, startTs = null;
 
-    // Teile zusammenstellen: 6 richtige Bier-Teile + 14 Ablenkungsteile (viel schwerer)
+    // Teile zusammenstellen: 6 richtige Bier-Teile + 22 Ablenkungsteile (viel schwerer)
     let pieces = PARTS.map(part=>({type:"bier", part}));
-    for(let i=0;i<14;i++){
+    for(let i=0;i<22;i++){
       pieces.push({type: DECOY_TYPES[Math.floor(Math.random()*2)], part: PARTS[Math.floor(Math.random()*PARTS.length)]});
     }
     pieces = shuffled(pieces);
@@ -2939,6 +2933,10 @@ function playBottlePuzzleGame(p, val){
       slotsEl.appendChild(slot);
     });
 
+    let hoveredSlot = null;
+    function clearHover(){
+      if(hoveredSlot){ hoveredSlot.classList.remove("hover"); hoveredSlot = null; }
+    }
     function makeDraggable(tile){
       let dragging = false, startX = 0, startY = 0;
       function onDown(e){
@@ -2954,6 +2952,20 @@ function playBottlePuzzleGame(p, val){
         if(!dragging) return;
         const dx=e.clientX-startX, dy=e.clientY-startY;
         tile.style.transform = `translate(${dx}px,${dy}px) scale(1.1)`;
+        // Live-Erkennung: sobald das Teil über dem passenden, noch freien
+        // Slot schwebt, diesen blau markieren – hilft besonders bei
+        // kleinen Teilen, bei denen das Ablegen sonst leicht danebengeht.
+        tile.style.pointerEvents = "none";
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        tile.style.pointerEvents = "";
+        const slotEl = el ? el.closest(".puzzle-slot") : null;
+        const isTarget = slotEl && !slotEl.classList.contains("filled") &&
+          slotEl.dataset.part===tile.dataset.part && tile.dataset.type==="bier";
+        if(isTarget){
+          if(hoveredSlot !== slotEl){ clearHover(); hoveredSlot = slotEl; slotEl.classList.add("hover"); }
+        } else {
+          clearHover();
+        }
       }
       function onUp(e){
         if(!dragging) return;
@@ -2961,6 +2973,7 @@ function playBottlePuzzleGame(p, val){
         tile.classList.remove("dragging");
         tile.style.transition = "transform .28s cubic-bezier(.3,.9,.4,1.1)";
         const dx=e.clientX-startX, dy=e.clientY-startY;
+        clearHover();
         if(Math.hypot(dx,dy) < 6){
           // Tap statt Drag: Teil umdrehen
           tile.style.transform = "translate(0,0) scale(1)";
@@ -4136,6 +4149,7 @@ function playWetteGame(p, pi){
     allPickBtns.forEach(b=> b.addEventListener("click", onPick));
 
     const stakeMinusBtn = $("#stakeMinus"), stakePlusBtn = $("#stakePlus");
+    stakeMinusBtn.disabled = false; stakePlusBtn.disabled = false;
     stakeMinusBtn.onclick = ()=>{ if(stake>1){ stake--; stakeValEl.textContent = stake; updatePayoutPreview(); } };
     stakePlusBtn.onclick  = ()=>{ if(stake<15){ stake++; stakeValEl.textContent = stake; updatePayoutPreview(); } };
 
@@ -4486,6 +4500,22 @@ function throwLightning(){
     }, 1900);
   });
 }
+/* Nebel-Animation: mehrere weiche, blau-graue Wolkenschwaden, die
+   langsam über den Bildschirm driften und wieder verblassen – bewusst
+   ruhiger als Regen/Gewitter, damit sich die drei Wetter-Karten optisch
+   klar voneinander unterscheiden. */
+function throwFog(){
+  return new Promise(res=>{
+    const overlay = document.getElementById("fogOverlay");
+    overlay.innerHTML = `<div class="fog-layer"></div>`;
+    overlay.style.display = "block";
+    setTimeout(()=>{
+      overlay.style.display = "none";
+      overlay.innerHTML = "";
+      res();
+    }, 2600);
+  });
+}
 
 /* ---------- Bewegung ---------- */
 /* ---------- Zielfeld-Sieg ----------
@@ -4649,6 +4679,15 @@ async function handleSpecialCard(special, pi){
       addSips(i, 2);
     }
     setLog("⚡ Gewitter! Alle Spieler unterwegs sind 1 Feld zurückgegangen und trinken 2 Schreck-Schlücke.");
+  } else if(special==="fog"){
+    setLog("🌫️ Dichter Nebel zieht auf – alle unterwegs verlieren die Orientierung …");
+    await throwFog();
+    for(let i=0;i<players.length;i++){
+      if(FIELDS[players[i].pos].z===1) continue; // auf der öden Party bekommt man vom Nebel draußen nichts mit
+      await moveSteps(i, -1);
+      addSips(i, 1);
+    }
+    setLog("🌫️ Nebel! Alle Spieler unterwegs haben sich verirrt, sind 1 Feld zurückgegangen und trinken 1 Frust-Schluck.");
   }
 }
 
