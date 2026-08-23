@@ -5158,12 +5158,14 @@ async function resolveField(pi){
   const f = FIELDS[p.pos];
   const meta = TYPE_META[f.t];
 
-  // Wenn schon mind. 1 anderer Spieler auf diesem Feld steht und es sich um
-  // eine Ereigniskarte oder ein Minispiel handelt, gibt es statt der
-  // normalen Feld-Auflösung eine Begegnung mit Wahlmöglichkeit.
-  const CARD_OR_MINIGAME_TYPES = [T.EVENT, T.FIXED, T.MINIGAME, T.DARTS, T.NAMEN, T.WETTE];
+  // Begegnung mit Anstoßen/Zurückschicken-Wahl gibt es NUR auf reinen
+  // Ereigniskarten- und Fest-Feldern. Minispiele (inkl. Darts, Namen,
+  // Wette) und die 50/50-Entscheidungsfelder (Baustelle, Frischhut,
+  // 24h Kiosk, Bavariapark, Tanke, P1) laufen immer eigenständig ab,
+  // unabhängig davon, ob dort schon ein anderer Spieler steht.
+  const ENCOUNTER_TYPES = [T.EVENT, T.FIXED];
   const occupants = players.filter(q=>q!==p && q.pos===p.pos);
-  const isEncounter = occupants.length>0 && CARD_OR_MINIGAME_TYPES.includes(f.t);
+  const isEncounter = occupants.length>0 && ENCOUNTER_TYPES.includes(f.t);
 
   if(isEncounter){
     const namesList = occupants.map(o=>`${o.icon} ${o.name}`).join(", ");
