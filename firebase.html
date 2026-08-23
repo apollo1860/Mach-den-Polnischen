@@ -1491,7 +1491,10 @@
       <div id="lobby" style="display:none;margin-top:18px;">
         <div style="font-weight:900;font-size:14px;color:#332a1d;">Code: <span id="lobbyCode" style="letter-spacing:3px;color:var(--coral);"></span></div>
         <div id="lobbyPlayers" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;"></div>
-        <button class="btn gray" id="lobbyAddBotBtn" style="width:100%;margin-top:10px;display:none;font-size:14px;padding:11px;">🤖 Bot hinzufügen</button>
+        <div id="lobbyAddBotRow" style="display:none;gap:8px;margin-top:10px;">
+          <input id="botNameInput" placeholder="Bot-Name" maxlength="12" style="flex:1;border:none;border-radius:14px;padding:0 14px;font-family:inherit;font-size:14px;font-weight:700;background:#fff;color:var(--ink);">
+          <button class="btn gray" id="lobbyAddBotBtn" style="font-size:14px;padding:11px 16px;">🤖 Hinzufügen</button>
+        </div>
         <button class="btn green" id="lobbyStartBtn" style="width:100%;margin-top:14px;display:none;">Spiel starten</button>
         <div id="lobbyWait" style="margin-top:14px;font-size:13px;color:#6b5f4c;">Warte auf Start durch Host…</div>
       </div>
@@ -2268,17 +2271,36 @@ function enterLobby(){
   $("#lobby").style.display = "block";
   $("#lobbyCode").textContent = mp.code;
   $("#lobbyStartBtn").style.display = mp.isHost ? "block" : "none";
-  $("#lobbyAddBotBtn").style.display = mp.isHost ? "block" : "none";
+  $("#lobbyAddBotRow").style.display = mp.isHost ? "flex" : "none";
   $("#lobbyWait").style.display = mp.isHost ? "none" : "block";
 
   fbDb.ref(`rooms/${mp.code}/players`).on("value", snap=>{
     const val = snap.val() || {};
     const uids = Object.keys(val).sort((a,b)=> val[a].joinedAt - val[b].joinedAt);
     mp.lobbyUids = uids; mp.lobbyVal = val;
-    $("#lobbyPlayers").innerHTML = uids.map((uid,i)=>`
-      <div class="p-row"><span class="ico">${TOKEN_ICONS[i]}</span>
-      <span style="flex:1;font-weight:700;">${val[uid].isBot?"🤖 ":""}${val[uid].name}${uid===mp.uid?" (du)":""}</span></div>`).join("");
-    if(mp.isHost) $("#lobbyStartBtn").disabled = uids.length < 2;
+    $("#lobbyPlayers").innerHTML = uids.map((uid,i)=>{
+      const isBot = !!val[uid].isBot;
+      if(isBot && mp.isHost){
+        return `<div class="p-row"><span class="ico">${TOKEN_ICONS[i]}</span>
+          <input class="bot-rename-input" data-uid="${uid}" value="${val[uid].name}" maxlength="12"
+            style="flex:1;border:none;outline:none;font-family:inherit;font-size:15px;font-weight:700;background:transparent;color:var(--ink);min-width:0;">
+          <button class="rm bot-remove-btn" data-uid="${uid}" title="Bot entfernen">✕</button></div>`;
+      }
+      return `<div class="p-row"><span class="ico">${TOKEN_ICONS[i]}</span>
+        <span style="flex:1;font-weight:700;">${isBot?"🤖 ":""}${val[uid].name}${uid===mp.uid?" (du)":""}</span></div>`;
+    }).join("");
+    if(mp.isHost){
+      $("#lobbyPlayers").querySelectorAll(".bot-rename-input").forEach(inp=>{
+        inp.addEventListener("change", ()=>{
+          const newName = inp.value.trim() || "Bot";
+          fbDb.ref(`rooms/${mp.code}/players/${inp.dataset.uid}/name`).set(newName);
+        });
+      });
+      $("#lobbyPlayers").querySelectorAll(".bot-remove-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=> fbDb.ref(`rooms/${mp.code}/players/${btn.dataset.uid}`).remove());
+      });
+      $("#lobbyStartBtn").disabled = uids.length < 2;
+    }
   });
   fbDb.ref(`rooms/${mp.code}/meta/started`).on("value", snap=>{
     if(snap.val()===true && !mp.gameStarted){
@@ -2289,10 +2311,13 @@ function enterLobby(){
 }
 $("#lobbyAddBotBtn").onclick = async ()=>{
   const botUid = "bot-" + Date.now() + "-" + Math.floor(Math.random()*1000);
+  const input = $("#botNameInput");
   const botNames = ["Bot Sepp","Bot Wiggerl","Bot Resi","Bot Franz","Bot Mia"];
   const usedNames = Object.values(mp.lobbyVal||{}).map(v=>v.name);
-  const freeName = botNames.find(n=>!usedNames.includes(n)) || `Bot ${Math.floor(Math.random()*1000)}`;
+  const customName = input.value.trim();
+  const freeName = customName || botNames.find(n=>!usedNames.includes(n)) || `Bot ${Math.floor(Math.random()*1000)}`;
   await fbDb.ref(`rooms/${mp.code}/players/${botUid}`).set({name:freeName, isBot:true, joinedAt:Date.now()});
+  input.value = "";
 };
 
 $("#lobbyStartBtn").onclick = async ()=>{
@@ -5578,4 +5603,3 @@ async function endTurn(){
 }
 </script>
 </body>
-</html>
