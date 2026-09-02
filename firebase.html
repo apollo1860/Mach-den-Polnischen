@@ -1803,11 +1803,13 @@ const FIELDS = [
           {text:"Die Jugendlichen geben dir ein Bier aus und verraten dir eine Abkürzung – trinke 3 Schlücke und gehe 3 Felder vor.", sips:3, mv:3},
           {text:"Die Jugendlichen verraten dir eine Abkürzung über die Baustelle – gehe 2 Felder vor.", mv:2},
           {text:"Die Jugendlichen zeigen dir den nächsten E-Scooter.", scooter:true},
+          {text:"Du entgegnest den Jugendlichen mit einem hippen \"67\" mit deinen Händen und gewinnst so den Respekt der Gruppe. Sie verraten dir eine Abkürzung und geben dir ein Bier aus – gehe 1 Feld vor und trinke 3 Schlücke.", mv:1, sips:3},
         ],
         negative:[
           {text:"Den Jugendlichen gefällt deine Fresse nicht und sie verscheuchen dich – gehe 2 Felder zurück.", mv:-2},
           {text:"Die Jugendlichen stellen dich zur Rede und fragen, was du hier suchst – setze eine Runde aus.", skip:1},
           {text:"Die Jugendlichen fordern dich zu einem Saufduell heraus – trinke 4 Schlücke.", sips:4},
+          {text:"Du entgegnest den Jugendlichen mit einem völlig peinlichen \"67\" mit deinen Händen und blamierst dich damit auf ganzer Linie, du Unc – trinke 3 Schlücke gegen die Scham.", sips:3},
         ]},
       {label:"Unauffällig weitergehen", type:"none"},
     ]},
@@ -1888,7 +1890,7 @@ const FIELDS = [
   {n:"Rotkreuzplatz",       e:"➕", t:T.EVENT,   z:5, ox:40, oy:52},
   {n:"Peaches",             e:"🍑", t:T.EVENT,   z:5},
   {n:"Donnersberger Brücke",e:"🌉", t:T.EVENT,   z:5},
-  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"hauptbahnhof", negative:true, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Hauptbahnhof."},
+  {n:"Heimeranplatz",       e:"🚈", t:T.TELEPORT,z:6, tp:"schwanthalerhoehe", key:"heimeranplatz", d:"Die U-Bahn steht schon da! Sie bringt dich zur Schwanthaler Höhe."},
   {n:"Tanke",               e:"⛽", t:T.TANKE,   z:6, prompt:TANKE_PROMPT, choices:TANKE_CHOICES},
   {n:"Boazn",               e:"🎯", t:T.DARTS,   z:6, d:"Ein Fremder fordert dich zu einer Partie Darts heraus – 3 Aufnahmen à 3 Darts, wer mehr Punkte wirft gewinnt."},
   {n:"Bavariapark",         e:"🏞️", t:T.BAVARIA, z:6,
@@ -1918,7 +1920,7 @@ const FIELDS = [
         ]},
     ]},
   {n:"Theresienwiese",      e:"🎡", t:T.MINIGAME, z:6, games:["flaschenpuzzle"], d:"Ein Fremder fordert dich zu einem Minispiel heraus."},
-  {n:"Schwanthaler Höhe",   e:"🏘️", t:T.EVENT,   z:6},
+  {n:"Schwanthaler Höhe",   e:"🏘️", t:T.TELEPORT, z:6, tp:"heimeranplatz", key:"schwanthalerhoehe", negative:true, d:"Falsche U-Bahn erwischt! Sie bringt dich zurück zum Heimeranplatz."},
   {n:"E-Scooter",           e:"🛴", t:T.SCOOTER, z:6},
   {n:"Stadtviertelfest",    e:"🎪", t:T.MINIGAME, z:6, games:["wuehlmaus"], d:"Ein Wühlmaus-Alarm-Stand auf dem Fest fordert dich heraus."},
   {n:"Herzog-Ernst-Platz",  e:"🌲", t:T.EVENT,   z:6},
@@ -5604,4 +5606,3 @@ async function endTurn(){
   maybeAutoRollForBot();
 }
 </script>
-</body>
