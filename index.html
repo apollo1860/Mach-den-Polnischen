@@ -2136,6 +2136,37 @@ function drawCardNoBackward(zone, fromPos){
   return card;
 }
 
+/* Spannungs-Mechanik Endspurt: auf den letzten ENDGAME_BIAS_FIELD_COUNT
+   Feldern vor dem Ziel werden gezogene Ereigniskarten künstlich zu
+   ENDGAME_BIAS_NEGATIVE_CHANCE Richtung "negativ" (aussetzen oder eigenes
+   Trinken) gewichtet, statt der normalen Stapel-Reihenfolge zu folgen. */
+const ENDGAME_BIAS_FIELD_COUNT = 8;
+const ENDGAME_BIAS_NEGATIVE_CHANCE = 0.6;
+function isCardNegative(card, fromPos){
+  if(card.skip) return true;
+  if(isCardBackward(card, fromPos)) return true;
+  const parsed = parseSips(card.txt);
+  if(parsed && parsed.target==="self") return true;
+  return false;
+}
+function drawEventCard(zone, fromPos, noBackward){
+  const draw = () => noBackward ? drawCardNoBackward(zone, fromPos) : drawCard(zone);
+  if(fromPos < FIELDS.length - ENDGAME_BIAS_FIELD_COUNT) return draw();
+  const wantNegative = Math.random() < ENDGAME_BIAS_NEGATIVE_CHANCE;
+  const key = zone===1 ? "party" : (zone===2 ? "city" : "street");
+  const buildFn = zone===1 ? (()=>shuffled(PARTY_CARDS))
+    : (zone===2 ? (()=>shuffled(STREET_CARDS.concat(FORGOT_CARDS))) : (()=>shuffled(STREET_CARDS)));
+  let card = draw();
+  let guard = 0;
+  while(isCardNegative(card, fromPos) !== wantNegative && guard<200){
+    if(decks[key]) decks[key].splice(Math.floor(Math.random()*(decks[key].length+1)), 0, card);
+    guard++;
+    if(guard % 8 === 0 && decks[key]) decks[key] = buildFn();
+    card = draw();
+  }
+  return card;
+}
+
 /* ---------- DOM ---------- */
 const $ = s => document.querySelector(s);
 const board = $("#board"), world = $("#world");
@@ -2645,7 +2676,8 @@ async function applyWishOption(key, p){
     const targets = players.filter((_,i)=>i!==idx);
     const targetIdx = await showModal({emoji:"⬅️", tag:"WUNSCH", tagCol:"linear-gradient(140deg,#ff8a5c,#c22f14)",
       title:"Wen schickst du zurück?", text:"Wähle einen Gegner.",
-      buttons: targets.map(t=>({label:`${t.icon} ${t.name}`, value: players.indexOf(t)}))});
+      buttons: targets.map(t=>({label:`${t.icon} ${t.name}`,
+        sub:`${Math.round(t.pos/(FIELDS.length-1)*100)}% geschafft`, value: players.indexOf(t)}))});
     const val = rand(6);
     await showDice([val]);
     await moveSteps(targetIdx, -val);
@@ -3530,7 +3562,7 @@ function playWhacAMole(p, val){
       const holeObj = pick.h, idx = pick.i;
       holeObj.up = true;
       holeObj.el.classList.add("up");
-      const upDuration = 300 + Math.random()*200;
+      const upDuration = 300 + Math.random()*350;
       const t = setTimeout(()=>{
         if(holeObj.up){ holeObj.up = false; holeObj.el.classList.remove("up"); }
         activeMoleTimers.delete(idx);
@@ -4366,9 +4398,23 @@ function syncTransient(patch){
   return fbDb.ref(`rooms/${mp.code}/state`).update(patch);
 }
 
+const INTRO_BORING_OPENERS = [
+  "Die Playlist besteht gefühlt nur aus Fahrstuhlmusik 🎷, der Gastgeber erzählt zum dritten Mal dieselbe Geschichte und selbst die Chips sind weich.",
+  "Das Bier ist schal, aus der Box quäkt nur ein dünner Bluetooth-Sound 📻 und irgendjemand schlägt allen Ernstes ein Quiz über Steuerrecht vor.",
+  "Der Gastgeber zeigt zum wiederholten Mal seine Urlaubsfotos 🏖️, das Buffet besteht nur aus labbrigen Käsewürfeln und die Stimmung liegt zwischen Beerdigung und Bewerbungsgespräch.",
+  "Jemand hat Wellness-Lounge-Sounds 🧘 aufgelegt, alle Getränke sind alkoholfrei und ein Typ erklärt gerade ungefragt sein Excel-Sheet.",
+  "Die Deko besteht aus drei traurigen Luftballons 🎈, das Gespräch dreht sich seit einer Stunde nur um Handwerkerrechnungen und der Punsch schmeckt nach Spülwasser.",
+  "Im Hintergrund dudelt Panflötenmusik 🎶 vom Wellness-Sampler, die Chipsschale ist leer und jemand will jetzt unbedingt Brettspielregeln vorlesen.",
+  "Es gibt nur noch warmes Radler 🍺, das WLAN-Passwort funktioniert nicht und der Nachbar erzählt zum gefühlt hundertsten Mal von seinem neuen Rasenmäher.",
+  "Die Playlist hängt im Shuffle-Modus bei ausschließlich Volksmusik 🪗 fest, das Buffet ist auf Rentner-Vorrat ausgelegt und jemand fragt schon wieder, ob du \"auch schon Steuern machst\".",
+  "Ein Gast erklärt seit 20 Minuten seine Krypto-Strategie 📈, die einzige Musik ist Fahrstuhl-Jazz aus dem Küchenradio und die letzten Chips schmecken nach Pappe.",
+  "Die Lichterkette blinkt im Ausfallmodus 🔦, der Grill ist längst kalt und dein Sitznachbar erzählt zum wiederholten Mal, wie toll sein neues Auto ist.",
+];
+
 function showIntroStory(){
+  const opener = INTRO_BORING_OPENERS[Math.floor(Math.random()*INTRO_BORING_OPENERS.length)];
   return showModal({emoji:"🥱➡️🎉", title:"Nichts wie weg!",
-    text:"Diese Party ist eine Katastrophe: Die Playlist besteht gefühlt nur aus Fahrstuhlmusik 🎷, der Gastgeber erzählt zum dritten Mal dieselbe Geschichte und selbst die Chips sind weich. Nichts wie weg!<br><br>📱 Gerade hat dich die Nachricht erreicht: Auf der angesagtesten Party der Stadt ist genau noch ein Platz frei.<br><br>😬 Blöd nur: Deine Freunde, mit denen du auf dieser Party bist, haben dieselbe Nachricht bekommen und sprinten ebenfalls los, um sich den letzten freien Platz zu schnappen.<br><br>🏃 Renn, spring und weiche Hindernissen aus. Erreiche die Party vor deinen Freunden – denn nur der Schnellste kommt noch rein!",
+    text:`Diese Party ist eine Katastrophe: ${opener} Nichts wie weg!<br><br>📱 Gerade hat dich die Nachricht erreicht: Auf der angesagtesten Party der Stadt ist genau noch ein Platz frei.<br><br>😬 Blöd nur: Deine Freunde, mit denen du auf dieser Party bist, haben dieselbe Nachricht bekommen und sprinten ebenfalls los, um sich den letzten freien Platz zu schnappen.<br><br>🏃 Renn, spring und weiche Hindernissen aus. Erreiche die Party vor deinen Freunden – denn nur der Schnellste kommt noch rein!`,
     buttons:[{label:"Auf geht's! 🏃", cls:"green", value:1}]});
 }
 
@@ -4716,7 +4762,7 @@ async function applyOutcome(outcome, pi){
    stattdessen Ereignis"-Fall bei negativen Teleport-Feldern genutzt. */
 async function resolveEventCard(zone, pi, title, noBackward){
   const p = players[pi];
-  const c = noBackward ? drawCardNoBackward(zone, p.pos) : drawCard(zone);
+  const c = drawEventCard(zone, p.pos, noBackward);
   const meta = TYPE_META.event;
   const distAmount = parseDistributeAmount(c.txt);
   let displayText = c.txt, botDistMsg = null;
