@@ -1916,6 +1916,11 @@ const PARTY_CARDS = [
   {e:"🥏", txt:"Ein Partygast versucht, dich zu überreden, seiner Ultimate-Frisbee-Mannschaft beizutreten. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
   {e:"📦", txt:"Ein Partygast versucht, dich zu überreden, ihm nächste Woche bei seinem Umzug zu helfen. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
   {e:"💘", txt:"Die Oma des Gastgebers möchte dich mit ihrer Schwester verkuppeln. Du erfindest einen Vorwand, um ihr zu entkommen – gehe 1 Feld zurück.", mv:-1},
+  {e:"🧊", txt:"Das Eis ist alle, dein Getränk wird lauwarm – trinke 2 Schlücke."},
+  {e:"🎧", txt:"Der Gastgeber fragt nach Musikwünschen – trinke 1 Schluck und wünsche dir ein Song (wenn möglich)."},
+  {e:"📸", txt:"Jemand will unbedingt ein Gruppenfoto machen – setze 1 Runde aus.", skip:1},
+  {e:"🚻", txt:"Vor dem Bad bildet sich eine lange Schlange – setze 1 Runde aus.", skip:1},
+  {e:"🚗", txt:"Ein Gast fragt, ob du ihn nachher nach Hause fahren kannst. Du erfindest einen Vorwand, um ihm zu entkommen – gehe 1 Feld zurück.", mv:-1},
 ];
 
 const FORGOT_CARDS = [
@@ -1999,7 +2004,6 @@ const STREET_CARDS = [
   {e:"😵", txt:"Du fühlst dich noch viel zu nüchtern – trinke 3 Schlücke."},
   {e:"🙂", txt:"Du fühlst dich ein wenig zu nüchtern – trinke 1 Schluck."},
   {e:"💥", txt:"Ein lauter Knall in deiner Nähe schüchtert dich ein und du entscheidest dich für einen Umweg – gehe 2 Felder zurück und trinke 1 Aufmunterungsschluck.", mv:-2},
-  {e:"👟", txt:"Deine Schnürsenkel sind offen, binde sie zuerst (Safety first!) – setze 1 Runde aus.", skip:1},
   {e:"🌳", txt:"Du verirrst dich aus Versehen in einen privaten Garten – gehe 1 Feld zurück.", mv:-1},
   {e:"📵", txt:"Du musst deinen Weg improvisieren, da deine Google Maps App abgestürzt ist, und verläufst dich prompt – gehe 2 Felder zurück.", mv:-2},
   {e:"🐻", txt:"Fremde an einer Bushaltestelle fragen dich, wie der Bär macht – trinke 3 Schlücke."},
@@ -2014,6 +2018,14 @@ const STREET_CARDS = [
   {e:"🚋", txt:"Du teilst dein Bier beim Warten auf die Tram mit einem Fremden – verteile 2 Schlücke."},
   {e:"🍻", txt:"Du probierst ein dir unbekanntes Bier eines Passanten – trinke 1 Schluck."},
   {e:"🎧", txt:"Deine frisch angemachte Playlist kurbelt deinen Durst an – trinke 2 Schlücke und mache 3 Lieder deiner Wahl in die Warteschlange (wenn möglich)."},
+  {e:"🍻", txt:"Du stößt mit einer Gruppe Fremder an – trinke 1 Schluck."},
+  {e:"🚮", txt:"Du leerst schnell deine Flasche, um sie einem Flaschensammler zu geben – trinke 2 Schlücke."},
+  {e:"👟", txt:"Deine Schnürsenkel sind offen, binde sie zuerst (Safety first!) – setze 1 Runde aus.", skip:1},
+  {e:"🥃", txt:"Eine Junggesellenabschied-Gruppe zieht dich kurz mit und gibt dir einen Shot aus – trinke 1 Shot oder 5 Schlücke."},
+  {e:"🥴", txt:"Dein Gleichgewichtssinn lässt kurz nach und du musst dich hinsetzen – setze eine Runde aus.", skip:1},
+  {e:"🚴", txt:"Du leihst dir spontan ein E-Bike und kommst gut voran – gehe 2 Felder vor.", mv:2},
+  {e:"🚲", txt:"Du leihst dir spontan ein Stadtrad und kommst gut voran – gehe 2 Felder vor.", mv:2},
+  {e:"🛴", txt:"Du leihst dir spontan einen E-Scooter und kommst gut voran – gehe 2 Felder vor.", mv:2},
 ];
 
 /* Eigene, seltene Sonderkarte – bewusst NICHT Teil von STREET_CARDS, damit
