@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#2e3a66"/>
+      <stop offset="0.55" stop-color="#232c52"/>
+      <stop offset="1" stop-color="#161c36"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="0.78" cy="0.16" r="0.42">
+      <stop offset="0" stop-color="#fef3c7" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#fef3c7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffcf4d"/>
+      <stop offset="0.5" stop-color="#ffe08a"/>
+      <stop offset="1" stop-color="#e0a94f"/>
+    </linearGradient>
+    <linearGradient id="die" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a5c"/>
+      <stop offset="1" stop-color="#ff5a3c"/>
+    </linearGradient>
+  </defs>
+  <!-- Hintergrund (vollflächig, für maskable) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#moon)"/>
+  <g fill="#fff">
+    <circle cx="96" cy="104" r="4" opacity=".7"/>
+    <circle cx="170" cy="62" r="3" opacity=".55"/>
+    <circle cx="420" cy="230" r="3.5" opacity=".5"/>
+    <circle cx="70" cy="300" r="3" opacity=".45"/>
+    <circle cx="300" cy="70" r="2.5" opacity=".6"/>
+  </g>
+
+  <!-- Schnapsglas -->
+  <g transform="translate(300 150) rotate(10)">
+    <path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z" fill="#ffffff" opacity=".22"/>
+    <path d="M10 58 H108 L101 190 Q100 198 92 198 H26 Q18 198 17 190 Z" fill="url(#glass)"/>
+    <ellipse cx="59" cy="58" rx="49" ry="9" fill="#fff6d6" opacity=".9"/>
+    <path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z" fill="none" stroke="#fdf7ea" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M24 76 L32 176" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".55"/>
+  </g>
+
+  <!-- Würfel -->
+  <g transform="translate(206 300) rotate(-14)">
+    <rect x="-118" y="-112" width="236" height="236" rx="46" fill="#c22f14"/>
+    <rect x="-118" y="-124" width="236" height="236" rx="46" fill="url(#die)"/>
+    <rect x="-100" y="-108" width="200" height="40" rx="20" fill="#fff" opacity=".18"/>
+    <g fill="#fdf7ea">
+      <circle cx="-58" cy="-64" r="22"/>
+      <circle cx="58"  cy="-64" r="22"/>
+      <circle cx="0"   cy="-6"  r="22"/>
+      <circle cx="-58" cy="52"  r="22"/>
+      <circle cx="58"  cy="52"  r="22"/>
+    </g>
+  </g>
+</svg>
