@@ -18,6 +18,12 @@
       <stop offset="0" stop-color="#ff8a5c"/>
       <stop offset="1" stop-color="#ff5a3c"/>
     </linearGradient>
+    <linearGradient id="flagshade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#161c36" stop-opacity=".35"/>
+      <stop offset="0.35" stop-color="#161c36" stop-opacity="0"/>
+      <stop offset="0.7" stop-color="#161c36" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#161c36" stop-opacity=".05"/>
+    </linearGradient>
   </defs>
   <!-- Hintergrund (vollflächig, für maskable) -->
   <rect width="512" height="512" fill="url(#bg)"/>
@@ -30,18 +36,19 @@
     <circle cx="300" cy="70" r="2.5" opacity=".6"/>
   </g>
 
+  <!-- Wehende Polen-Flagge im Hintergrund -->
+  <g>
+    <path d="M-10 170 C 110 130, 230 210, 350 170 C 430 143, 480 150, 522 160 L522 275 C 480 265, 430 258, 350 285 C 230 325, 110 245, -10 285 Z" fill="#fdf7ea" opacity=".28"/>
+    <path d="M-10 285 C 110 245, 230 325, 350 285 C 430 258, 480 265, 522 275 L522 390 C 480 380, 430 373, 350 400 C 230 440, 110 360, -10 400 Z" fill="#dc143c" opacity=".55"/>
+    <path d="M-10 170 C 110 130, 230 210, 350 170 C 430 143, 480 150, 522 160 L522 390 C 480 380, 430 373, 350 400 C 230 440, 110 360, -10 400 Z" fill="url(#flagshade)"/>
+  </g>
+
   <!-- Schnapsglas -->
   <g transform="translate(300 150) rotate(10)">
     <path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z" fill="#ffffff" opacity=".22"/>
     <path d="M10 58 H108 L101 190 Q100 198 92 198 H26 Q18 198 17 190 Z" fill="url(#glass)"/>
     <ellipse cx="59" cy="58" rx="49" ry="9" fill="#fff6d6" opacity=".9"/>
     <path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z" fill="none" stroke="#fdf7ea" stroke-width="7" stroke-linejoin="round"/>
-    <!-- Banderole in Weiß-Rot -->
-    <clipPath id="glassclip"><path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z"/></clipPath>
-    <g clip-path="url(#glassclip)">
-      <rect x="0" y="118" width="120" height="20" fill="#ffffff"/>
-      <rect x="0" y="138" width="120" height="20" fill="#dc143c"/>
-    </g>
     <path d="M24 76 L32 176" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".55"/>
   </g>
 
