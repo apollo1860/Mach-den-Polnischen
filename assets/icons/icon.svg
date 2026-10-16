@@ -36,6 +36,12 @@
     <path d="M10 58 H108 L101 190 Q100 198 92 198 H26 Q18 198 17 190 Z" fill="url(#glass)"/>
     <ellipse cx="59" cy="58" rx="49" ry="9" fill="#fff6d6" opacity=".9"/>
     <path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z" fill="none" stroke="#fdf7ea" stroke-width="7" stroke-linejoin="round"/>
+    <!-- Banderole in Weiß-Rot -->
+    <clipPath id="glassclip"><path d="M0 0 H118 L104 196 Q103 208 91 208 H27 Q15 208 14 196 Z"/></clipPath>
+    <g clip-path="url(#glassclip)">
+      <rect x="0" y="118" width="120" height="20" fill="#ffffff"/>
+      <rect x="0" y="138" width="120" height="20" fill="#dc143c"/>
+    </g>
     <path d="M24 76 L32 176" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".55"/>
   </g>
 
