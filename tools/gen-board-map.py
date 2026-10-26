@@ -19,7 +19,6 @@ rnd = random.Random(1860)
 # ---------- Farben ----------
 BG_TOP, BG_BOTTOM = "#141b35", "#101a2e"
 STREET_GOLD, STREET_TEAL = (226, 172, 92), (92, 178, 178)
-MAIN_ROAD = "#f2bd63"
 RIVER, RIVER_EDGE = "#24427a", "#4d7cc9"
 PARK, PARK_EDGE, PARK_PATH = "#173a33", "#2d6a54", "#3f8a6c"
 LAKE = "#22477f"
@@ -182,21 +181,6 @@ ISAR = [(1030, 1760), (985, 1560), (1005, 1380), (965, 1200), (995, 1030),
         (975, 900), (1010, 760), (1065, 600), (1110, 450), (1175, 300),
         (1265, 170), (1350, 40), (1400, -60)]
 AUER_BACH = [(990, 1760), (948, 1560), (960, 1390), (930, 1220), (955, 1060)]
-ALTSTADT_RING = [(675, 760), (730, 690), (845, 680), (925, 735), (935, 870),
-                 (880, 960), (760, 975), (680, 905)]
-MITTLERER_RING = [(330, 430), (620, 230), (980, 210), (1290, 330), (1430, 640),
-                  (1450, 990), (1300, 1310), (1000, 1430), (650, 1440),
-                  (370, 1280), (250, 950), (240, 640)]
-RADIALS = [
-    [(830, 690), (840, 520), (865, 330), (880, 140), (890, -20)],     # Ludwig-/Leopoldstraße
-    [(680, 800), (500, 815), (300, 835), (100, 860), (-20, 870)],     # Landsberger Straße
-    [(720, 950), (620, 1100), (520, 1290), (430, 1500), (370, 1720)], # Lindwurmstraße
-    [(925, 870), (1080, 930), (1260, 1030), (1480, 1160), (1720, 1270)],  # Rosenheimer Straße
-    [(890, 790), (1000, 795), (1110, 790), (1170, 800)],               # Maximilianstraße
-    [(925, 735), (1100, 700), (1350, 690), (1720, 700)],               # Prinzregentenstraße
-    [(700, 745), (560, 600), (380, 400), (200, 210), (60, 60)],        # Dachauer Straße
-    [(850, 975), (880, 1150), (900, 1380), (910, 1720)],               # Fraunhoferstr. → Tegernseer
-]
 ENGLISCHER_GARTEN = [(925, 690), (985, 650), (1035, 520), (1080, 400), (1130, 260),
                      (1180, 120), (1110, 80), (1040, 200), (985, 330), (950, 470),
                      (915, 590)]
@@ -291,25 +275,8 @@ def svg():
     o.append(f'<path d="{blob(992, 905, 13, 52, 8, .1, .12)}" fill="#1b2846" '
              f'stroke="{RIVER_EDGE}" stroke-width="2"/>')                        # Museumsinsel
 
-    # Hauptstraßen mit weichem Leuchten (breiter, transparenter Strich statt Filter)
-    roads = [catmull(MITTLERER_RING, closed=True)] + [catmull(r) for r in RADIALS]
-    ring = catmull(ALTSTADT_RING, closed=True)
-    o.append(f'<g fill="none" stroke="{MAIN_ROAD}" stroke-linecap="round" stroke-linejoin="round">')
-    for d in roads:
-        o.append(f'<path d="{d}" stroke-width="16" stroke-opacity=".08"/>')
-    o.append(f'<path d="{ring}" stroke-width="20" stroke-opacity=".1"/>')
-    for d in roads:
-        o.append(f'<path d="{d}" stroke-width="5" stroke-opacity=".75"/>')
-    o.append(f'<path d="{ring}" stroke-width="6.5" stroke-opacity=".9"/>')
-    for d in roads:
-        o.append(f'<path d="{d}" stroke="#fff3d6" stroke-width="1.2" stroke-opacity=".55"/>')
-    o.append("</g>")
-
-    # Marienplatz-Leuchten
+    # weiches Leuchten über der Innenstadt
     o.append(f'<rect width="{W}" height="{H}" fill="url(#glow)"/>')
-    o.append('<circle cx="800" cy="830" r="11" fill="#ffd27a" fill-opacity=".9"/>')
-    o.append('<circle cx="800" cy="830" r="24" fill="none" stroke="#ffd27a" stroke-opacity=".5" stroke-width="2.5"/>')
-    o.append('<circle cx="800" cy="830" r="40" fill="none" stroke="#ffd27a" stroke-opacity=".22" stroke-width="2"/>')
     # Olympiaturm
     o.append('<circle cx="455" cy="300" r="6" fill="#e9eefc"/>'
              '<circle cx="455" cy="300" r="14" fill="none" stroke="#e9eefc" stroke-opacity=".45" stroke-width="2"/>')
