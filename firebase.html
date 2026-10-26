@@ -2286,6 +2286,8 @@ $("#modeMultiBtn").onclick = ()=>{
   $("#singleSetup").style.display = "none"; $("#multiSetup").style.display = "";
   ensureAuth();
 };
+// Von index.html über "Mehrere Geräte" gekommen → direkt Multiplayer-Ansicht zeigen
+if(location.hash === "#multi") $("#modeMultiBtn").onclick();
 
 $("#createRoomChoiceBtn").onclick = ()=>{
   $("#createRoomForm").style.display = ""; $("#joinRoomForm").style.display = "none";

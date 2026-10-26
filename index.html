@@ -1462,6 +1462,11 @@
       </div>
     </div>
 
+    <div id="modeToggle" style="display:flex;gap:10px;justify-content:center;margin:18px 0 4px;">
+      <button class="btn green" id="modeSingleBtn" style="flex:1;font-size:13.5px;padding:12px 8px;">📱 1 Gerät</button>
+      <button class="btn gray" id="modeMultiBtn" style="flex:1;font-size:13.5px;padding:12px 8px;">🌐 Mehrere Geräte</button>
+    </div>
+
     <div id="playerList"></div>
     <button id="addPlayer">+ Spieler hinzufügen</button>
     <div style="margin-top:20px">
@@ -2224,6 +2229,9 @@ function addPlayerRow(name=""){
 }
 $("#addPlayer").onclick = ()=> addPlayerRow();
 addPlayerRow(); addPlayerRow();
+
+// Multiplayer läuft auf firebase.html – "#multi" öffnet dort direkt die Raum-Auswahl
+$("#modeMultiBtn").onclick = ()=>{ location.href = "firebase.html#multi"; };
 
 $("#startBtn").onclick = async ()=>{
   players = [...playerList.children].map((r,i)=>({
